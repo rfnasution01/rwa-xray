@@ -20,7 +20,7 @@ export default async function AssetPage({
   if (!Number.isSafeInteger(parsed) || parsed <= 0) notFound();
 
   return (
-    <main className="bg-background text-foreground min-h-screen">
+    <main className="min-h-screen bg-[#02090b] text-[#e6f1ef]">
       <AssetDetailView rwaId={parsed} />
     </main>
   );

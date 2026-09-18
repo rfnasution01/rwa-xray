@@ -236,10 +236,44 @@ test("filters and opens a live Explorer row", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Treasury Capacity Note", level: 1 }),
   ).toBeVisible();
+  await expect(page.getByText("Average tokenized price")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Exit Capacity Simulator" }),
+  ).not.toBeVisible();
+  await page.getByRole("tab", { name: "Simulator" }).click();
   await expect(
     page.getByRole("heading", { name: "Exit Capacity Simulator" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Concentration" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Concentration X-Ray" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Exit Capacity Simulator" }),
+  ).not.toBeVisible();
   await expect(page.getByText(/Partial evidence/)).toBeVisible();
+});
+
+test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRwaApi(page);
+  await page.goto("/assets/101");
+
+  await expect(
+    page.getByRole("heading", { name: "Treasury Capacity Note", level: 1 }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Evidence" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Evidence summary" }),
+  ).toBeVisible();
+  await expect(page.getByText("Asset context")).not.toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(page.getByText("Asset context")).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
 });
 
 function compareItem(item: typeof asset, estimatedExitDays: number) {

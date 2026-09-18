@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,7 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
 import {
@@ -22,6 +23,14 @@ import {
 } from "@/lib/rwa-api";
 
 const positions = [10_000, 100_000, 500_000, 1_000_000];
+const detailTabs = [
+  "overview",
+  "simulator",
+  "concentration",
+  "markets",
+  "evidence",
+] as const;
+type DetailTab = (typeof detailTabs)[number];
 
 export function AssetDetailView({ rwaId }: { rwaId: number }) {
   const query = useQuery({
@@ -41,220 +50,325 @@ export function AssetDetailView({ rwaId }: { rwaId: number }) {
 }
 
 function DetailContent({ data }: { data: AssetDetailResponse }) {
+  const reduceMotion = useReducedMotion();
+  const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const { asset, analysis, metadata, marketPairs } = data;
+
+  function handleTabKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentTab: DetailTab,
+  ) {
+    const currentIndex = detailTabs.indexOf(currentTab);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight")
+      nextIndex = (currentIndex + 1) % detailTabs.length;
+    if (event.key === "ArrowLeft")
+      nextIndex = (currentIndex - 1 + detailTabs.length) % detailTabs.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = detailTabs.length - 1;
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    const nextTab = detailTabs[nextIndex];
+    setActiveTab(nextTab);
+    requestAnimationFrame(() =>
+      document.getElementById(`asset-tab-${nextTab}`)?.focus(),
+    );
+  }
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-      <Link
-        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
-        href="/assets"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" /> Back to Explorer
-      </Link>
+    <div className="fx-detail-shell relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e6f1ef]">
+      <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
+      <div className="relative mx-auto max-w-[1600px] px-5 py-8 sm:px-8 lg:px-14 lg:py-10">
+        <Link
+          className="inline-flex items-center gap-2 font-mono text-[9px] font-semibold tracking-[0.12em] text-[#59e8e1] uppercase transition hover:text-[#b2fffb] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#59e8e1]"
+          href="/assets"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" /> Back to Explorer
+        </Link>
 
-      <header className="mt-6 flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
-        <div className="flex items-start gap-4">
-          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-slate-950 font-mono text-sm font-bold text-white dark:bg-white dark:text-slate-950">
-            {asset.symbol.slice(0, 4)}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                {asset.name}
-              </h1>
-              <span className="data-badge">{formatType(asset.assetType)}</span>
-              {data.stale ? (
-                <span className="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800 uppercase dark:bg-amber-950 dark:text-amber-200">
-                  Stale
-                </span>
-              ) : null}
+        <header className="relative mt-6 overflow-hidden border border-[#174f51] bg-[#041214]/90 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] sm:p-6 lg:flex lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="grid size-16 shrink-0 place-items-center border border-[#3b9b99] bg-[#071a1c] font-mono text-sm font-bold tracking-wider text-[#73f4ed] shadow-[inset_0_0_24px_rgba(52,222,215,0.08),0_0_18px_rgba(52,222,215,0.07)]">
+              {asset.symbol.slice(0, 4)}
             </div>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {asset.symbol} · CMC RWA #{asset.rwaId}
-              {metadata?.industry ? ` · ${metadata.industry}` : ""}
-            </p>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-medium tracking-[-0.04em] text-[#f0f7f5] sm:text-4xl">
+                  {asset.name}
+                </h1>
+                <span className="fx-data-badge">
+                  {formatType(asset.assetType)}
+                </span>
+                {data.stale ? (
+                  <span className="border border-[#8a642c] bg-[#241a0c] px-2 py-1 font-mono text-[8px] font-bold tracking-wider text-[#f2ca8e] uppercase">
+                    Stale
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-2 font-mono text-[9px] tracking-[0.1em] text-[#608587] uppercase">
+                {asset.symbol} · CMC RWA #{asset.rwaId}
+                {metadata?.industry ? ` · ${metadata.industry}` : ""}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-          <span className="flex items-center gap-2">
-            <span
-              className="size-2 rounded-full bg-emerald-500"
-              aria-hidden="true"
-            />
-            Updated {formatDateTime(analysis.calculatedAt)}
-          </span>
-          <span className="mt-1 block">
-            Methodology {analysis.methodologyVersion}
-          </span>
-        </div>
-      </header>
-
-      {data.dataGaps.length > 0 ? <DataGapBanner gaps={data.dataGaps} /> : null}
-
-      <nav
-        className="mt-7 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 text-sm dark:border-slate-800 dark:bg-slate-900"
-        aria-label="Asset analysis sections"
-      >
-        {["Overview", "Simulator", "Concentration", "Markets", "Evidence"].map(
-          (label) => (
-            <a
-              key={label}
-              className="nav-link whitespace-nowrap"
-              href={`#${label.toLowerCase()}`}
-            >
-              {label}
-            </a>
-          ),
-        )}
-      </nav>
-
-      <section id="overview" className="scroll-mt-4 pt-7">
-        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <OverviewMetric
-            label="Average tokenized price"
-            value={formatCurrency(asset.quote.averageTokenizedPrice)}
-          />
-          <OverviewMetric
-            label="Tokenized market cap"
-            value={formatMoney(asset.quote.tokenizedMarketCap)}
-          />
-          <OverviewMetric
-            label="Reported volume · 24h"
-            value={formatMoney(asset.quote.tokenizedVolume24h)}
-          />
-          <OverviewMetric
-            label="Turnover ratio"
-            value={formatPercent(analysis.metrics.turnoverRatio)}
-          />
-        </dl>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <ScorePanel data={data} />
-          <MetadataPanel data={data} />
-        </div>
-      </section>
-
-      <section id="simulator" className="scroll-mt-4 pt-10">
-        <SectionHeading
-          eyebrow="Volume participation scenario"
-          title="Exit Capacity Simulator"
-          description="Adjust explicit assumptions without making another upstream request."
-        />
-        <CapacitySimulator volume24h={asset.quote.tokenizedVolume24h} />
-      </section>
-
-      <section id="concentration" className="scroll-mt-4 pt-10">
-        <SectionHeading
-          eyebrow="Observed distribution"
-          title="Concentration X-Ray"
-          description="Each dimension is calculated separately. Unavailable evidence is never converted to zero."
-        />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <ConcentrationCard
-            icon={<Store />}
-            label="Market pairs"
-            value={analysis.concentration.market}
-          />
-          <ConcentrationCard
-            icon={<Building2 />}
-            label="Exchanges"
-            value={analysis.concentration.exchange}
-          />
-          <ConcentrationCard
-            icon={<Layers3 />}
-            label="Tokens"
-            value={analysis.concentration.token}
-          />
-          <ConcentrationCard
-            icon={<ShieldCheck />}
-            label="Issuers"
-            value={analysis.concentration.issuer}
-            note={
-              analysis.concentration.issuerMappedVolumeCoverage === null
-                ? null
-                : `${formatPercent(analysis.concentration.issuerMappedVolumeCoverage)} mapped volume`
-            }
-          />
-        </div>
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="font-semibold">Price dispersion</h3>
-            <span className="data-badge">
-              {analysis.priceDispersion.sampleSize} valid prices
+          <div className="mt-5 border border-[#1c5a5c] bg-[#061719] px-4 py-3 font-mono text-[9px] tracking-[0.08em] text-[#81a8a9] uppercase lg:mt-0">
+            <span className="flex items-center gap-2">
+              <span
+                className="size-1.5 rounded-full bg-[#43e3a1] shadow-[0_0_9px_#43e3a1]"
+                aria-hidden="true"
+              />
+              Updated {formatDateTime(analysis.calculatedAt)}
+            </span>
+            <span className="mt-1 block">
+              Methodology {analysis.methodologyVersion}
             </span>
           </div>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-            <SmallMetric
-              label="Weighted mean"
-              value={formatCurrency(analysis.priceDispersion.weightedMeanPrice)}
-            />
-            <SmallMetric
-              label="Raw deviation"
-              value={formatPercent(
-                analysis.priceDispersion.weightedAbsoluteDeviation,
-              )}
-            />
-            <SmallMetric
-              label="Robust deviation"
-              value={formatPercent(
-                analysis.priceDispersion.robustWeightedAbsoluteDeviation,
-              )}
-            />
-          </dl>
-        </div>
-      </section>
+        </header>
 
-      <section id="markets" className="scroll-mt-4 pt-10">
-        <SectionHeading
-          eyebrow="Underlying observations"
-          title="Tokens and markets"
-          description="Token metrics and market-pair observations are shown independently to avoid double counting."
-        />
-        <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          <TokenTable tokens={asset.tokens} />
-          <MarketTable marketPairs={marketPairs} />
-        </div>
-      </section>
-
-      <section id="evidence" className="scroll-mt-4 pt-10">
-        <SectionHeading
-          eyebrow="Traceable inputs"
-          title="Evidence summary"
-          description="Sanitized endpoint lineage and coverage factors. Credentials and raw headers are never exposed."
-        />
-        <div className="mt-5 grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-          <EvidenceFactors data={data} />
-          <SourceTable data={data} />
-        </div>
-        {analysis.warnings.length > 0 ? (
-          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/30">
-            <h3 className="font-semibold text-amber-950 dark:text-amber-100">
-              Methodology warnings
-            </h3>
-            <ul className="mt-3 space-y-2 text-sm text-amber-900 dark:text-amber-200">
-              {analysis.warnings.map((warning) => (
-                <li
-                  key={`${warning.code}:${warning.message}`}
-                  className="flex gap-2"
-                >
-                  <AlertTriangle
-                    className="mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>
-                    <strong>{warning.code.replaceAll("_", " ")}</strong> —{" "}
-                    {warning.message}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {data.dataGaps.length > 0 ? (
+          <DataGapBanner gaps={data.dataGaps} />
         ) : null}
-      </section>
 
-      <p className="mt-10 border-t border-slate-200 pt-5 text-xs leading-5 text-slate-500 dark:border-slate-800 dark:text-slate-400">
-        RWA X-Ray is a research tool, not investment advice. Capacity estimates
-        do not model order-book depth, slippage, fees, redemption restrictions,
-        market hours, or guaranteed execution.
-      </p>
+        <div
+          className="mt-7 flex overflow-x-auto border border-[#1a5557] bg-[#041214] p-1"
+          role="tablist"
+          aria-label="Asset analysis sections"
+        >
+          {detailTabs.map((tab) => (
+            <button
+              key={tab}
+              id={`asset-tab-${tab}`}
+              className={
+                activeTab === tab
+                  ? "fx-detail-tab fx-detail-tab-active"
+                  : "fx-detail-tab"
+              }
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
+              aria-controls={`asset-panel-${tab}`}
+              tabIndex={activeTab === tab ? 0 : -1}
+              onClick={() => setActiveTab(tab)}
+              onKeyDown={(event) => handleTabKeyDown(event, tab)}
+            >
+              {formatType(tab)}
+            </button>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait" initial={false}>
+          {activeTab === "overview" ? (
+            <motion.section
+              key="overview"
+              id="asset-panel-overview"
+              className="pt-7"
+              role="tabpanel"
+              aria-labelledby="asset-tab-overview"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+            >
+              <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <OverviewMetric
+                  label="Average tokenized price"
+                  value={formatCurrency(asset.quote.averageTokenizedPrice)}
+                />
+                <OverviewMetric
+                  label="Tokenized market cap"
+                  value={formatMoney(asset.quote.tokenizedMarketCap)}
+                />
+                <OverviewMetric
+                  label="Reported volume · 24h"
+                  value={formatMoney(asset.quote.tokenizedVolume24h)}
+                />
+                <OverviewMetric
+                  label="Turnover ratio"
+                  value={formatPercent(analysis.metrics.turnoverRatio)}
+                />
+              </dl>
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <ScorePanel data={data} />
+                <MetadataPanel data={data} />
+              </div>
+            </motion.section>
+          ) : null}
+
+          {activeTab === "simulator" ? (
+            <motion.section
+              key="simulator"
+              id="asset-panel-simulator"
+              className="pt-7"
+              role="tabpanel"
+              aria-labelledby="asset-tab-simulator"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+            >
+              <SectionHeading
+                eyebrow="Volume participation scenario"
+                title="Exit Capacity Simulator"
+                description="Adjust explicit assumptions without making another upstream request."
+              />
+              <CapacitySimulator volume24h={asset.quote.tokenizedVolume24h} />
+            </motion.section>
+          ) : null}
+
+          {activeTab === "concentration" ? (
+            <motion.section
+              key="concentration"
+              id="asset-panel-concentration"
+              className="pt-7"
+              role="tabpanel"
+              aria-labelledby="asset-tab-concentration"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+            >
+              <SectionHeading
+                eyebrow="Observed distribution"
+                title="Concentration X-Ray"
+                description="Each dimension is calculated separately. Unavailable evidence is never converted to zero."
+              />
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <ConcentrationCard
+                  icon={<Store />}
+                  label="Market pairs"
+                  value={analysis.concentration.market}
+                />
+                <ConcentrationCard
+                  icon={<Building2 />}
+                  label="Exchanges"
+                  value={analysis.concentration.exchange}
+                />
+                <ConcentrationCard
+                  icon={<Layers3 />}
+                  label="Tokens"
+                  value={analysis.concentration.token}
+                />
+                <ConcentrationCard
+                  icon={<ShieldCheck />}
+                  label="Issuers"
+                  value={analysis.concentration.issuer}
+                  note={
+                    analysis.concentration.issuerMappedVolumeCoverage === null
+                      ? null
+                      : `${formatPercent(analysis.concentration.issuerMappedVolumeCoverage)} mapped volume`
+                  }
+                />
+              </div>
+              <div className="mt-4 border border-[#1a5557] bg-[#041214] p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold">Price dispersion</h3>
+                  <span className="data-badge">
+                    {analysis.priceDispersion.sampleSize} valid prices
+                  </span>
+                </div>
+                <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <SmallMetric
+                    label="Weighted mean"
+                    value={formatCurrency(
+                      analysis.priceDispersion.weightedMeanPrice,
+                    )}
+                  />
+                  <SmallMetric
+                    label="Raw deviation"
+                    value={formatPercent(
+                      analysis.priceDispersion.weightedAbsoluteDeviation,
+                    )}
+                  />
+                  <SmallMetric
+                    label="Robust deviation"
+                    value={formatPercent(
+                      analysis.priceDispersion.robustWeightedAbsoluteDeviation,
+                    )}
+                  />
+                </dl>
+              </div>
+            </motion.section>
+          ) : null}
+
+          {activeTab === "markets" ? (
+            <motion.section
+              key="markets"
+              id="asset-panel-markets"
+              className="pt-7"
+              role="tabpanel"
+              aria-labelledby="asset-tab-markets"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+            >
+              <SectionHeading
+                eyebrow="Underlying observations"
+                title="Tokens and markets"
+                description="Token metrics and market-pair observations are shown independently to avoid double counting."
+              />
+              <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                <TokenTable tokens={asset.tokens} />
+                <MarketTable marketPairs={marketPairs} />
+              </div>
+            </motion.section>
+          ) : null}
+
+          {activeTab === "evidence" ? (
+            <motion.section
+              key="evidence"
+              id="asset-panel-evidence"
+              className="pt-7"
+              role="tabpanel"
+              aria-labelledby="asset-tab-evidence"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+            >
+              <SectionHeading
+                eyebrow="Traceable inputs"
+                title="Evidence summary"
+                description="Sanitized endpoint lineage and coverage factors. Credentials and raw headers are never exposed."
+              />
+              <div className="mt-5 grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+                <EvidenceFactors data={data} />
+                <SourceTable data={data} />
+              </div>
+              {analysis.warnings.length > 0 ? (
+                <div className="mt-4 border border-[#7b582b] bg-[#1e170d] p-5">
+                  <h3 className="font-semibold text-[#f3ce99]">
+                    Methodology warnings
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-[#d8b77f]">
+                    {analysis.warnings.map((warning) => (
+                      <li
+                        key={`${warning.code}:${warning.message}`}
+                        className="flex gap-2"
+                      >
+                        <AlertTriangle
+                          className="mt-0.5 size-4 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <strong>{warning.code.replaceAll("_", " ")}</strong> —{" "}
+                          {warning.message}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </motion.section>
+          ) : null}
+        </AnimatePresence>
+
+        <p className="mt-10 border-t border-[#153b3d] pt-5 font-mono text-[9px] leading-5 tracking-[0.06em] text-[#557b7d]">
+          RWA X-Ray is a research tool, not investment advice. Capacity
+          estimates do not model order-book depth, slippage, fees, redemption
+          restrictions, market hours, or guaranteed execution.
+        </p>
+      </div>
     </div>
   );
 }
@@ -274,9 +388,9 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
     [haircut, participation, position, volume24h],
   );
   return (
-    <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="mt-5 overflow-hidden border border-[#1a5557] bg-[#030f11] shadow-[0_24px_70px_rgba(0,0,0,0.25)]">
       <div className="grid lg:grid-cols-[0.82fr_1.18fr]">
-        <div className="bg-slate-50 p-5 sm:p-6 dark:bg-slate-950/50">
+        <div className="border-[#153b3d] bg-[#041416] p-5 sm:p-6 lg:border-r">
           <label className="input-label" htmlFor="position-value">
             Position value · USD
           </label>
@@ -326,15 +440,17 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
             onChange={(value) => setHaircut(value / 100)}
           />
         </div>
-        <div className="p-5 sm:p-7">
+        <div className="bg-[#030e10] p-5 sm:p-7">
           {result.status === "available" ? (
             <>
-              <p className="eyebrow">Estimated capacity</p>
+              <p className="fx-kicker">Estimated capacity</p>
               <div className="mt-4 flex items-end gap-3">
-                <strong className="text-5xl tracking-tight tabular-nums">
+                <strong className="fx-result-value text-5xl font-medium tracking-[-0.05em] tabular-nums">
                   {formatDays(result.estimatedExitDays)}
                 </strong>
-                <span className="pb-1 text-sm text-slate-500">days</span>
+                <span className="pb-1 font-mono text-[10px] tracking-wider text-[#628789] uppercase">
+                  days
+                </span>
               </div>
               <dl className="mt-6 grid gap-3 sm:grid-cols-3">
                 <SmallMetric
@@ -385,7 +501,7 @@ function RangeControl(props: {
       </span>
       <input
         id={props.id}
-        className="mt-3 w-full accent-blue-600"
+        className="fx-range mt-3 w-full"
         type="range"
         min={props.min}
         max={props.max}
@@ -400,8 +516,8 @@ function RangeControl(props: {
 function ScorePanel({ data }: { data: AssetDetailResponse }) {
   const { evidenceCoverage, marketCapacityHealth } = data.analysis;
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-      <p className="eyebrow">Quality at a glance</p>
+    <article className="border border-[#1a5557] bg-[#041214] p-5">
+      <p className="fx-kicker">Quality at a glance</p>
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Score
           value={marketCapacityHealth.score}
@@ -427,14 +543,27 @@ function Score({
   label: string;
   sublabel: string;
 }) {
+  const score = value === null ? 0 : Math.round(value);
   return (
-    <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-950/50">
-      <span className="text-3xl font-semibold tabular-nums">
-        {value === null ? "—" : Math.round(value)}
-      </span>
-      <span className="text-sm text-slate-400">/100</span>
-      <p className="mt-2 text-xs font-semibold">{label}</p>
-      <p className="mt-1 text-[11px] text-slate-500">{sublabel}</p>
+    <div className="flex flex-col items-center border border-[#153f41] bg-[#061719] p-4 text-center">
+      <div
+        className="grid size-24 place-items-center rounded-full p-[7px]"
+        style={{
+          background: `conic-gradient(#56ebe4 ${score * 3.6}deg, #163638 0deg)`,
+        }}
+        aria-label={`${label}: ${value === null ? "unavailable" : `${score} out of 100`}`}
+      >
+        <div className="grid size-full place-items-center rounded-full bg-[#061416] shadow-[inset_0_0_18px_rgba(0,0,0,0.55)]">
+          <span>
+            <strong className="block text-2xl font-medium text-[#65eee7] tabular-nums">
+              {value === null ? "—" : score}
+            </strong>
+            <span className="font-mono text-[8px] text-[#527b7d]">/100</span>
+          </span>
+        </div>
+      </div>
+      <p className="mt-3 text-xs font-semibold text-[#c8d9d7]">{label}</p>
+      <p className="mt-1 font-mono text-[9px] text-[#527b7d]">{sublabel}</p>
     </div>
   );
 }
@@ -442,9 +571,9 @@ function Score({
 function MetadataPanel({ data }: { data: AssetDetailResponse }) {
   const metadata = data.metadata;
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-      <p className="eyebrow">Asset context</p>
-      <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+    <article className="border border-[#1a5557] bg-[#041214] p-5">
+      <p className="fx-kicker">Asset context</p>
+      <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#89a6a7]">
         {metadata?.about?.description ??
           "CMC metadata description is unavailable for this asset."}
       </p>
@@ -474,9 +603,9 @@ function ConcentrationCard({
   note?: string | null;
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <article className="border border-[#1a5557] bg-[#041214] p-5">
       <div className="flex items-center justify-between">
-        <span className="text-blue-600 dark:text-blue-400">{icon}</span>
+        <span className="text-[#59e8e1] [&>svg]:size-5">{icon}</span>
         <span className="data-badge">n={value.sampleSize}</span>
       </div>
       <h3 className="mt-4 font-semibold">{label}</h3>
@@ -492,11 +621,11 @@ function ConcentrationCard({
           />
         </dl>
       ) : (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-[#678b8d]">
           Insufficient observed volume.
         </p>
       )}
-      {note ? <p className="mt-3 text-xs text-slate-500">{note}</p> : null}
+      {note ? <p className="mt-3 text-xs text-[#678b8d]">{note}</p> : null}
     </article>
   );
 }
@@ -591,7 +720,7 @@ function MarketTable({
 
 function EvidenceFactors({ data }: { data: AssetDetailResponse }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <article className="border border-[#1a5557] bg-[#041214] p-5">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Coverage factors</h3>
         <span className="font-semibold tabular-nums">
@@ -609,9 +738,9 @@ function EvidenceFactors({ data }: { data: AssetDetailResponse }) {
                 {factor.earned}/{factor.weight}
               </span>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="mt-1.5 h-1.5 overflow-hidden bg-[#112f31]">
               <div
-                className="h-full rounded-full bg-blue-600"
+                className="h-full bg-[#51e8e1] shadow-[0_0_8px_rgba(81,232,225,0.35)]"
                 style={{
                   width: `${factor.weight > 0 ? (factor.earned / factor.weight) * 100 : 0}%`,
                 }}
@@ -690,8 +819,8 @@ function DataPanel({
   children: React.ReactNode;
 }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+    <article className="overflow-hidden border border-[#1a5557] bg-[#041214]">
+      <div className="flex items-center justify-between border-b border-[#153b3d] px-5 py-4">
         <h3 className="font-semibold">{title}</h3>
         <span className="data-badge">{count} records</span>
       </div>
@@ -702,9 +831,9 @@ function DataPanel({
 
 function EmptyRow({ text }: { text: string }) {
   return (
-    <div className="p-8 text-center text-sm text-slate-500">
+    <div className="p-8 text-center text-sm text-[#678b8d]">
       <Database
-        className="mx-auto mb-3 size-5 text-slate-400"
+        className="mx-auto mb-3 size-5 text-[#56dcd6]"
         aria-hidden="true"
       />
       {text}
@@ -713,17 +842,23 @@ function EmptyRow({ text }: { text: string }) {
 }
 function OverviewMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="metric-card border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
+    <div className="border border-[#1a5557] bg-[#041416] p-5 shadow-[inset_0_0_24px_rgba(45,202,196,0.025)]">
+      <dt className="font-mono text-[9px] tracking-[0.08em] text-[#5b8587] uppercase">
+        {label}
+      </dt>
+      <dd className="mt-3 text-xl font-medium tracking-tight text-[#dff0ee] tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }
 function SmallMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-950/50">
-      <dt className="text-[11px] text-slate-500">{label}</dt>
-      <dd className="mt-1 text-sm font-semibold tabular-nums">{value}</dd>
+    <div className="border border-[#153f41] bg-[#061719] p-3">
+      <dt className="font-mono text-[9px] text-[#5b8587]">{label}</dt>
+      <dd className="mt-2 text-sm font-medium text-[#cfdfdd] tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -738,9 +873,11 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h2>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+      <p className="fx-kicker">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-medium tracking-[-0.025em] text-[#eaf4f2]">
+        {title}
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-[#78999b]">
         {description}
       </p>
     </div>
@@ -749,21 +886,33 @@ function SectionHeading({
 
 function DetailSkeleton() {
   return (
-    <div
-      className="mx-auto max-w-7xl space-y-5 px-4 py-12 sm:px-6 lg:px-8"
-      aria-label="Loading asset X-Ray"
-    >
-      <div className="h-16 w-2/3 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
-      <div className="grid gap-3 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-28 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800"
-          />
-        ))}
+    <div className="min-h-[calc(100vh-76px)] bg-[#02090b]">
+      <div
+        className="mx-auto max-w-[1600px] space-y-5 px-5 py-10 sm:px-8 lg:px-14"
+        aria-label="Loading asset X-Ray"
+      >
+        <div className="fx-skeleton h-28 p-6">
+          <div className="flex items-center gap-4">
+            <div className="fx-skeleton-cell size-16" />
+            <div className="w-full max-w-md space-y-3">
+              <div className="fx-skeleton-line h-5 w-3/5" />
+              <div className="fx-skeleton-line h-2.5 w-2/5" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-5 gap-px border border-[#174749] bg-[#143638] p-1">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-10 bg-[#061416]" />
+          ))}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="fx-skeleton-cell h-28" />
+          ))}
+        </div>
+        <div className="fx-skeleton-cell h-72" />
+        <span className="sr-only">Loading asset X-Ray</span>
       </div>
-      <div className="h-96 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
-      <span className="sr-only">Loading asset X-Ray</span>
     </div>
   );
 }
@@ -771,7 +920,7 @@ function DetailSkeleton() {
 function DetailError({ error, retry }: { error: unknown; retry(): void }) {
   const notFound = error instanceof RwaApiError && error.status === 404;
   return (
-    <div className="mx-auto grid min-h-[65vh] max-w-xl place-items-center px-6 text-center">
+    <div className="grid min-h-[calc(100vh-76px)] place-items-center bg-[#02090b] px-6 text-center">
       <div>
         <AlertTriangle
           className="mx-auto size-8 text-rose-500"
