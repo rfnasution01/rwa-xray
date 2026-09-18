@@ -1,0 +1,324 @@
+import { describe, expect, it, vi } from "vitest";
+
+import assetsListFixture from "../../../tests/fixtures/cmc/rwa-assets-list.json";
+import infoFixture from "../../../tests/fixtures/cmc/rwa-info.json";
+import marketPairsFixture from "../../../tests/fixtures/cmc/rwa-market-pairs.json";
+import quotesLatestFixture from "../../../tests/fixtures/cmc/rwa-quotes-latest.json";
+import type { CacheResult, CacheState } from "@/server/cache/service";
+import {
+  normalizeRwaAssetsList,
+  normalizeRwaInfo,
+  normalizeRwaMarketPairs,
+  normalizeRwaQuotesLatest,
+} from "@/server/cmc/normalize";
+import {
+  rwaAssetsListResponseSchema,
+  rwaInfoResponseSchema,
+  rwaMarketPairsResponseSchema,
+  rwaQuotesLatestResponseSchema,
+} from "@/server/cmc/schemas";
+import type { RwaRepository } from "@/server/repositories/rwa-repository";
+
+import {
+  ApplicationServiceError,
+  createRwaApplicationService,
+} from "./rwa-service";
+
+const observedAt = new Date("2026-09-09T06:59:30.000Z");
+const calculatedAt = new Date("2026-09-09T07:00:00.000Z");
+
+function cached<T>(value: T, state: CacheState = "fresh"): CacheResult<T> {
+  return {
+    value,
+    cache: {
+      key: "internal-cache-key",
+      state,
+      observedAt: observedAt.toISOString(),
+      expiresAt: "2026-09-09T07:01:00.000Z",
+      staleUntil: "2026-09-10T06:59:30.000Z",
+      warning: null,
+    },
+    refreshError:
+      state === "stale"
+        ? {
+            code: "CMC_UPSTREAM_ERROR",
+            message: "Upstream refresh failed; serving the last cached dataset",
+          }
+        : null,
+  };
+}
+
+function repository(): RwaRepository {
+  return {
+    getMap: vi.fn(),
+    getInfo: vi.fn(async () =>
+      cached(
+        normalizeRwaInfo(rwaInfoResponseSchema.parse(infoFixture), {
+          observedAt,
+        }),
+      ),
+    ),
+    getAssets: vi.fn(async () =>
+      cached(
+        normalizeRwaAssetsList(
+          rwaAssetsListResponseSchema.parse(assetsListFixture),
+          { observedAt },
+        ),
+      ),
+    ),
+    getMarketPairs: vi.fn(async () =>
+      cached(
+        normalizeRwaMarketPairs(
+          rwaMarketPairsResponseSchema.parse(marketPairsFixture),
+          { observedAt },
+        ),
+      ),
+    ),
+    getQuotesLatest: vi.fn(async () =>
+      cached(
+        normalizeRwaQuotesLatest(
+          rwaQuotesLatestResponseSchema.parse(quotesLatestFixture),
+          { observedAt },
+        ),
+      ),
+    ),
+    getIssuers: vi.fn(),
+    getIssuer: vi.fn(),
+  };
+}
+
+describe("RWA application service", () => {
+  it("returns a safe explorer DTO with derived turnover", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getExplorer({
+      assetType: "government_security",
+      limit: 20,
+    });
+
+    expect(result.items[0]).toMatchObject({
+      rwaId: 101,
+      turnoverRatio: 0.05,
+    });
+    expect(result.sourceStatus.cache).not.toHaveProperty("key");
+    expect(result.sourceStatus.evidence.endpoint).toBe(
+      "/v5/real-world-assets/assets/list",
+    );
+    expect(data.getAssets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assetType: "government_security",
+        convert: "USD",
+        limit: 20,
+      }),
+    );
+  });
+
+  it("orchestrates detail sources and analysis without exposing cache keys", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.asset.rwaId).toBe(101);
+    expect(result.metadata?.rwaId).toBe(101);
+    expect(result.marketPairs?.pairs).toHaveLength(1);
+    expect(result.analysis.scenario).toMatchObject({
+      status: "available",
+      estimatedExitDays: 4,
+    });
+    expect(result.sourceStatuses).toHaveLength(4);
+    expect(JSON.stringify(result)).not.toContain("internal-cache-key");
+    expect(result.dataGaps).toEqual([]);
+  });
+
+  it("records a valid detail view without making activity tracking critical", async () => {
+    const data = repository();
+    const activityRecorder = {
+      recordView: vi.fn(async () => {
+        throw new Error("activity database unavailable");
+      }),
+    };
+    const service = createRwaApplicationService({
+      repository: data,
+      activityRecorder,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.asset.rwaId).toBe(101);
+    expect(activityRecorder.recordView).toHaveBeenCalledWith(
+      expect.objectContaining({ rwaId: 101 }),
+    );
+  });
+
+  it("keeps detail usable when optional sources fail", async () => {
+    const data = repository();
+    vi.mocked(data.getInfo).mockRejectedValueOnce(
+      new Error("metadata unavailable"),
+    );
+    vi.mocked(data.getMarketPairs).mockRejectedValueOnce(
+      new Error("pairs unavailable"),
+    );
+    vi.mocked(data.getAssets).mockRejectedValueOnce(
+      new Error("benchmark unavailable"),
+    );
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.asset.rwaId).toBe(101);
+    expect(result.metadata).toBeNull();
+    expect(result.marketPairs).toBeNull();
+    expect(result.dataGaps).toEqual(
+      expect.arrayContaining([
+        { source: "metadata", code: "SOURCE_UNAVAILABLE" },
+        { source: "marketPairs", code: "SOURCE_UNAVAILABLE" },
+        { source: "assets", code: "SOURCE_UNAVAILABLE" },
+      ]),
+    );
+  });
+
+  it("compares assets with one shared scenario and sorts available exit days", async () => {
+    const data = repository();
+    const quotes = await data.getQuotesLatest({ rwaId: "101" });
+    const first = quotes.value.data[0]!;
+    vi.mocked(data.getQuotesLatest).mockResolvedValue({
+      ...quotes,
+      value: {
+        ...quotes.value,
+        data: [
+          first,
+          {
+            ...first,
+            rwaId: 102,
+            name: "Lower Capacity Asset",
+            symbol: "LOW",
+            slug: "lower-capacity-asset",
+            quote: { ...first.quote, tokenizedVolume24h: 25_000 },
+          },
+        ],
+      },
+    });
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.compareAssets({
+      rwaIds: [102, 101],
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.items.map((item) => item.asset.rwaId)).toEqual([101, 102]);
+    expect(result.scenario).toEqual({
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+    expect(result.failures).toEqual([]);
+  });
+
+  it("returns sanitized evidence parameters, lineage, and excerpts", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetEvidence({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "quotes",
+          parameters: { rwaId: 101, convert: "USD" },
+          features: expect.arrayContaining(["exit capacity"]),
+        }),
+      ]),
+    );
+    expect(result.metricLineage).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ metric: "estimatedExitDays" }),
+      ]),
+    );
+    expect(result.excerpt).toMatchObject({
+      currency: "USD",
+      tokenCount: 1,
+      marketPairCount: 1,
+    });
+    expect(JSON.stringify(result)).not.toContain("internal-cache-key");
+  });
+
+  it("fails safely when the required quote source is unavailable", async () => {
+    const data = repository();
+    vi.mocked(data.getQuotesLatest).mockRejectedValueOnce(
+      new Error("secret upstream detail"),
+    );
+    const service = createRwaApplicationService({ repository: data });
+
+    await expect(
+      service.getAssetDetail({
+        rwaId: 101,
+        positionValue: 100_000,
+        participationRate: 0.05,
+        stressHaircut: 0,
+      }),
+    ).rejects.toMatchObject({
+      code: "REQUIRED_SOURCE_UNAVAILABLE",
+    } satisfies Partial<ApplicationServiceError>);
+  });
+
+  it("marks the complete response stale when a required dataset is stale", async () => {
+    const data = repository();
+    const staleQuote = await data.getQuotesLatest({ rwaId: "101" });
+    vi.mocked(data.getQuotesLatest).mockResolvedValueOnce({
+      ...staleQuote,
+      cache: { ...staleQuote.cache, state: "stale" },
+    });
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+    expect(result.stale).toBe(true);
+  });
+});

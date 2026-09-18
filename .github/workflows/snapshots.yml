@@ -1,0 +1,64 @@
+name: RWA snapshots
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+    - cron: "2,17,32,47 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Snapshot mode
+        required: true
+        default: priority
+        type: choice
+        options:
+          - priority
+          - broad
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rwa-snapshot-worker
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    env:
+      CMC_API_KEY: ${{ secrets.CMC_API_KEY }}
+      CMC_API_BASE_URL: https://pro-api.coinmarketcap.com
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Select snapshot mode
+        id: mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "2,17,32,47 * * * *" ]; then
+            echo "value=broad" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=priority" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run snapshot worker
+        if: env.CMC_API_KEY != '' && env.DATABASE_URL != ''
+        run: pnpm snapshot:${{ steps.mode.outputs.value }}
+
+      - name: Explain skipped snapshot
+        if: env.CMC_API_KEY == '' || env.DATABASE_URL == ''
+        run: echo "Snapshot skipped because required repository secrets are not configured."

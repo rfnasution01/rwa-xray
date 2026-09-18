@@ -1,0 +1,23 @@
+{
+  "data": {
+    "issuers": [
+      {
+        "issuer_id": "6878977dcbbf471de3366e85",
+        "name": "Example Issuer",
+        "website": "https://example.invalid",
+        "logo": null,
+        "num_tokens": 1
+      }
+    ],
+    "total_size": 1,
+    "has_more": false
+  },
+  "status": {
+    "timestamp": "2026-09-09T06:50:00.000Z",
+    "error_code": 0,
+    "error_message": "",
+    "elapsed": 10,
+    "credit_count": 1,
+    "notice": ""
+  }
+}

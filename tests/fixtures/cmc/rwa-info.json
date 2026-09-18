@@ -1,0 +1,35 @@
+{
+  "data": {
+    "rwa_assets": [
+      {
+        "rwa_id": 101,
+        "name": "Example Treasury Bill",
+        "symbol": "EXTB",
+        "slug": "example-treasury-bill",
+        "asset_type": "government_security",
+        "rwa_rank": 1,
+        "has_tokens": true,
+        "website": "https://example.invalid",
+        "employees": null,
+        "founded": null,
+        "industry": "Government Securities",
+        "cik": null,
+        "primary_exchange": null,
+        "about": {
+          "description": "Sanitized fixture for automated tests.",
+          "logo": null,
+          "website": "https://example.invalid",
+          "date_added": "2026-01-01T00:00:00.000Z"
+        }
+      }
+    ]
+  },
+  "status": {
+    "timestamp": "2026-09-09T06:50:00.000Z",
+    "error_code": 0,
+    "error_message": "",
+    "elapsed": 10,
+    "credit_count": 1,
+    "notice": ""
+  }
+}

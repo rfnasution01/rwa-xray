@@ -1,0 +1,52 @@
+{
+  "data": {
+    "rwa_id": 101,
+    "name": "Example Treasury Bill",
+    "symbol": "EXTB",
+    "num_market_pairs": 1,
+    "market_pairs": [
+      {
+        "exchange": {
+          "exchange_id": 270,
+          "name": "Example Exchange",
+          "slug": "example-exchange"
+        },
+        "market_id": 99001,
+        "market_pair": "EXTBX/USDT",
+        "category": "spot",
+        "fee_type": "percentage",
+        "market_pair_base": {
+          "crypto_id": 40101,
+          "symbol": "EXTBX",
+          "exchange_symbol": "EXTBX",
+          "currency_type": "cryptocurrency"
+        },
+        "market_pair_quote": {
+          "crypto_id": 825,
+          "symbol": "USDT",
+          "exchange_symbol": "USDT",
+          "currency_type": "cryptocurrency"
+        },
+        "quotes": [
+          {
+            "crypto_id": 2781,
+            "symbol": "USD",
+            "price": 100.25,
+            "volume_24h": 500000,
+            "last_updated": "2026-09-09T06:49:59.000Z"
+          }
+        ]
+      }
+    ],
+    "total_size": 1,
+    "has_more": false
+  },
+  "status": {
+    "timestamp": "2026-09-09T06:50:00.000Z",
+    "error_code": 0,
+    "error_message": "",
+    "elapsed": 10,
+    "credit_count": 1,
+    "notice": ""
+  }
+}

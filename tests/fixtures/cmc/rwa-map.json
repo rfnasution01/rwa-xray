@@ -1,0 +1,27 @@
+{
+  "data": {
+    "rwa_assets": [
+      {
+        "rwa_id": 101,
+        "name": "Example Treasury Bill",
+        "symbol": "EXTB",
+        "slug": "example-treasury-bill",
+        "asset_type": "government_security",
+        "rwa_rank": 1,
+        "has_tokens": true,
+        "first_historical_data": "2026-01-01T00:00:00.000Z",
+        "last_historical_data": "2026-09-09T00:00:00.000Z"
+      }
+    ],
+    "total_size": 1,
+    "has_more": false
+  },
+  "status": {
+    "timestamp": "2026-09-09T06:50:00.000Z",
+    "error_code": 0,
+    "error_message": "",
+    "elapsed": 10,
+    "credit_count": 0,
+    "notice": ""
+  }
+}
