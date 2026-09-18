@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AssetDetailView } from "@/components/asset-detail-view";
-import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "Asset X-Ray",
@@ -22,7 +21,6 @@ export default async function AssetPage({
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <SiteHeader />
       <AssetDetailView rwaId={parsed} />
     </main>
   );

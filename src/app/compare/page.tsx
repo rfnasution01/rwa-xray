@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { CompareView } from "@/components/compare-view";
-import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "Compare RWA Capacity",
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 export default function ComparePage() {
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <SiteHeader />
       <CompareView />
     </main>
   );

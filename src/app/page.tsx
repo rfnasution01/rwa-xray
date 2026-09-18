@@ -16,7 +16,6 @@ import {
   MotionItem,
   MotionStagger,
 } from "@/components/landing-motion";
-import { SiteHeader } from "@/components/site-header";
 
 const principles = [
   {
@@ -39,8 +38,6 @@ const principles = [
 export default function Home() {
   return (
     <main className="landing-shell min-h-screen overflow-hidden bg-[#02090b] text-[#e9f5f4]">
-      <SiteHeader variant="landing" />
-
       <section className="fx-hero" aria-labelledby="landing-title">
         <div className="fx-hero-grid" aria-hidden="true" />
         <div className="fx-hero-glow" aria-hidden="true" />
@@ -87,15 +84,16 @@ export default function Home() {
             </MotionItem>
           </MotionStagger>
 
-          <MotionFloat className="relative -mx-10 mt-10 min-h-[360px] lg:absolute lg:top-0 lg:right-[-7%] lg:bottom-0 lg:mt-0 lg:w-[64%]">
+          <MotionFloat className="relative mt-10 flex min-w-0 items-center lg:mt-0 lg:w-full">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(36,235,229,0.14),transparent_58%)]" />
             <Image
               src="/illustrations/rwa-market-globe.webp"
               alt="Connected global real-world asset markets visualized as a digital globe"
-              fill
+              width={1536}
+              height={1024}
               priority
-              sizes="(max-width: 1024px) 110vw, 64vw"
-              className="object-contain object-center lg:object-right"
+              sizes="(max-width: 1024px) 100vw, 54vw"
+              className="relative h-auto w-full object-contain"
             />
           </MotionFloat>
         </div>
