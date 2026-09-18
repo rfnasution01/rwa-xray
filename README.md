@@ -6,6 +6,10 @@ RWA X-Ray membantu investor, analis, dan treasury manager memahami apakah sebuah
 
 Proyek ini dirancang untuk **Build with CMC: API Hackathon 2026**, track **Real World Assets**.
 
+**Live demo:** [rwa-xray.vercel.app](https://rwa-xray.vercel.app)
+
+**Source:** [github.com/rfnasution01/rwa-xray](https://github.com/rfnasution01/rwa-xray)
+
 ## Masalah
 
 Market cap tidak sama dengan likuiditas. Sebuah token dapat memiliki valuasi besar, tetapi:
@@ -164,7 +168,7 @@ Sudah tersedia:
 - `POST /api/compare` serta dedicated `GET /api/assets/:rwaId/evidence` dengan validated input dan safe response;
 - production security headers, configuration-aware readiness, manual GitHub smoke workflow, dan secret-safe production smoke harness.
 
-Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta enam endpoint CMC. `market-pairs/list` masih diblokir subscription plan (`403/1006`), sehingga verifikasi penuh tetap gagal. Adaptive snapshot worker, GitHub Actions scheduler, dan production deployment configuration telah tersedia. Public Vercel deployment masih memerlukan repository remote serta account-side environment setup. Historical Replay API/UI, raw-pair hourly aggregation/retention, dan monitoring integration belum selesai.
+Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta enam endpoint CMC. `market-pairs/list` masih diblokir subscription plan (`403/1006`), sehingga verifikasi penuh tetap gagal. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Historical Replay API/UI, raw-pair hourly aggregation/retention, dan monitoring integration belum selesai.
 
 ## Disclaimer
 

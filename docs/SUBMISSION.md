@@ -2,9 +2,9 @@
 
 ## 1. Persyaratan wajib
 
-- [ ] Produk benar-benar berjalan.
-- [ ] Repository bersifat publik.
-- [ ] Demo deployment, working demo, atau screen recording tersedia.
+- [x] Produk benar-benar berjalan.
+- [x] Repository bersifat publik.
+- [x] Demo deployment tersedia di `https://rwa-xray.vercel.app`.
 - [ ] X post menghubungkan submission dan demo video.
 - [ ] Hashtag `#BuildwithCMC` digunakan.
 - [ ] Endpoint CMC ditulis eksplisit.
@@ -47,13 +47,13 @@ Tanpa CMC API, aplikasi harus mengintegrasikan dan menormalisasi banyak token, i
 
 Centang hanya yang benar-benar dipakai implementasi:
 
-- [ ] `GET /v5/real-world-assets/map`
-- [ ] `GET /v5/real-world-assets/info`
-- [ ] `GET /v5/real-world-assets/assets/list`
-- [ ] `GET /v5/real-world-assets/market-pairs/list`
-- [ ] `GET /v5/real-world-assets/quotes/latest`
-- [ ] `GET /v5/real-world-assets/issuers/list`
-- [ ] `GET /v5/real-world-assets/issuers`
+- [x] `GET /v5/real-world-assets/map`
+- [x] `GET /v5/real-world-assets/info`
+- [x] `GET /v5/real-world-assets/assets/list`
+- [x] `GET /v5/real-world-assets/market-pairs/list` — integrated; live entitlement currently returns `403/1006`
+- [x] `GET /v5/real-world-assets/quotes/latest`
+- [x] `GET /v5/real-world-assets/issuers/list`
+- [x] `GET /v5/real-world-assets/issuers`
 
 Untuk setiap endpoint tulis:
 
@@ -106,10 +106,10 @@ Jelaskan pengguna sasaran, keterbatasan, dan roadmap singkat.
 
 ### Does it work — 30
 
-- [ ] Demo URL stabil dan dapat dibuka tanpa akun.
-- [ ] Skenario default langsung tersedia.
-- [ ] Error state tidak merusak seluruh halaman.
-- [ ] Mobile dan desktop telah diuji.
+- [x] Demo URL stabil dan dapat dibuka tanpa akun.
+- [x] Skenario default langsung tersedia.
+- [x] Error state tidak merusak seluruh halaman.
+- [ ] Responsive layouts tersedia; final mobile dan desktop device audit tetap diperlukan.
 
 ### Usefulness — 25
 
@@ -125,10 +125,10 @@ Jelaskan pengguna sasaran, keterbatasan, dan roadmap singkat.
 
 ### Code quality — 15
 
-- [ ] Setup berjalan dari README.
-- [ ] Formula memiliki test.
-- [ ] Typecheck/lint/CI lulus.
-- [ ] Architecture, methodology, API usage, dan limitations tersedia.
+- [x] Setup berjalan dari README.
+- [x] Formula memiliki test.
+- [x] Typecheck/lint/CI lulus.
+- [x] Architecture, methodology, API usage, dan limitations tersedia.
 
 ### Presentation — 10
 
@@ -156,10 +156,10 @@ Sesuaikan mention dan tautan dengan akun/event resmi ketika submission.
 
 ## 8. Repository release checklist
 
-- [ ] LICENSE dipilih.
-- [ ] `.env.example` tidak berisi secret.
-- [ ] `.gitignore` benar.
-- [ ] Git history dipindai.
+- [x] LICENSE dipilih.
+- [x] `.env.example` tidak berisi secret.
+- [x] `.gitignore` benar.
+- [x] Staged tree dipindai sebelum initial commit; CI Gitleaks memindai full history.
 - [ ] Fixture API telah disanitasi.
 - [ ] README mempunyai screenshot dan live URL.
 - [ ] Commit/tag final dibuat.

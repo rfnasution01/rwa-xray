@@ -2,6 +2,8 @@
 
 Target deployment RWA X-Ray adalah Vercel dengan Supabase PostgreSQL dan snapshot scheduler di GitHub Actions. Dokumen ini tidak menyimpan nilai credential.
 
+Production aktif di [https://rwa-xray.vercel.app](https://rwa-xray.vercel.app). Repository publik berada di [https://github.com/rfnasution01/rwa-xray](https://github.com/rfnasution01/rwa-xray).
+
 ## 1. Prasyarat
 
 - Repository publik telah dibuat dan dihubungkan ke project ini.

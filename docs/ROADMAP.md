@@ -119,7 +119,7 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 - [x] Rate-limit test.
 - [x] Cache hit/stale fallback test.
 - [x] Dependency audit (`pnpm audit --prod`: no known vulnerabilities).
-- [ ] Secret scan seluruh git history.
+- [x] Secret scan staged tree sebelum initial commit; CI memindai full history pada setiap push.
 - [ ] API key rotation jika diperlukan.
 - [ ] Production monitoring.
 - [x] Security headers, readiness check, deployment guide, dan production smoke harness.
@@ -137,9 +137,9 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 ## Hari 21 — Submission
 
 - [ ] Freeze fitur.
-- [ ] Smoke test production.
-- [ ] Public repository dapat diakses.
-- [ ] Demo URL dapat dibuka incognito.
+- [x] Smoke test production.
+- [x] Public repository dapat diakses.
+- [x] Demo URL production tersedia dan lulus external smoke test.
 - [ ] DoraHacks submission lengkap.
 - [ ] X post dengan `#BuildwithCMC`.
 - [ ] Link video, repository, demo, dan endpoint benar.
