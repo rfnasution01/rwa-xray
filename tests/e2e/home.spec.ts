@@ -201,6 +201,22 @@ test("compares assets under one shared scenario", async ({ page }) => {
   await expect(page.getByText(/not a “best asset” ranking/i)).toBeVisible();
 });
 
+test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRwaApi(page);
+  await page.goto("/assets");
+
+  await expect(
+    page.getByRole("heading", { name: "Asset Explorer" }),
+  ).toBeVisible();
+  await expect(page.getByText("Asset registry")).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+});
+
 test("filters and opens a live Explorer row", async ({ page }) => {
   await mockRwaApi(page);
   await page.goto("/assets");
