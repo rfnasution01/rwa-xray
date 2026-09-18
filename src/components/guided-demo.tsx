@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowRight,
@@ -30,6 +31,7 @@ const haircutPresets = [0, 0.25, 0.5, 0.75];
 
 export function GuidedDemo() {
   const searchParams = useSearchParams();
+  const reduceMotion = useReducedMotion();
   const requestedId = parseRwaId(searchParams.get("asset"));
   const [position, setPosition] = useState(100_000);
   const [participation, setParticipation] = useState(0.05);
@@ -97,7 +99,13 @@ export function GuidedDemo() {
       className="relative mx-auto max-w-[1600px] px-5 py-12 sm:px-8 lg:px-14 lg:py-16"
     >
       <div className="pointer-events-none absolute top-0 left-1/2 h-72 w-[70%] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(29,219,211,0.07),transparent_68%)]" />
-      <div className="relative mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <motion.div
+        className="relative mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end"
+        initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.7, ease: [0.2, 0.75, 0.25, 1] }}
+      >
         <div>
           <p className="fx-kicker">Guided live scenario</p>
           <h2 className="mt-3 text-2xl font-medium tracking-[-0.03em] text-[#edf8f6] sm:text-3xl">
@@ -112,7 +120,7 @@ export function GuidedDemo() {
           Explore all assets
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
-      </div>
+      </motion.div>
 
       {isLoading ? <DemoSkeleton /> : null}
       {error ? (
@@ -146,7 +154,12 @@ export function GuidedDemo() {
             </StatusBanner>
           ) : null}
 
-          <div className="fx-dashboard-frame">
+          <motion.div
+            className="fx-dashboard-frame"
+            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.2, 0.75, 0.25, 1] }}
+          >
             <div className="fx-dashboard-header">
               <span className="flex items-center gap-3">
                 <span className="h-px w-8 bg-[#50eee7]" />
@@ -171,7 +184,7 @@ export function GuidedDemo() {
               </div>
               <EvidenceSidebar data={detail.data} />
             </div>
-          </div>
+          </motion.div>
 
           <p className="font-mono text-[10px] leading-5 tracking-[0.06em] text-[#557b7d]">
             Capacity estimate based on observed 24-hour volume. It does not
@@ -208,10 +221,7 @@ function AssetSummary({ data }: { data: AssetDetailResponse }) {
           </div>
         </div>
         <div className="flex items-center gap-2 font-mono text-[9px] tracking-wider text-[#628a8c] uppercase">
-          <span
-            className="size-1.5 rounded-full bg-[#48eae2] shadow-[0_0_8px_#48eae2]"
-            aria-hidden="true"
-          />
+          <LiveDot />
           Observed {formatRelativeTime(analysis.calculatedAt)}
         </div>
       </div>
@@ -272,6 +282,22 @@ function EvidenceSidebar({ data }: { data: AssetDetailResponse }) {
   );
 }
 
+function LiveDot() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.span
+      className="size-1.5 rounded-full bg-[#48eae2] shadow-[0_0_8px_#48eae2]"
+      animate={
+        reduceMotion
+          ? undefined
+          : { opacity: [0.45, 1, 0.45], scale: [0.86, 1.2, 0.86] }
+      }
+      transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+      aria-hidden="true"
+    />
+  );
+}
+
 function ScoreDial({
   label,
   score,
@@ -283,6 +309,7 @@ function ScoreDial({
   status: string;
   tone: "cyan" | "amber";
 }) {
+  const reduceMotion = useReducedMotion();
   const value = score === null ? 0 : Math.round(score);
   const color = tone === "cyan" ? "#50eee7" : "#ffd096";
   return (
@@ -291,11 +318,24 @@ function ScoreDial({
         {label}
       </p>
       <div className="mt-4 flex items-center gap-5">
-        <div
+        <motion.div
           className="grid size-24 shrink-0 place-items-center rounded-full p-[7px]"
           style={{
             background: `conic-gradient(${color} ${value * 3.6}deg, #173234 0deg)`,
           }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  scale: [1, 1.025, 1],
+                  filter: [
+                    "drop-shadow(0 0 0 rgba(67,229,221,0))",
+                    "drop-shadow(0 0 10px rgba(67,229,221,0.14))",
+                    "drop-shadow(0 0 0 rgba(67,229,221,0))",
+                  ],
+                }
+          }
+          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
           aria-label={`${label}: ${score === null ? "unavailable" : `${value} out of 100`}`}
         >
           <div className="grid size-full place-items-center rounded-full bg-[#061315] text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
@@ -306,7 +346,7 @@ function ScoreDial({
               <span className="font-mono text-[8px] text-[#668789]">/ 100</span>
             </span>
           </div>
-        </div>
+        </motion.div>
         <div>
           <p className="text-sm font-semibold" style={{ color }}>
             {status}
@@ -588,18 +628,62 @@ function DemoError({ error, retry }: { error: unknown; retry(): void }) {
 
 function DemoSkeleton() {
   return (
-    <div
-      className="animate-pulse rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900"
-      aria-label="Loading live RWA data"
-    >
-      <div className="h-12 w-64 rounded-xl bg-slate-200 dark:bg-slate-800" />
-      <div className="mt-8 grid gap-3 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-24 rounded-2xl bg-slate-100 dark:bg-slate-800"
-          />
-        ))}
+    <div className="fx-skeleton" aria-label="Loading live RWA data">
+      <div className="fx-skeleton-header">
+        <span className="flex items-center gap-3">
+          <span className="h-px w-8 bg-[#4edfd8]" />
+          Establishing live data link
+        </span>
+        <span className="fx-skeleton-status">Synchronizing</span>
+      </div>
+      <div className="grid xl:grid-cols-[0.78fr_1.42fr_0.72fr]">
+        <div className="space-y-7 p-5 sm:p-7">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index}>
+              <div className="fx-skeleton-line h-2.5 w-32" />
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {Array.from({ length: 3 }).map((__, itemIndex) => (
+                  <div key={itemIndex} className="fx-skeleton-cell h-10" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border-[#153b3d] p-5 sm:p-7 xl:border-x">
+          <div className="flex items-center gap-4">
+            <div className="fx-skeleton-cell size-14 shrink-0" />
+            <div className="w-full space-y-3">
+              <div className="fx-skeleton-line h-4 w-2/5" />
+              <div className="fx-skeleton-line h-2 w-1/4" />
+            </div>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-px border border-[#123537] bg-[#123537] lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-20 bg-[#051315] p-4">
+                <div className="fx-skeleton-line h-2 w-4/5" />
+                <div className="fx-skeleton-line mt-4 h-4 w-3/5" />
+              </div>
+            ))}
+          </div>
+          <div className="fx-skeleton-line mt-9 h-2.5 w-28" />
+          <div className="fx-skeleton-line mt-5 h-14 w-3/5" />
+          <div className="fx-skeleton-line mt-5 h-2.5 w-full" />
+        </div>
+        <div className="space-y-9 p-5 sm:p-7">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index}>
+              <div className="fx-skeleton-line h-2.5 w-36" />
+              <div className="mt-5 flex items-center gap-4">
+                <div className="fx-skeleton-dial size-20 shrink-0 rounded-full" />
+                <div className="w-full space-y-3">
+                  <div className="fx-skeleton-line h-3 w-1/2" />
+                  <div className="fx-skeleton-line h-2 w-full" />
+                  <div className="fx-skeleton-line h-2 w-4/5" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       <span className="sr-only">Loading live RWA data</span>
     </div>
