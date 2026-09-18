@@ -1,4 +1,11 @@
-import { ArrowDown, DatabaseZap, ScanSearch, ShieldCheck } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  DatabaseZap,
+  Layers3,
+  ShieldCheck,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -8,77 +15,102 @@ import { SiteHeader } from "@/components/site-header";
 const principles = [
   {
     icon: DatabaseZap,
-    title: "Real observations only",
-    body: "Live CoinMarketCap data with a labeled real-cache fallback. Never an unlabeled mock.",
+    title: "Real market data",
+    body: "Observed and normalized RWA activity.",
   },
   {
-    icon: ScanSearch,
-    title: "Capacity, not promises",
-    body: "Explore transparent volume-participation scenarios rather than guaranteed liquidity claims.",
+    icon: Layers3,
+    title: "Transparent methodology",
+    body: "Clearly defined signals, assumptions, and limits.",
   },
   {
     icon: ShieldCheck,
     title: "Evidence before score",
-    body: "Missing pairs, stale timestamps, and issuer gaps stay visible instead of becoming zero.",
+    body: "See the data that drives every assessment.",
   },
 ];
 
 export default function Home() {
   return (
-    <main className="bg-background text-foreground min-h-screen">
-      <SiteHeader />
-      <section className="hero-grid border-b border-slate-200 dark:border-slate-800">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.12fr_0.88fr] lg:px-8 lg:py-24">
-          <div className="self-center">
-            <p className="eyebrow">RWA market capacity intelligence</p>
-            <h1 className="mt-5 max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-balance sm:text-6xl lg:text-7xl">
-              Can I actually{" "}
-              <span className="text-blue-600 dark:text-blue-400">exit?</span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              Stress-test a position against observed RWA volume, inspect
-              concentration risk, and see exactly where the evidence stops.
+    <main className="landing-shell min-h-screen overflow-hidden bg-[#02090b] text-[#e9f5f4]">
+      <SiteHeader variant="landing" />
+
+      <section className="fx-hero" aria-labelledby="landing-title">
+        <div className="fx-hero-grid" aria-hidden="true" />
+        <div className="fx-hero-glow" aria-hidden="true" />
+        <div className="relative mx-auto grid min-h-[620px] max-w-[1600px] items-center px-5 py-14 sm:px-8 lg:grid-cols-[0.92fr_1.08fr] lg:px-14 lg:py-20">
+          <div className="relative z-10 max-w-3xl lg:pb-10">
+            <p className="fx-kicker">
+              Institutional intelligence for a tokenized world
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a className="button-primary" href="#demo">
-                Run guided scenario{" "}
-                <ArrowDown className="size-4" aria-hidden="true" />
+            <h1
+              id="landing-title"
+              className="mt-6 text-[clamp(3.25rem,6vw,6.75rem)] leading-[0.94] font-medium tracking-[-0.065em] text-[#f1f5f2]"
+            >
+              Can I actually <span className="fx-gradient-text">exit</span>
+              <br />
+              this position?
+            </h1>
+            <p className="mt-7 max-w-2xl text-base leading-7 text-[#a2b9ba] sm:text-lg sm:leading-8">
+              Stress-test any tokenized real-world asset against observed market
+              activity, concentration risk, and evidence coverage—before you
+              commit capital.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <a className="fx-button-primary" href="#demo">
+                Run guided scenario
+                <ArrowDownRight className="size-4" aria-hidden="true" />
               </a>
-              <Link className="button-secondary" href="/assets">
+              <Link className="fx-button-secondary" href="/assets">
                 Open Explorer
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
-            <p className="mt-5 text-xs text-slate-500 dark:text-slate-400">
-              Built for treasury and risk analysis · USD scenarios · No account
-              required
+            <p className="mt-6 font-mono text-[10px] tracking-[0.17em] text-[#5f8587] uppercase">
+              Real observations · USD scenarios · No account required
             </p>
           </div>
 
-          <div className="grid gap-3 self-center">
-            {principles.map(({ icon: Icon, title, body }, index) => (
-              <article
-                key={title}
-                className="group rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90"
-              >
-                <div className="flex gap-4">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-slate-400">
-                        0{index + 1}
-                      </span>
-                      <h2 className="font-semibold">{title}</h2>
-                    </div>
-                    <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                      {body}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            ))}
+          <div className="relative -mx-10 mt-10 min-h-[360px] lg:absolute lg:top-0 lg:right-[-7%] lg:bottom-0 lg:mt-0 lg:w-[64%]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(36,235,229,0.14),transparent_58%)]" />
+            <Image
+              src="/illustrations/rwa-market-globe.webp"
+              alt="Connected global real-world asset markets visualized as a digital globe"
+              fill
+              priority
+              sizes="(max-width: 1024px) 110vw, 64vw"
+              className="object-contain object-center lg:object-right"
+            />
           </div>
+        </div>
+      </section>
+
+      <section
+        className="border-y border-[#12383a] bg-[#031012]/90"
+        aria-label="Product principles"
+      >
+        <div className="mx-auto grid max-w-[1600px] md:grid-cols-3">
+          {principles.map(({ icon: Icon, title, body }, index) => (
+            <article
+              key={title}
+              className="group flex min-h-28 items-center gap-5 border-[#12383a] px-6 py-6 md:border-r md:last:border-r-0 lg:px-12"
+            >
+              <span className="grid size-11 shrink-0 place-items-center border border-[#236467] text-[#62f5ee] transition group-hover:bg-[#0a2c2e]">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[9px] tracking-widest text-[#447477]">
+                    0{index + 1}
+                  </span>
+                  <h2 className="text-sm font-semibold tracking-wide text-[#e7f2f0]">
+                    {title}
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-[#78999b]">{body}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -92,10 +124,10 @@ export default function Home() {
 function DemoPageFallback() {
   return (
     <section
-      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
+      className="mx-auto max-w-[1600px] px-5 py-12 sm:px-8 lg:px-14"
       aria-label="Loading guided scenario"
     >
-      <div className="h-96 animate-pulse rounded-3xl bg-slate-200 dark:bg-slate-800" />
+      <div className="h-[620px] animate-pulse border border-[#17484a] bg-[#061416]" />
     </section>
   );
 }

@@ -2,14 +2,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
-
+:root,
 .dark {
   --background: #020617;
   --foreground: #f8fafc;
+}
+
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -54,7 +55,194 @@ a {
     auto;
 }
 
+.landing-shell {
+  color-scheme: dark;
+  background:
+    radial-gradient(
+      circle at 82% 8%,
+      rgb(20 126 125 / 0.12),
+      transparent 25rem
+    ),
+    #02090b;
+}
+
+.fx-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.fx-hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgb(29 92 94 / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(29 92 94 / 0.16) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to right, black, transparent 75%);
+}
+
+.fx-hero-glow {
+  position: absolute;
+  z-index: -1;
+  top: -16rem;
+  right: 10%;
+  width: 45rem;
+  height: 45rem;
+  border-radius: 999px;
+  background: rgb(29 214 206 / 0.08);
+  filter: blur(100px);
+}
+
+.fx-gradient-text {
+  color: #60f5ee;
+  text-shadow: 0 0 28px rgb(53 234 226 / 0.36);
+}
+
+.fx-result-value {
+  color: #59f2eb;
+  text-shadow: 0 0 24px rgb(53 234 226 / 0.24);
+}
+
+.fx-dashboard-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #1a5557;
+  background: rgb(3 14 16 / 0.92);
+  box-shadow:
+    0 28px 80px rgb(0 0 0 / 0.32),
+    inset 0 0 60px rgb(21 133 132 / 0.025);
+}
+
+.fx-dashboard-frame::before,
+.fx-dashboard-frame::after {
+  position: absolute;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  content: "";
+  pointer-events: none;
+}
+
+.fx-dashboard-frame::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #64f5ee;
+  border-left: 2px solid #64f5ee;
+}
+
+.fx-dashboard-frame::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 2px solid #64f5ee;
+  border-bottom: 2px solid #64f5ee;
+}
+
+.fx-dashboard-header {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #153b3d;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #65f3ec;
+  text-transform: uppercase;
+}
+
+.landing-shell .input-label {
+  color: #b6cbca;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-shell .preset-button {
+  min-height: 38px;
+  border-radius: 1px;
+  border-color: #194648;
+  background: #061517;
+  color: #86a4a5;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.625rem;
+}
+
+.landing-shell .preset-button:hover {
+  border-color: #43c8c3;
+  color: #dff7f4;
+}
+
+.landing-shell .preset-button-active {
+  border-color: #50e9e2;
+  background: linear-gradient(180deg, #104648, #082426);
+  color: #dffffb;
+  box-shadow:
+    inset 0 0 16px rgb(74 238 230 / 0.12),
+    0 0 12px rgb(46 218 210 / 0.09);
+}
+
+.landing-shell .control-input {
+  height: 42px;
+  border-radius: 1px;
+  border-color: #1b5052;
+  background: #061416;
+  color: #d8e9e7;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.fx-range {
+  accent-color: #52e8e1;
+}
+
+.landing-shell .status-banner {
+  border-radius: 1px;
+  border-color: #1d5557;
+  background: #071a1c;
+  color: #a9cfcd;
+}
+
+.landing-shell .status-banner-warning {
+  border-color: #7b582b;
+  background: #1e170d;
+  color: #f3ce99;
+}
+
 @layer components {
+  .fx-kicker {
+    @apply font-mono text-[10px] font-semibold tracking-[0.28em] text-[#5cebe5] uppercase;
+  }
+
+  .fx-nav-link {
+    @apply inline-flex min-h-10 items-center px-3 text-xs font-medium tracking-wide text-[#a4bbbb] transition hover:text-[#64f5ee] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4ee8e1];
+  }
+
+  .fx-header-cta {
+    @apply inline-flex min-h-10 items-center justify-center gap-3 border border-[#2bbcb8] bg-[#0b292b] px-4 font-mono text-[10px] font-semibold tracking-[0.12em] text-[#8afff8] uppercase shadow-[inset_0_0_22px_rgba(38,224,216,0.06)] transition hover:border-[#63f4ed] hover:bg-[#103638] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4ee8e1] sm:px-6;
+  }
+
+  .fx-button-primary {
+    @apply inline-flex min-h-12 items-center justify-center gap-4 border border-[#59eee7] bg-[#55e3dc] px-6 text-xs font-bold tracking-[0.08em] text-[#032123] uppercase shadow-[0_0_24px_rgba(47,225,217,0.2)] transition hover:bg-[#77fff8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5ff5ee];
+  }
+
+  .fx-button-secondary {
+    @apply inline-flex min-h-12 items-center justify-center gap-4 border border-[#276467] bg-[#051315]/80 px-6 text-xs font-bold tracking-[0.08em] text-[#8dd4d1] uppercase transition hover:border-[#51e8e1] hover:text-[#dffffb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5ff5ee];
+  }
+
+  .fx-text-link {
+    @apply inline-flex min-h-10 items-center gap-3 self-start font-mono text-[10px] font-semibold tracking-[0.13em] text-[#67ddd8] uppercase transition hover:text-[#a1fff9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5ff5ee];
+  }
+
+  .fx-data-badge {
+    @apply inline-flex border border-[#226163] bg-[#082123] px-2 py-1 font-mono text-[8px] font-bold tracking-[0.14em] text-[#55e9e2] uppercase;
+  }
+
   .eyebrow {
     @apply text-xs font-bold tracking-[0.16em] text-blue-600 uppercase dark:text-blue-400;
   }

@@ -151,7 +151,9 @@ test("runs the guided capacity scenario", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Can I actually exit?" }),
+    page.getByRole("heading", {
+      name: "Can I actually exit this position?",
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Treasury Capacity Note" }),
@@ -161,6 +163,24 @@ test("runs the guided capacity scenario", async ({ page }) => {
   await page.getByRole("button", { name: "1%", exact: true }).click();
   await expect(page.getByText("20", { exact: true })).toBeVisible();
   await expect(page.getByText(/not a promise of execution/i)).toBeVisible();
+});
+
+test("keeps the redesigned landing usable on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRwaApi(page);
+  await page.goto("/");
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Can I actually exit this position?",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Live scenario terminal")).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
 });
 
 test("compares assets under one shared scenario", async ({ page }) => {

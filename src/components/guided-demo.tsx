@@ -94,21 +94,22 @@ export function GuidedDemo() {
   return (
     <section
       id="demo"
-      className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16"
+      className="relative mx-auto max-w-[1600px] px-5 py-12 sm:px-8 lg:px-14 lg:py-16"
     >
-      <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div className="pointer-events-none absolute top-0 left-1/2 h-72 w-[70%] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(29,219,211,0.07),transparent_68%)]" />
+      <div className="relative mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="eyebrow">Guided live scenario</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Test observed market capacity
+          <p className="fx-kicker">Guided live scenario</p>
+          <h2 className="mt-3 text-2xl font-medium tracking-[-0.03em] text-[#edf8f6] sm:text-3xl">
+            Stress-test observed market capacity
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-            Start with a $100,000 position and adjust how much of reported
-            24-hour volume you are willing to participate in.
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#78999b]">
+            Apply one transparent volume-participation scenario to live RWA
+            observations.
           </p>
         </div>
-        <Link className="button-secondary" href="/assets">
-          Explore all assets{" "}
+        <Link className="fx-text-link" href="/assets">
+          Explore all assets
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       </div>
@@ -124,7 +125,7 @@ export function GuidedDemo() {
       ) : null}
       {!isLoading && !error && selectedId === null ? <EmptyDemo /> : null}
       {detail.data ? (
-        <div className="space-y-4">
+        <div className="relative space-y-3">
           {discovery.data?.fallbackUsed && requestedId === null ? (
             <StatusBanner tone="warning">
               No government-security assets are currently returned by CMC.
@@ -145,9 +146,17 @@ export function GuidedDemo() {
             </StatusBanner>
           ) : null}
 
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <AssetSummary data={detail.data} />
-            <div className="grid border-t border-slate-200 lg:grid-cols-[0.82fr_1.18fr] dark:border-slate-800">
+          <div className="fx-dashboard-frame">
+            <div className="fx-dashboard-header">
+              <span className="flex items-center gap-3">
+                <span className="h-px w-8 bg-[#50eee7]" />
+                Live scenario terminal
+              </span>
+              <span className="hidden text-[9px] tracking-[0.2em] text-[#47787a] uppercase md:block">
+                Stress test today. Allocate with clearer evidence tomorrow.
+              </span>
+            </div>
+            <div className="grid xl:grid-cols-[0.78fr_1.42fr_0.72fr]">
               <ScenarioControls
                 position={position}
                 participation={participation}
@@ -156,11 +165,15 @@ export function GuidedDemo() {
                 onParticipation={setParticipation}
                 onHaircut={setHaircut}
               />
-              <ScenarioResults scenario={scenario} />
+              <div className="border-[#153b3d] xl:border-x">
+                <AssetSummary data={detail.data} />
+                <ScenarioResults scenario={scenario} />
+              </div>
+              <EvidenceSidebar data={detail.data} />
             </div>
           </div>
 
-          <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+          <p className="font-mono text-[10px] leading-5 tracking-[0.06em] text-[#557b7d]">
             Capacity estimate based on observed 24-hour volume. It does not
             model order-book depth, slippage, fees, redemption restrictions, or
             guaranteed execution. Not investment advice.
@@ -177,31 +190,33 @@ function AssetSummary({ data }: { data: AssetDetailResponse }) {
     <div className="p-5 sm:p-7">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div className="flex items-center gap-4">
-          <div className="grid size-12 place-items-center rounded-2xl bg-slate-950 font-mono text-sm font-bold text-white dark:bg-white dark:text-slate-950">
+          <div className="grid size-14 place-items-center border border-[#286b6e] bg-[#092326] font-mono text-xs font-bold tracking-wider text-[#6df8f1] shadow-[inset_0_0_24px_rgba(42,224,216,0.08)]">
             {asset.symbol.slice(0, 4)}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-xl font-semibold">{asset.name}</h3>
-              <span className="data-badge">
+              <h3 className="text-xl font-medium tracking-tight text-[#f0f7f5]">
+                {asset.name}
+              </h3>
+              <span className="fx-data-badge">
                 {formatAssetType(asset.assetType)}
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 font-mono text-[10px] tracking-[0.12em] text-[#64888a] uppercase">
               {asset.symbol} · CMC RWA #{asset.rwaId}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 font-mono text-[9px] tracking-wider text-[#628a8c] uppercase">
           <span
-            className="size-2 rounded-full bg-emerald-500"
+            className="size-1.5 rounded-full bg-[#48eae2] shadow-[0_0_8px_#48eae2]"
             aria-hidden="true"
           />
           Observed {formatRelativeTime(analysis.calculatedAt)}
         </div>
       </div>
 
-      <dl className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="mt-7 grid grid-cols-2 border-y border-[#14383a] lg:grid-cols-4">
         <Metric
           label="Average tokenized price"
           value={formatCurrency(asset.quote.averageTokenizedPrice)}
@@ -219,27 +234,87 @@ function AssetSummary({ data }: { data: AssetDetailResponse }) {
           value={formatPercent(analysis.metrics.turnoverRatio)}
         />
       </dl>
+    </div>
+  );
+}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <EvidencePill
-          icon={<ShieldCheck className="size-4" aria-hidden="true" />}
-          label="Evidence coverage"
-          value={`${analysis.evidenceCoverage.score}/100 · ${analysis.evidenceCoverage.label}`}
-        />
-        <EvidencePill
-          icon={<Gauge className="size-4" aria-hidden="true" />}
-          label="Market Capacity Health"
-          value={
-            analysis.marketCapacityHealth.score === null
-              ? "Insufficient evidence"
-              : `${Math.round(analysis.marketCapacityHealth.score)}/100`
-          }
-        />
-        <EvidencePill
-          icon={<Database className="size-4" aria-hidden="true" />}
-          label="Methodology"
-          value={`Version ${analysis.methodologyVersion}`}
-        />
+function EvidenceSidebar({ data }: { data: AssetDetailResponse }) {
+  const evidence = data.analysis.evidenceCoverage;
+  const health = data.analysis.marketCapacityHealth;
+  return (
+    <aside className="grid gap-7 bg-[#041113]/80 p-5 sm:p-7 xl:content-start">
+      <ScoreDial
+        label="Evidence coverage"
+        score={evidence.score}
+        status={evidence.label}
+        tone="cyan"
+      />
+      <ScoreDial
+        label="Market capacity health"
+        score={health.score}
+        status={health.status === "available" ? "Observed" : "Unavailable"}
+        tone="amber"
+      />
+      <div className="border border-[#1b5052] bg-[#07191b] p-4">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="size-5 text-[#5ef3ec]" aria-hidden="true" />
+          <div>
+            <p className="text-xs font-semibold text-[#dcebea]">
+              Same asset. A clearer picture.
+            </p>
+            <p className="mt-1 font-mono text-[8px] tracking-[0.22em] text-[#4d8587] uppercase">
+              Methodology v{data.analysis.methodologyVersion}
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function ScoreDial({
+  label,
+  score,
+  status,
+  tone,
+}: {
+  label: string;
+  score: number | null;
+  status: string;
+  tone: "cyan" | "amber";
+}) {
+  const value = score === null ? 0 : Math.round(score);
+  const color = tone === "cyan" ? "#50eee7" : "#ffd096";
+  return (
+    <div>
+      <p className="font-mono text-[10px] tracking-[0.16em] text-[#b0c5c5] uppercase">
+        {label}
+      </p>
+      <div className="mt-4 flex items-center gap-5">
+        <div
+          className="grid size-24 shrink-0 place-items-center rounded-full p-[7px]"
+          style={{
+            background: `conic-gradient(${color} ${value * 3.6}deg, #173234 0deg)`,
+          }}
+          aria-label={`${label}: ${score === null ? "unavailable" : `${value} out of 100`}`}
+        >
+          <div className="grid size-full place-items-center rounded-full bg-[#061315] text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.6)]">
+            <span>
+              <strong className="block text-2xl font-medium" style={{ color }}>
+                {score === null ? "—" : value}
+              </strong>
+              <span className="font-mono text-[8px] text-[#668789]">/ 100</span>
+            </span>
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold" style={{ color }}>
+            {status}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[#668789]">
+            Transparent coverage based on currently available observations.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -254,11 +329,11 @@ function ScenarioControls(props: {
   onHaircut(value: number): void;
 }) {
   return (
-    <div className="bg-slate-50/80 p-5 sm:p-7 dark:bg-slate-950/45">
-      <p className="eyebrow">Scenario inputs</p>
-      <fieldset className="mt-5">
-        <legend className="input-label">Position value</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+    <div className="bg-[#041113]/80 p-5 sm:p-7">
+      <p className="fx-kicker">Scenario inputs</p>
+      <fieldset className="mt-6">
+        <legend className="input-label">01 · Position value</legend>
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {positionPresets.map((value) => (
             <PresetButton
               key={value}
@@ -284,9 +359,9 @@ function ScenarioControls(props: {
           />
         </label>
       </fieldset>
-      <fieldset className="mt-5">
-        <legend className="input-label">Volume participation</legend>
-        <div className="mt-2 grid grid-cols-3 gap-2">
+      <fieldset className="mt-7 border-t border-[#14383a] pt-6">
+        <legend className="input-label">02 · Volume participation</legend>
+        <div className="mt-3 grid grid-cols-3 gap-2">
           {participationPresets.map((value) => (
             <PresetButton
               key={value}
@@ -297,10 +372,10 @@ function ScenarioControls(props: {
             </PresetButton>
           ))}
         </div>
-        <label className="mt-3 flex items-center gap-3 text-xs text-slate-500">
+        <label className="mt-4 flex items-center gap-3 text-xs text-[#64888a]">
           <span className="sr-only">Custom volume participation rate</span>
           <input
-            className="w-full accent-blue-600"
+            className="fx-range w-full"
             type="range"
             min="0.1"
             max="20"
@@ -310,14 +385,14 @@ function ScenarioControls(props: {
               props.onParticipation(event.currentTarget.valueAsNumber / 100)
             }
           />
-          <output className="w-12 text-right font-semibold text-slate-700 tabular-nums dark:text-slate-200">
+          <output className="w-12 text-right font-mono text-xs font-semibold text-[#d5e8e6] tabular-nums">
             {formatPercent(props.participation)}
           </output>
         </label>
       </fieldset>
-      <fieldset className="mt-5">
-        <legend className="input-label">Stress haircut</legend>
-        <div className="mt-2 grid grid-cols-4 gap-2">
+      <fieldset className="mt-7 border-t border-[#14383a] pt-6">
+        <legend className="input-label">03 · Stress haircut</legend>
+        <div className="mt-3 grid grid-cols-4 gap-2">
           {haircutPresets.map((value) => (
             <PresetButton
               key={value}
@@ -328,10 +403,10 @@ function ScenarioControls(props: {
             </PresetButton>
           ))}
         </div>
-        <label className="mt-3 flex items-center gap-3 text-xs text-slate-500">
+        <label className="mt-4 flex items-center gap-3 text-xs text-[#64888a]">
           <span className="sr-only">Custom stress haircut</span>
           <input
-            className="w-full accent-blue-600"
+            className="fx-range w-full"
             type="range"
             min="0"
             max="90"
@@ -341,7 +416,7 @@ function ScenarioControls(props: {
               props.onHaircut(event.currentTarget.valueAsNumber / 100)
             }
           />
-          <output className="w-12 text-right font-semibold text-slate-700 tabular-nums dark:text-slate-200">
+          <output className="w-12 text-right font-mono text-xs font-semibold text-[#d5e8e6] tabular-nums">
             {formatPercent(props.haircut)}
           </output>
         </label>
@@ -357,7 +432,7 @@ function ScenarioResults({
 }) {
   if (scenario.status === "unavailable") {
     return (
-      <div className="grid min-h-72 place-items-center p-7 text-center">
+      <div className="grid min-h-72 place-items-center border-t border-[#14383a] p-7 text-center">
         <div>
           <AlertTriangle
             className="mx-auto size-7 text-amber-500"
@@ -372,21 +447,21 @@ function ScenarioResults({
     );
   }
   return (
-    <div className="p-5 sm:p-7">
-      <p className="eyebrow">Scenario result</p>
-      <div className="mt-5 flex items-end gap-3">
-        <span className="text-5xl font-semibold tracking-tight tabular-nums sm:text-6xl">
+    <div className="border-t border-[#14383a] p-5 sm:p-7">
+      <p className="fx-kicker">Scenario result</p>
+      <div className="mt-5 flex flex-wrap items-end gap-3">
+        <span className="fx-result-value text-5xl font-medium tracking-[-0.055em] tabular-nums sm:text-6xl">
           {formatDays(scenario.estimatedExitDays)}
         </span>
-        <span className="pb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+        <span className="pb-2 font-mono text-[10px] tracking-[0.12em] text-[#66898b] uppercase">
           estimated exit days
         </span>
       </div>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+      <p className="mt-3 max-w-xl text-sm leading-6 text-[#85a4a5]">
         This is a volume-participation scenario—not a promise of execution or a
         slippage estimate.
       </p>
-      <dl className="mt-7 grid gap-3 sm:grid-cols-3">
+      <dl className="mt-7 grid border-y border-[#14383a] sm:grid-cols-3">
         <ResultMetric
           icon={<BarChart3 />}
           label="Effective volume"
@@ -409,31 +484,11 @@ function ScenarioResults({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="metric-card">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
-}
-
-function EvidencePill({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 dark:border-slate-800">
-      <span className="text-blue-600 dark:text-blue-400">{icon}</span>
-      <span className="min-w-0">
-        <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-          {label}
-        </span>
-        <span className="block truncate text-xs font-semibold">{value}</span>
-      </span>
+    <div className="border-r border-[#14383a] px-3 py-5 last:border-r-0">
+      <dt className="text-[10px] leading-4 text-[#658789]">{label}</dt>
+      <dd className="mt-2 text-lg font-medium tracking-tight text-[#e7f3f1] tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -448,12 +503,12 @@ function ResultMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl bg-blue-50 p-4 dark:bg-blue-950/30">
-      <span className="text-blue-600 dark:text-blue-400">{icon}</span>
-      <dt className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-        {label}
-      </dt>
-      <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+    <div className="border-r border-[#14383a] px-3 py-5 last:border-r-0">
+      <span className="text-[#51eae3] [&>svg]:size-4">{icon}</span>
+      <dt className="mt-3 text-[10px] text-[#64888a]">{label}</dt>
+      <dd className="mt-1 text-sm font-medium text-[#e3f0ee] tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }

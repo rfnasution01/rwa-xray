@@ -44,7 +44,7 @@ RWA X-Ray menyediakan:
 - Guided demo: posisi **$100.000**, participation rate **5%**, USD.
 - Metrik utama: Estimated Exit Days, Daily Exit Capacity, dan Position-to-Volume Ratio.
 - P1: Historical Replay dan grounded AI Due-Diligence Memo.
-- UI: English, modern fintech, light default + dark mode.
+- UI: English, dark-first Sleek and Futuristic design system dengan light-mode compatibility.
 - Akses publik tanpa akun.
 
 Keputusan lengkap tersedia di [docs/DECISIONS.md](docs/DECISIONS.md).

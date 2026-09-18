@@ -68,8 +68,8 @@ Dokumen ini merangkum keputusan discovery yang telah disetujui. Keputusan ini be
 
 | Area          | Approved decision                                                                                                |
 | ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Visual style  | Modern fintech dashboard with institutional character                                                            |
-| Themes        | Light default plus dark mode                                                                                     |
+| Visual style  | Dark-first Sleek and Futuristic dashboard with institutional character                                           |
+| Themes        | Dark default plus light-mode compatibility; redesign dimulai dari landing                                        |
 | Charts        | Apache ECharts with accessible table/text alternatives                                                           |
 | Components    | shadcn/ui + Radix UI + Tailwind CSS                                                                              |
 | Data fetching | TanStack Query                                                                                                   |

@@ -379,7 +379,7 @@ interface AnalysisMetadata {
 
 ### Product UI
 
-Gunakan bahasa Inggris untuk UI submission utama agar mudah dinilai secara global. Gunakan modern fintech dashboard dengan karakter institutional, light theme sebagai default, dan dark mode. Halaman pertama adalah guided demo dengan curated government-security asset dan fallback valid. Arsitektur harus memungkinkan localization, tetapi jangan membangun sistem i18n kompleks sebelum P0 selesai.
+Gunakan bahasa Inggris untuk UI submission utama agar mudah dinilai secara global. Gunakan dark-first Sleek and Futuristic dashboard dengan karakter institutional serta light-mode compatibility. Redesign dimulai dari landing page sebelum route lain. Halaman pertama adalah guided demo dengan curated government-security asset dan fallback valid. Arsitektur harus memungkinkan localization, tetapi jangan membangun sistem i18n kompleks sebelum P0 selesai.
 
 ### Code
 
