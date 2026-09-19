@@ -1033,7 +1033,30 @@ a {
   }
 
   .fx-nav-link {
-    @apply inline-flex min-h-10 items-center px-3 text-xs font-medium tracking-wide text-[#a4bbbb] transition hover:text-[#64f5ee] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4ee8e1];
+    @apply relative inline-flex min-h-10 items-center px-3 text-xs font-medium tracking-wide text-[#a4bbbb] transition hover:text-[#64f5ee] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4ee8e1];
+  }
+
+  .fx-nav-link::after {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.2rem;
+    left: 0.75rem;
+    height: 1px;
+    content: "";
+    background: transparent;
+    box-shadow: none;
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .fx-nav-link-active {
+    color: #67eee8;
+  }
+
+  .fx-nav-link-active::after {
+    background: #55e9e2;
+    box-shadow: 0 0 9px rgb(85 233 226 / 0.7);
   }
 
   .fx-header-cta {

@@ -1,8 +1,17 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const explorerActive =
+    pathname === "/assets" || pathname.startsWith("/assets/");
+  const compareActive = pathname === "/compare";
+  const methodologyActive = pathname === "/methodology";
+
   return (
     <header className="relative z-30 border-b border-[#103537]/80 bg-[#02090b]/90 text-[#edf8f6] backdrop-blur-xl">
       <div className="mx-auto flex h-[76px] max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-14">
@@ -33,15 +42,34 @@ export function SiteHeader() {
           className="flex items-center gap-1 md:gap-4"
           aria-label="Primary navigation"
         >
-          <Link className="fx-nav-link" href="/assets">
+          <Link
+            className={
+              explorerActive ? "fx-nav-link fx-nav-link-active" : "fx-nav-link"
+            }
+            href="/assets"
+            aria-current={explorerActive ? "page" : undefined}
+          >
             Explorer
           </Link>
-          <Link className="fx-nav-link hidden sm:inline-flex" href="/compare">
+          <Link
+            className={
+              compareActive
+                ? "fx-nav-link fx-nav-link-active hidden sm:inline-flex"
+                : "fx-nav-link hidden sm:inline-flex"
+            }
+            href="/compare"
+            aria-current={compareActive ? "page" : undefined}
+          >
             Compare
           </Link>
           <Link
-            className="fx-nav-link hidden md:inline-flex"
+            className={
+              methodologyActive
+                ? "fx-nav-link fx-nav-link-active hidden md:inline-flex"
+                : "fx-nav-link hidden md:inline-flex"
+            }
             href="/methodology"
+            aria-current={methodologyActive ? "page" : undefined}
           >
             Methodology
           </Link>

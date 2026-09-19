@@ -203,6 +203,14 @@ test("presents the methodology and guardrails on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/methodology");
 
+  await expect(page.locator('a[href="/methodology"]').first()).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.locator('a[href="/assets"]').first()).not.toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await expect(
     page.getByRole("heading", { name: "Methodology under the X-Ray" }),
   ).toBeVisible();
