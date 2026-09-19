@@ -263,6 +263,12 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
   await expect(
     page.getByRole("heading", { name: "Compare market capacity" }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Select assets", exact: true })
+    .click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("two to four canonical RWA assets");
   await page.getByRole("button", { name: "Run comparison" }).click();
   await expect(
     page.getByRole("dialog", { name: "Processing comparison" }),
@@ -275,6 +281,13 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
   ).not.toBeVisible();
   await expect(page.getByText("Market Capacity Health").first()).toBeVisible();
   await expect(page.getByText("Evidence Coverage").first()).toBeVisible();
+  await page
+    .getByRole("button", { name: "Top market share", exact: true })
+    .first()
+    .click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("largest market");
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -331,7 +344,15 @@ test("filters and opens a live Explorer row", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Treasury Capacity Note", level: 1 }),
   ).toBeVisible();
-  await expect(page.getByText("Average tokenized price")).toBeVisible();
+  const averagePriceTerm = page.getByRole("button", {
+    name: "Average tokenized price",
+    exact: true,
+  });
+  await expect(averagePriceTerm).toBeVisible();
+  await averagePriceTerm.click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("aggregate USD price");
   await expect(
     page.getByRole("heading", { name: "Exit Capacity Simulator" }),
   ).not.toBeVisible();

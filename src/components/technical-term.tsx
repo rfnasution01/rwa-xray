@@ -129,6 +129,111 @@ const glossary = {
     definition:
       "The current paginated list of canonical RWA assets returned by the internal API.",
   },
+  marketPairs: {
+    label: "Market pairs",
+    definition:
+      "The trading venues and pairs where tokenized activity is observed. Each pair is treated as a separate market observation.",
+  },
+  exchanges: {
+    label: "Exchanges",
+    definition:
+      "The venues represented by the observed market pairs. Concentration shows whether activity depends on a small number of venues.",
+  },
+  tokens: {
+    label: "Tokens",
+    definition:
+      "The tokenized representations linked to the asset. Token concentration shows how observed activity is distributed across them.",
+  },
+  issuers: {
+    label: "Issuers",
+    definition:
+      "Entities associated with issuing or representing the underlying tokenized products. Mapping may be incomplete.",
+  },
+  priceDispersion: {
+    label: "Price dispersion",
+    definition:
+      "The difference between observed prices across markets, weighted by reported volume where available.",
+  },
+  weightedMean: {
+    label: "Weighted mean",
+    definition:
+      "An average price where observations with more reported volume contribute more to the result.",
+  },
+  rawDeviation: {
+    label: "Raw deviation",
+    definition:
+      "Volume-weighted absolute price deviation before robust outlier handling.",
+  },
+  robustDeviation: {
+    label: "Robust deviation",
+    definition:
+      "Price deviation calculated after flagging robust outliers with median-based detection.",
+  },
+  topShare: {
+    label: "Top share",
+    definition:
+      "The share of observed volume represented by the largest entity in that concentration dimension.",
+  },
+  normalizedHhi: {
+    label: "Normalized HHI",
+    definition:
+      "A 0–1 concentration measure adjusted for the number of observations. Higher values indicate more concentration.",
+  },
+  positionValue: {
+    label: "Position value",
+    definition:
+      "The USD size of the scenario position used in the capacity calculation.",
+  },
+  sourceLineage: {
+    label: "Sanitized source lineage",
+    definition:
+      "Safe record of which internal source datasets contributed to the analysis, without credentials or raw sensitive headers.",
+  },
+  coverageFactors: {
+    label: "Coverage factors",
+    definition:
+      "The individual evidence checks that contribute to the overall Evidence Coverage score.",
+  },
+  primaryExchange: {
+    label: "Primary exchange",
+    definition:
+      "The main exchange reported in the asset metadata. It does not represent all observed market venues.",
+  },
+  founded: {
+    label: "Founded",
+    definition:
+      "The founding date or year reported in the asset metadata. It is descriptive, not a verification of legal status.",
+  },
+  assetSelection: {
+    label: "Select assets",
+    definition:
+      "Choose two to four canonical RWA assets to evaluate under the same scenario assumptions.",
+  },
+  sharedScenario: {
+    label: "Shared scenario",
+    definition:
+      "One position size, participation rate, and stress haircut applied consistently to every selected asset.",
+  },
+  neutralOrdering: {
+    label: "Neutral ordering",
+    definition:
+      "Results are ordered by estimated exit days for scenario convenience. This is not a best-asset ranking or recommendation.",
+  },
+  dailyCapacity: {
+    label: "Daily capacity",
+    definition:
+      "The scenario amount of observed volume available per day after participation and stress assumptions.",
+  },
+  topMarketShare: {
+    label: "Top market share",
+    definition:
+      "The percentage of observed market-pair volume represented by the largest market in the available data.",
+  },
+  comparisonEvidenceGap: {
+    label: "Evidence gap",
+    definition:
+      "A missing or unavailable source that limits one or more comparison metrics. It is not converted into a zero result.",
+  },
 } as const;
 
 export type GlossaryTerm = keyof typeof glossary;

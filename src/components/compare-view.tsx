@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
 import {
   compareAssets,
   type CompareResponse,
@@ -66,9 +67,9 @@ export function CompareView() {
   }
 
   return (
-    <section className="fx-compare-shell relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e7f3f1]">
+    <section className="fx-compare-shell relative min-h-[calc(100vh-76px)] overflow-visible bg-[#02090b] text-[#e7f3f1]">
       <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
-      <div className="pointer-events-none absolute top-[-18rem] right-[-8rem] size-[42rem] rounded-full bg-[#0b7373]/10 blur-[130px]" />
+      <div className="pointer-events-none absolute top-[-18rem] right-0 size-[42rem] rounded-full bg-[#0b7373]/10 blur-[130px]" />
 
       <div className="relative mx-auto max-w-[1600px] px-5 py-10 sm:px-8 lg:px-14 lg:py-12">
         <motion.header
@@ -110,7 +111,7 @@ export function CompareView() {
                 id="compare-select-assets"
                 className="text-lg font-medium tracking-tight text-[#e6f1ef]"
               >
-                Select assets
+                <TechnicalTerm term="assetSelection" />
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#719294]">
                 Suggested peers favor the same asset category when available.
@@ -196,7 +197,7 @@ export function CompareView() {
               id="shared-scenario-heading"
               className="text-lg font-medium tracking-tight"
             >
-              Shared scenario
+              <TechnicalTerm term="sharedScenario" />
             </h2>
             <p className="mt-1 text-xs text-[#719294]">
               Position, participation, and stress are applied to every selected
@@ -206,7 +207,9 @@ export function CompareView() {
 
           <div className="grid gap-px bg-[#153b3d] lg:grid-cols-[1.15fr_1fr_1fr_auto]">
             <label className="bg-[#041416] p-5">
-              <span className="input-label">Position value · USD</span>
+              <span className="input-label">
+                <TechnicalTerm term="positionValue" /> · USD
+              </span>
               <span className="mt-3 flex items-center border border-[#245d60] bg-[#061719] focus-within:border-[#54e6df] focus-within:shadow-[0_0_0_3px_rgba(84,230,223,0.08)]">
                 <input
                   className="min-w-0 flex-1 bg-transparent px-3 py-2.5 font-mono text-sm text-[#e6f1ef] outline-none"
@@ -228,7 +231,7 @@ export function CompareView() {
             <div className="bg-[#041416] p-5">
               <CompareRange
                 id="compare-participation"
-                label="Volume participation"
+                term="volumeParticipation"
                 value={participationRate * 100}
                 min={0.1}
                 max={20}
@@ -239,7 +242,7 @@ export function CompareView() {
             <div className="bg-[#041416] p-5">
               <CompareRange
                 id="compare-haircut"
-                label="Stress haircut"
+                term="stressHaircut"
                 value={stressHaircut * 100}
                 min={0}
                 max={90}
@@ -408,7 +411,9 @@ function ComparisonResults({
     >
       <div className="flex flex-col justify-between gap-3 border-b border-[#153b3d] px-5 py-4 sm:flex-row sm:items-end sm:px-6">
         <div>
-          <p className="fx-kicker">Neutral ordering</p>
+          <p className="fx-kicker">
+            <TechnicalTerm term="neutralOrdering" />
+          </p>
           <h2
             id="comparison-results"
             className="mt-2 text-2xl font-medium tracking-[-0.025em]"
@@ -485,7 +490,7 @@ function ComparisonResults({
               </div>
               <dl className="space-y-2 text-xs">
                 <CompareMetric
-                  label="Daily capacity"
+                  term="dailyCapacity"
                   value={
                     item.analysis.scenario.status === "available"
                       ? formatMoney(item.analysis.scenario.dailyCapacity)
@@ -493,17 +498,17 @@ function ComparisonResults({
                   }
                 />
                 <CompareMetric
-                  label="Turnover"
+                  term="turnoverRatio"
                   value={formatPercent(item.analysis.metrics.turnoverRatio)}
                 />
                 <CompareMetric
-                  label="Top market share"
+                  term="topMarketShare"
                   value={formatPercent(
                     item.analysis.concentration.market.top1Share,
                   )}
                 />
                 <CompareMetric
-                  label="Market Capacity Health"
+                  term="marketCapacityHealth"
                   value={
                     item.analysis.marketCapacityHealth.score === null
                       ? "Insufficient evidence"
@@ -511,7 +516,7 @@ function ComparisonResults({
                   }
                 />
                 <CompareMetric
-                  label="Evidence Coverage"
+                  term="evidenceCoverage"
                   value={`${item.analysis.evidenceCoverage.score}/100`}
                 />
               </dl>
@@ -524,8 +529,9 @@ function ComparisonResults({
                   aria-hidden="true"
                 />
                 <span>
-                  {item.dataGaps.length} evidence gap(s); unavailable metrics
-                  are not ranked as zero.
+                  {item.dataGaps.length}{" "}
+                  <TechnicalTerm term="comparisonEvidenceGap" />
+                  (s); unavailable metrics are not ranked as zero.
                 </span>
               </p>
             ) : null}
@@ -548,7 +554,7 @@ function ComparisonResults({
 
 function CompareRange(props: {
   id: string;
-  label: string;
+  term: GlossaryTerm;
   value: number;
   min: number;
   max: number;
@@ -558,7 +564,9 @@ function CompareRange(props: {
   return (
     <label htmlFor={props.id}>
       <span className="flex items-center justify-between gap-3">
-        <span className="input-label">{props.label}</span>
+        <span className="input-label">
+          <TechnicalTerm term={props.term} />
+        </span>
         <output className="border border-[#245d60] bg-[#082123] px-3 py-2 font-mono text-[10px] text-[#d4efed]">
           {formatPercent(props.value / 100)}
         </output>
@@ -577,10 +585,12 @@ function CompareRange(props: {
   );
 }
 
-function CompareMetric({ label, value }: { label: string; value: string }) {
+function CompareMetric({ term, value }: { term: GlossaryTerm; value: string }) {
   return (
     <div className="flex justify-between gap-3 border-b border-[#174143] pb-2 last:border-0">
-      <dt className="text-[#719294]">{label}</dt>
+      <dt className="text-[#719294]">
+        <TechnicalTerm term={term} />
+      </dt>
       <dd className="max-w-[55%] text-right font-semibold text-[#d8e7e5] tabular-nums">
         {value}
       </dd>

@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState, type KeyboardEvent } from "react";
 
+import { TechnicalTerm, type GlossaryTerm } from "@/components/technical-term";
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
 import {
   type AssetDetailResponse,
@@ -76,7 +77,7 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
     );
   }
   return (
-    <div className="fx-detail-shell relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e6f1ef]">
+    <div className="fx-detail-shell relative min-h-[calc(100vh-76px)] overflow-visible bg-[#02090b] text-[#e6f1ef]">
       <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
       <div className="relative mx-auto max-w-[1600px] px-5 py-8 sm:px-8 lg:px-14 lg:py-10">
         <Link
@@ -171,19 +172,21 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
             >
               <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <OverviewMetric
-                  label="Average tokenized price"
+                  term="averageTokenizedPrice"
                   value={formatCurrency(asset.quote.averageTokenizedPrice)}
                 />
                 <OverviewMetric
-                  label="Tokenized market cap"
+                  term="tokenizedMarketCap"
+                  align="right"
                   value={formatMoney(asset.quote.tokenizedMarketCap)}
                 />
                 <OverviewMetric
-                  label="Reported volume · 24h"
+                  term="reportedVolume24h"
                   value={formatMoney(asset.quote.tokenizedVolume24h)}
                 />
                 <OverviewMetric
-                  label="Turnover ratio"
+                  term="turnoverRatio"
+                  align="right"
                   value={formatPercent(analysis.metrics.turnoverRatio)}
                 />
               </dl>
@@ -235,21 +238,25 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
               <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <ConcentrationCard
                   icon={<Store />}
+                  term="marketPairs"
                   label="Market pairs"
                   value={analysis.concentration.market}
                 />
                 <ConcentrationCard
                   icon={<Building2 />}
+                  term="exchanges"
                   label="Exchanges"
                   value={analysis.concentration.exchange}
                 />
                 <ConcentrationCard
                   icon={<Layers3 />}
+                  term="tokens"
                   label="Tokens"
                   value={analysis.concentration.token}
                 />
                 <ConcentrationCard
                   icon={<ShieldCheck />}
+                  term="issuers"
                   label="Issuers"
                   value={analysis.concentration.issuer}
                   note={
@@ -261,26 +268,28 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
               </div>
               <div className="mt-4 border border-[#1a5557] bg-[#041214] p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold">Price dispersion</h3>
+                  <h3 className="font-semibold">
+                    <TechnicalTerm term="priceDispersion" />
+                  </h3>
                   <span className="data-badge">
                     {analysis.priceDispersion.sampleSize} valid prices
                   </span>
                 </div>
                 <dl className="mt-4 grid gap-3 sm:grid-cols-3">
                   <SmallMetric
-                    label="Weighted mean"
+                    term="weightedMean"
                     value={formatCurrency(
                       analysis.priceDispersion.weightedMeanPrice,
                     )}
                   />
                   <SmallMetric
-                    label="Raw deviation"
+                    term="rawDeviation"
                     value={formatPercent(
                       analysis.priceDispersion.weightedAbsoluteDeviation,
                     )}
                   />
                   <SmallMetric
-                    label="Robust deviation"
+                    term="robustDeviation"
                     value={formatPercent(
                       analysis.priceDispersion.robustWeightedAbsoluteDeviation,
                     )}
@@ -423,7 +432,7 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
           </div>
           <RangeControl
             id="participation-rate"
-            label="Volume participation"
+            term="volumeParticipation"
             value={participation * 100}
             min={0.1}
             max={20}
@@ -432,7 +441,7 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
           />
           <RangeControl
             id="stress-haircut"
-            label="Stress haircut"
+            term="stressHaircut"
             value={haircut * 100}
             min={0}
             max={90}
@@ -454,15 +463,15 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
               </div>
               <dl className="mt-6 grid gap-3 sm:grid-cols-3">
                 <SmallMetric
-                  label="Effective volume"
+                  term="effectiveVolume"
                   value={formatMoney(result.effectiveVolume)}
                 />
                 <SmallMetric
-                  label="Daily capacity"
+                  term="dailyExitCapacity"
                   value={formatMoney(result.dailyCapacity)}
                 />
                 <SmallMetric
-                  label="Position / volume"
+                  term="positionToVolume"
                   value={formatPercent(result.positionToVolumeRatio)}
                 />
               </dl>
@@ -486,7 +495,7 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
 
 function RangeControl(props: {
   id: string;
-  label: string;
+  term: GlossaryTerm;
   value: number;
   min: number;
   max: number;
@@ -496,7 +505,7 @@ function RangeControl(props: {
   return (
     <label className="mt-5 block" htmlFor={props.id}>
       <span className="flex justify-between text-xs font-semibold">
-        <span>{props.label}</span>
+        <TechnicalTerm term={props.term} />
         <output>{formatPercent(props.value / 100)}</output>
       </span>
       <input
@@ -521,12 +530,15 @@ function ScorePanel({ data }: { data: AssetDetailResponse }) {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Score
           value={marketCapacityHealth.score}
+          term="marketCapacityHealth"
           label="Market Capacity Health"
           sublabel={`${Math.round(marketCapacityHealth.coverage * 100)}% component coverage`}
         />
         <Score
           value={evidenceCoverage.score}
+          term="evidenceCoverage"
           label="Evidence Coverage"
+          align="right"
           sublabel={evidenceCoverage.label}
         />
       </div>
@@ -536,11 +548,15 @@ function ScorePanel({ data }: { data: AssetDetailResponse }) {
 
 function Score({
   value,
+  term,
   label,
+  align = "left",
   sublabel,
 }: {
   value: number | null;
+  term: GlossaryTerm;
   label: string;
+  align?: "left" | "right";
   sublabel: string;
 }) {
   const score = value === null ? 0 : Math.round(value);
@@ -562,7 +578,11 @@ function Score({
           </span>
         </div>
       </div>
-      <p className="mt-3 text-xs font-semibold text-[#c8d9d7]">{label}</p>
+      <p className="mt-3 text-xs font-semibold text-[#c8d9d7]">
+        <TechnicalTerm term={term} align={align}>
+          {label}
+        </TechnicalTerm>
+      </p>
       <p className="mt-1 font-mono text-[9px] text-[#527b7d]">{sublabel}</p>
     </div>
   );
@@ -579,11 +599,12 @@ function MetadataPanel({ data }: { data: AssetDetailResponse }) {
       </p>
       <dl className="mt-4 grid grid-cols-2 gap-3">
         <SmallMetric
-          label="Primary exchange"
+          term="primaryExchange"
           value={metadata?.primaryExchange ?? "Unavailable"}
         />
         <SmallMetric
-          label="Founded"
+          term="founded"
+          align="right"
           value={metadata?.founded ?? "Unavailable"}
         />
       </dl>
@@ -593,11 +614,13 @@ function MetadataPanel({ data }: { data: AssetDetailResponse }) {
 
 function ConcentrationCard({
   icon,
+  term,
   label,
   value,
   note,
 }: {
   icon: React.ReactElement;
+  term: GlossaryTerm;
   label: string;
   value: AssetDetailResponse["analysis"]["concentration"]["market"];
   note?: string | null;
@@ -608,15 +631,14 @@ function ConcentrationCard({
         <span className="text-[#59e8e1] [&>svg]:size-5">{icon}</span>
         <span className="data-badge">n={value.sampleSize}</span>
       </div>
-      <h3 className="mt-4 font-semibold">{label}</h3>
+      <h3 className="mt-4 font-semibold">
+        <TechnicalTerm term={term}>{label}</TechnicalTerm>
+      </h3>
       {value.status === "available" ? (
         <dl className="mt-4 grid grid-cols-2 gap-2">
+          <SmallMetric term="topShare" value={formatPercent(value.top1Share)} />
           <SmallMetric
-            label="Top share"
-            value={formatPercent(value.top1Share)}
-          />
-          <SmallMetric
-            label="Normalized HHI"
+            term="normalizedHhi"
             value={formatNumber(value.normalizedHhi)}
           />
         </dl>
@@ -722,7 +744,9 @@ function EvidenceFactors({ data }: { data: AssetDetailResponse }) {
   return (
     <article className="border border-[#1a5557] bg-[#041214] p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Coverage factors</h3>
+        <h3 className="font-semibold">
+          <TechnicalTerm term="coverageFactors" />
+        </h3>
         <span className="font-semibold tabular-nums">
           {data.analysis.evidenceCoverage.score}/100
         </span>
@@ -757,6 +781,7 @@ function SourceTable({ data }: { data: AssetDetailResponse }) {
   return (
     <DataPanel
       title="Sanitized source lineage"
+      term="sourceLineage"
       count={data.sourceStatuses.length}
     >
       {data.sourceStatuses.length === 0 ? (
@@ -811,17 +836,21 @@ function DataGapBanner({ gaps }: { gaps: AssetDetailResponse["dataGaps"] }) {
 
 function DataPanel({
   title,
+  term,
   count,
   children,
 }: {
   title: string;
+  term?: GlossaryTerm;
   count: number;
   children: React.ReactNode;
 }) {
   return (
     <article className="overflow-hidden border border-[#1a5557] bg-[#041214]">
       <div className="flex items-center justify-between border-b border-[#153b3d] px-5 py-4">
-        <h3 className="font-semibold">{title}</h3>
+        <h3 className="font-semibold">
+          {term ? <TechnicalTerm term={term}>{title}</TechnicalTerm> : title}
+        </h3>
         <span className="data-badge">{count} records</span>
       </div>
       {children}
@@ -840,11 +869,19 @@ function EmptyRow({ text }: { text: string }) {
     </div>
   );
 }
-function OverviewMetric({ label, value }: { label: string; value: string }) {
+function OverviewMetric({
+  term,
+  value,
+  align = "left",
+}: {
+  term: GlossaryTerm;
+  value: string;
+  align?: "left" | "right";
+}) {
   return (
     <div className="border border-[#1a5557] bg-[#041416] p-5 shadow-[inset_0_0_24px_rgba(45,202,196,0.025)]">
       <dt className="font-mono text-[9px] tracking-[0.08em] text-[#5b8587] uppercase">
-        {label}
+        <TechnicalTerm term={term} align={align} />
       </dt>
       <dd className="mt-3 text-xl font-medium tracking-tight text-[#dff0ee] tabular-nums">
         {value}
@@ -852,10 +889,20 @@ function OverviewMetric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function SmallMetric({ label, value }: { label: string; value: string }) {
+function SmallMetric({
+  term,
+  value,
+  align = "left",
+}: {
+  term: GlossaryTerm;
+  value: string;
+  align?: "left" | "right";
+}) {
   return (
     <div className="border border-[#153f41] bg-[#061719] p-3">
-      <dt className="font-mono text-[9px] text-[#5b8587]">{label}</dt>
+      <dt className="font-mono text-[9px] text-[#5b8587]">
+        <TechnicalTerm term={term} align={align} />
+      </dt>
       <dd className="mt-2 text-sm font-medium text-[#cfdfdd] tabular-nums">
         {value}
       </dd>
