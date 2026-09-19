@@ -27,6 +27,25 @@ export const explorerRequestSchema = z
   })
   .strict();
 
+export const issuerDirectoryRequestSchema = z
+  .object({
+    active: z
+      .enum(["true", "false"])
+      .transform((value) => value === "true")
+      .optional(),
+    start: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(250).default(24),
+  })
+  .strict();
+
+export const issuerDetailRequestSchema = z
+  .object({
+    issuerId: z.string().regex(/^[0-9a-f]{24}$/),
+    start: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(250).default(100),
+  })
+  .strict();
+
 const scenarioFields = {
   positionValue: z
     .number()

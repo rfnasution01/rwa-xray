@@ -2,18 +2,24 @@ import { describe, expect, it, vi } from "vitest";
 
 import assetsListFixture from "../../../tests/fixtures/cmc/rwa-assets-list.json";
 import infoFixture from "../../../tests/fixtures/cmc/rwa-info.json";
+import issuerFixture from "../../../tests/fixtures/cmc/rwa-issuer.json";
+import issuersListFixture from "../../../tests/fixtures/cmc/rwa-issuers-list.json";
 import marketPairsFixture from "../../../tests/fixtures/cmc/rwa-market-pairs.json";
 import quotesLatestFixture from "../../../tests/fixtures/cmc/rwa-quotes-latest.json";
 import type { CacheResult, CacheState } from "@/server/cache/service";
 import {
   normalizeRwaAssetsList,
   normalizeRwaInfo,
+  normalizeRwaIssuer,
+  normalizeRwaIssuersList,
   normalizeRwaMarketPairs,
   normalizeRwaQuotesLatest,
 } from "@/server/cmc/normalize";
 import {
   rwaAssetsListResponseSchema,
   rwaInfoResponseSchema,
+  rwaIssuerResponseSchema,
+  rwaIssuersListResponseSchema,
   rwaMarketPairsResponseSchema,
   rwaQuotesLatestResponseSchema,
 } from "@/server/cmc/schemas";
@@ -82,8 +88,21 @@ function repository(): RwaRepository {
         ),
       ),
     ),
-    getIssuers: vi.fn(),
-    getIssuer: vi.fn(),
+    getIssuers: vi.fn(async () =>
+      cached(
+        normalizeRwaIssuersList(
+          rwaIssuersListResponseSchema.parse(issuersListFixture),
+          { observedAt },
+        ),
+      ),
+    ),
+    getIssuer: vi.fn(async () =>
+      cached(
+        normalizeRwaIssuer(rwaIssuerResponseSchema.parse(issuerFixture), {
+          observedAt,
+        }),
+      ),
+    ),
   };
 }
 
@@ -114,6 +133,45 @@ describe("RWA application service", () => {
         convert: "USD",
         limit: 20,
       }),
+    );
+  });
+
+  it("returns issuer directory and detail DTOs without cache keys", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({ repository: data });
+
+    const directory = await service.getIssuerDirectory({
+      active: true,
+      start: 1,
+      limit: 24,
+    });
+    const detail = await service.getIssuerDetail({
+      issuerId: "6878977dcbbf471de3366e85",
+      start: 1,
+      limit: 100,
+    });
+
+    expect(directory.items[0]).toMatchObject({
+      issuerId: "6878977dcbbf471de3366e85",
+      name: "Example Issuer",
+      tokenCount: 1,
+    });
+    expect(detail.issuer.tokens[0]).toMatchObject({
+      cryptoId: 40101,
+      rwaId: 101,
+    });
+    expect(data.getIssuers).toHaveBeenCalledWith({
+      active: true,
+      start: 1,
+      limit: 24,
+    });
+    expect(data.getIssuer).toHaveBeenCalledWith({
+      issuerId: "6878977dcbbf471de3366e85",
+      start: 1,
+      limit: 100,
+    });
+    expect(JSON.stringify({ directory, detail })).not.toContain(
+      "internal-cache-key",
     );
   });
 

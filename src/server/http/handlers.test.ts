@@ -6,6 +6,8 @@ import {
   ApplicationServiceError,
   type AssetDetailResult,
   type ExplorerResult,
+  type IssuerDetailResult,
+  type IssuerDirectoryResult,
   type RwaApplicationService,
 } from "@/server/services/rwa-service";
 
@@ -38,6 +40,12 @@ function service(): RwaApplicationService {
       sourceStatus,
       stale: false,
     })),
+    getIssuerDirectory: vi.fn(async () => {
+      throw new Error("not configured");
+    }),
+    getIssuerDetail: vi.fn(async () => {
+      throw new Error("not configured");
+    }),
     getAssetDetail: vi.fn(async (): Promise<AssetDetailResult> => {
       throw new Error("not configured");
     }),
@@ -105,6 +113,63 @@ describe("API handlers", () => {
       error: { code: "INVALID_REQUEST", retryable: false },
     });
     expect(duplicate.status).toBe(400);
+  });
+
+  it("validates issuer directory and detail requests", async () => {
+    const applicationService = service();
+    vi.mocked(applicationService.getIssuerDirectory).mockResolvedValueOnce({
+      items: [],
+      pagination: { totalSize: 0, hasMore: false },
+      sourceStatus: { ...sourceStatus, source: "issuers" },
+      stale: false,
+    } satisfies IssuerDirectoryResult);
+    vi.mocked(applicationService.getIssuerDetail).mockResolvedValueOnce({
+      issuer: {
+        issuerId: "6878977dcbbf471de3366e85",
+        name: "Example Issuer",
+        website: null,
+        logo: null,
+        tokenCount: 0,
+        tokens: [],
+        linkedTokenTotal: 0,
+        hasMore: false,
+      },
+      sourceStatus: { ...sourceStatus, source: "issuers" },
+      stale: false,
+    } satisfies IssuerDetailResult);
+    const { handlers: api } = handlers(applicationService);
+
+    const directoryResponse = await api.getIssuers(
+      new Request("https://example.test/api/issuers?active=false&limit=24"),
+    );
+    const detailResponse = await api.getIssuerDetail(
+      new Request(
+        "https://example.test/api/issuers/6878977dcbbf471de3366e85?limit=100",
+      ),
+      "6878977dcbbf471de3366e85",
+    );
+
+    expect(directoryResponse.status).toBe(200);
+    expect(detailResponse.status).toBe(200);
+    expect(applicationService.getIssuerDirectory).toHaveBeenCalledWith({
+      active: false,
+      start: 1,
+      limit: 24,
+    });
+    expect(applicationService.getIssuerDetail).toHaveBeenCalledWith({
+      issuerId: "6878977dcbbf471de3366e85",
+      start: 1,
+      limit: 100,
+    });
+  });
+
+  it("rejects invalid issuer identifiers", async () => {
+    const { handlers: api } = handlers();
+    const response = await api.getIssuerDetail(
+      new Request("https://example.test/api/issuers/not-valid"),
+      "not-valid",
+    );
+    expect(response.status).toBe(400);
   });
 
   it("parses the detail scenario with approved defaults", async () => {

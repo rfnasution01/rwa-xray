@@ -278,6 +278,22 @@ GET /api/assets?assetType=government_security&sort=rwa_rank&sortDir=asc&start=1&
 GET /api/assets/101?positionValue=100000&participationRate=0.05&stressHaircut=0
 ```
 
+### Issuer directory
+
+```http
+GET /api/issuers?active=true&start=1&limit=24
+```
+
+Issuer directory mengembalikan normalized issuer summaries, token count, pagination, cache status, dan stale state tanpa meneruskan payload atau credential upstream.
+
+### Issuer detail
+
+```http
+GET /api/issuers/6878977dcbbf471de3366e85?start=1&limit=100
+```
+
+Issuer detail mengembalikan metadata issuer dan relasi token ke canonical `rwa_id`. Relasi tersebut merupakan metadata CoinMarketCap, bukan verifikasi reserve, redemption rights, atau legal claim.
+
 ### Compare
 
 ```http

@@ -3,6 +3,8 @@ import "server-only";
 import type {
   AssetMetadata,
   DetailedAsset,
+  IssuerDetail,
+  IssuerSummary,
   ListedAsset,
   MarketPairs,
   NormalizationWarning,
@@ -46,6 +48,18 @@ export type ExplorerInput = {
   limit?: number;
 };
 
+export type IssuerDirectoryInput = {
+  active?: boolean;
+  start?: number;
+  limit?: number;
+};
+
+export type IssuerDetailInput = {
+  issuerId: string;
+  start?: number;
+  limit?: number;
+};
+
 export type DetailInput = {
   rwaId: number;
   positionValue: number;
@@ -61,7 +75,7 @@ export type CompareInput = {
 };
 
 export type SourceStatus = {
-  source: "assets" | "quotes" | "marketPairs" | "metadata";
+  source: "assets" | "quotes" | "marketPairs" | "metadata" | "issuers";
   evidence: SourceEvidence;
   normalizationWarnings: NormalizationWarning[];
   cache: {
@@ -81,6 +95,19 @@ export type ExplorerItem = ListedAsset & {
 export type ExplorerResult = {
   items: ExplorerItem[];
   pagination: { totalSize: number | null; hasMore: boolean | null };
+  sourceStatus: SourceStatus;
+  stale: boolean;
+};
+
+export type IssuerDirectoryResult = {
+  items: IssuerSummary[];
+  pagination: { totalSize: number | null; hasMore: boolean | null };
+  sourceStatus: SourceStatus;
+  stale: boolean;
+};
+
+export type IssuerDetailResult = {
+  issuer: IssuerDetail;
   sourceStatus: SourceStatus;
   stale: boolean;
 };
@@ -144,6 +171,10 @@ export type EvidenceResult = {
 
 export type RwaApplicationService = {
   getExplorer(input: ExplorerInput): Promise<ExplorerResult>;
+  getIssuerDirectory(
+    input: IssuerDirectoryInput,
+  ): Promise<IssuerDirectoryResult>;
+  getIssuerDetail(input: IssuerDetailInput): Promise<IssuerDetailResult>;
   getAssetDetail(input: DetailInput): Promise<AssetDetailResult>;
   compareAssets(input: CompareInput): Promise<CompareResult>;
   getAssetEvidence(input: DetailInput): Promise<EvidenceResult>;
@@ -189,6 +220,36 @@ export function createRwaApplicationService(options: {
           hasMore: result.value.data.hasMore,
         },
         sourceStatus: sourceStatus("assets", result),
+        stale: result.cache.state === "stale",
+      };
+    },
+
+    async getIssuerDirectory(input) {
+      const result = await options.repository.getIssuers({
+        active: input.active,
+        start: input.start,
+        limit: input.limit,
+      });
+      return {
+        items: result.value.data.items,
+        pagination: {
+          totalSize: result.value.data.totalSize,
+          hasMore: result.value.data.hasMore,
+        },
+        sourceStatus: sourceStatus("issuers", result),
+        stale: result.cache.state === "stale",
+      };
+    },
+
+    async getIssuerDetail(input) {
+      const result = await options.repository.getIssuer({
+        issuerId: input.issuerId,
+        start: input.start,
+        limit: input.limit,
+      });
+      return {
+        issuer: result.value.data,
+        sourceStatus: sourceStatus("issuers", result),
         stale: result.cache.state === "stale",
       };
     },
@@ -464,6 +525,7 @@ function evidenceParameters(
   if (source === "assets") return { limit: 250, convert: "USD" };
   if (source === "metadata") return { rwaId };
   if (source === "marketPairs") return { rwaId, limit: 250, convert: "USD" };
+  if (source === "issuers") return {};
   return { rwaId, convert: "USD" };
 }
 
@@ -476,6 +538,7 @@ function evidenceFeatures(source: SourceStatus["source"]): string[] {
       "exchange concentration",
       "price dispersion",
     ];
+  if (source === "issuers") return ["issuer profile", "linked tokens"];
   return [
     "aggregate quote",
     "exit capacity",

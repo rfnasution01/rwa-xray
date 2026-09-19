@@ -683,7 +683,18 @@ function TokenTable({
                       {token.name}
                     </span>
                   </td>
-                  <td>{token.issuerName ?? "Unmapped"}</td>
+                  <td>
+                    {token.issuerName && issuerHref(token.issuerId) ? (
+                      <Link
+                        className="text-[#5ee9e2] hover:text-[#c3fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
+                        href={issuerHref(token.issuerId)!}
+                      >
+                        {token.issuerName}
+                      </Link>
+                    ) : (
+                      (token.issuerName ?? "Unmapped")
+                    )}
+                  </td>
                   <td className="text-right tabular-nums">
                     {formatCurrency(token.price)}
                   </td>
@@ -1101,6 +1112,12 @@ function formatDays(value: number) {
           maximumFractionDigits: value < 10 ? 1 : 0,
         }).format(value);
 }
+function issuerHref(issuerId: string | null) {
+  return issuerId && /^[0-9a-f]{24}$/.test(issuerId)
+    ? `/issuers/${issuerId}`
+    : null;
+}
+
 function safeExternalUrl(value: string | null) {
   if (!value) return null;
   try {

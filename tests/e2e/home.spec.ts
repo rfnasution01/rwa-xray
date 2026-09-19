@@ -38,7 +38,19 @@ async function mockRwaApi(page: Page) {
         data: {
           asset: {
             ...asset,
-            tokens: [],
+            tokens: [
+              {
+                cryptoId: 40101,
+                name: "Example Treasury Token",
+                symbol: "EXTBX",
+                issuerId: "6878977dcbbf471de3366e85",
+                issuerName: "Example Issuer",
+                currency: "USD",
+                price: 100.25,
+                marketCap: 10_000_000,
+                volume24h: 500_000,
+              },
+            ],
             tradfiMarkets: [
               {
                 exchangeId: 270,
@@ -151,6 +163,84 @@ async function mockRwaApi(page: Page) {
         },
         meta: {
           requestId: "e2e-explorer",
+          generatedAt: "2026-09-18T02:31:00.000Z",
+          stale: false,
+        },
+      }),
+    });
+  });
+
+  await page.route(
+    /\/api\/issuers\/6878977dcbbf471de3366e85(?:\?.*)?$/,
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            issuer: {
+              issuerId: "6878977dcbbf471de3366e85",
+              name: "Example Issuer",
+              website: "https://example.invalid",
+              logo: null,
+              tokenCount: 1,
+              tokens: [
+                {
+                  cryptoId: 40101,
+                  rwaId: 101,
+                  name: "Example Treasury Token",
+                  symbol: "EXTBX",
+                },
+              ],
+              linkedTokenTotal: 1,
+              hasMore: false,
+            },
+            sourceStatus: {
+              ...sourceStatus,
+              source: "issuers",
+              evidence: {
+                ...sourceStatus.evidence,
+                endpoint: "/v5/real-world-assets/issuers",
+              },
+            },
+            stale: false,
+          },
+          meta: {
+            requestId: "e2e-issuer-detail",
+            generatedAt: "2026-09-18T02:31:00.000Z",
+            stale: false,
+          },
+        }),
+      });
+    },
+  );
+
+  await page.route(/\/api\/issuers\?.*$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          items: [
+            {
+              issuerId: "6878977dcbbf471de3366e85",
+              name: "Example Issuer",
+              website: "https://example.invalid",
+              logo: null,
+              tokenCount: 1,
+            },
+          ],
+          pagination: { totalSize: 1, hasMore: false },
+          sourceStatus: {
+            ...sourceStatus,
+            source: "issuers",
+            evidence: {
+              ...sourceStatus.evidence,
+              endpoint: "/v5/real-world-assets/issuers/list",
+            },
+          },
+          stale: false,
+        },
+        meta: {
+          requestId: "e2e-issuers",
           generatedAt: "2026-09-18T02:31:00.000Z",
           stale: false,
         },
@@ -422,10 +512,38 @@ test("filters and opens a live Explorer row", async ({ page }) => {
     page.getByRole("heading", { name: "TradFi markets" }),
   ).toBeVisible();
   await expect(page.getByText("Example Exchange")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Example Issuer" }),
+  ).toHaveAttribute("href", "/issuers/6878977dcbbf471de3366e85");
   await expect(page.getByRole("link", { name: "Open market" })).toHaveAttribute(
     "href",
     "https://example.com/markets/tcn",
   );
+});
+
+test("opens an issuer and traces its token to an RWA asset", async ({
+  page,
+}) => {
+  await mockRwaApi(page);
+  await page.goto("/issuers");
+
+  await expect(
+    page.getByRole("heading", { name: "Issuer Directory" }),
+  ).toBeVisible();
+  await expect(page.getByText("Example Issuer")).toBeVisible();
+  await page.getByRole("link", { name: "View issuer" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Example Issuer", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByText("Example Treasury Token")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open X-Ray" })).toHaveAttribute(
+    "href",
+    "/assets/101",
+  );
+  await expect(
+    page.getByRole("link", { name: "Issuers", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
 });
 
 test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {

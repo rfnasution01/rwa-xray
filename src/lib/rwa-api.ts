@@ -32,7 +32,7 @@ const assetSchema = z.object({
 });
 
 const sourceStatusSchema = z.object({
-  source: z.enum(["assets", "quotes", "marketPairs", "metadata"]),
+  source: z.enum(["assets", "quotes", "marketPairs", "metadata", "issuers"]),
   evidence: z.object({
     provider: z.literal("coinmarketcap"),
     endpoint: z.string(),
@@ -59,6 +59,55 @@ const explorerEnvelopeSchema = z.object({
     items: z.array(assetSchema.extend({ turnoverRatio: nullableNumber })),
     pagination: z.object({
       totalSize: z.number().int().nonnegative().nullable(),
+      hasMore: z.boolean().nullable(),
+    }),
+    sourceStatus: sourceStatusSchema,
+    stale: z.boolean(),
+  }),
+  meta: z.object({
+    requestId: z.string(),
+    generatedAt: z.string(),
+    stale: z.boolean().optional(),
+  }),
+});
+
+const issuerSummarySchema = z.object({
+  issuerId: z.string().regex(/^[0-9a-f]{24}$/),
+  name: z.string(),
+  website: nullableString,
+  logo: nullableString,
+  tokenCount: z.number().int().nonnegative().nullable(),
+});
+
+const issuerDirectoryEnvelopeSchema = z.object({
+  data: z.object({
+    items: z.array(issuerSummarySchema),
+    pagination: z.object({
+      totalSize: z.number().int().nonnegative().nullable(),
+      hasMore: z.boolean().nullable(),
+    }),
+    sourceStatus: sourceStatusSchema,
+    stale: z.boolean(),
+  }),
+  meta: z.object({
+    requestId: z.string(),
+    generatedAt: z.string(),
+    stale: z.boolean().optional(),
+  }),
+});
+
+const issuerDetailEnvelopeSchema = z.object({
+  data: z.object({
+    issuer: issuerSummarySchema.extend({
+      tokens: z.array(
+        z.object({
+          cryptoId: z.number().int().positive(),
+          rwaId: z.number().int().positive().nullable(),
+          name: z.string(),
+          symbol: z.string(),
+        }),
+      ),
+      linkedTokenTotal: z.number().int().nonnegative().nullable(),
       hasMore: z.boolean().nullable(),
     }),
     sourceStatus: sourceStatusSchema,
@@ -330,6 +379,12 @@ export type ExplorerResponse = z.infer<typeof explorerEnvelopeSchema>["data"];
 export type ExplorerItem = ExplorerResponse["items"][number];
 export type AssetDetailResponse = z.infer<typeof detailEnvelopeSchema>["data"];
 export type CompareResponse = z.infer<typeof compareEnvelopeSchema>["data"];
+export type IssuerDirectoryResponse = z.infer<
+  typeof issuerDirectoryEnvelopeSchema
+>["data"];
+export type IssuerDetailResponse = z.infer<
+  typeof issuerDetailEnvelopeSchema
+>["data"];
 
 export class RwaApiError extends Error {
   constructor(
@@ -362,6 +417,37 @@ export async function getExplorer(input: {
     headers: { Accept: "application/json" },
   });
   return parseResponse(response, explorerEnvelopeSchema);
+}
+
+export async function getIssuerDirectory(input: {
+  active?: boolean;
+  start?: number;
+  limit?: number;
+}): Promise<IssuerDirectoryResponse> {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) query.set(key, String(value));
+  }
+  const response = await fetch(`/api/issuers?${query.toString()}`, {
+    headers: { Accept: "application/json" },
+  });
+  return parseResponse(response, issuerDirectoryEnvelopeSchema);
+}
+
+export async function getIssuerDetail(
+  issuerId: string,
+  input: { start?: number; limit?: number } = {},
+): Promise<IssuerDetailResponse> {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) query.set(key, String(value));
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  const response = await fetch(
+    `/api/issuers/${encodeURIComponent(issuerId)}${suffix}`,
+    { headers: { Accept: "application/json" } },
+  );
+  return parseResponse(response, issuerDetailEnvelopeSchema);
 }
 
 export async function getAssetDetail(

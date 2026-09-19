@@ -42,6 +42,7 @@ flowchart LR
 - Explorer melakukan pagination/filter/sort melalui backend; search saat ini hanya memfilter page yang sudah diterima dan diberi label demikian.
 - `/assets/[rwaId]` menampilkan simulator client-side, concentration per dimensi, price dispersion, token/market tables, methodology warnings, dan sanitized source lineage dari satu detail response.
 - `/compare` menerapkan satu scenario pada 2–4 canonical RWA IDs, mempertahankan partial results, dan memakai neutral ordering berdasarkan Estimated Exit Days.
+- `/issuers` menampilkan issuer directory terpaginasikan; `/issuers/[issuerId]` menampilkan token yang dilaporkan terkait dan menautkannya kembali ke canonical asset bila `rwa_id` tersedia.
 - Response internal divalidasi dengan Zod di browser sebelum dirender.
 - Tidak pernah menerima `X-CMC_PRO_API_KEY`.
 
@@ -153,16 +154,18 @@ sequenceDiagram
 
 ## 5. API internal yang disarankan
 
-| Method | Path                          | Fungsi                                                 |
-| ------ | ----------------------------- | ------------------------------------------------------ |
-| GET    | `/api/assets`                 | Explorer dan filter — implemented                      |
-| GET    | `/api/assets/:rwaId`          | Detail, scenario, dan analisis — implemented           |
-| POST   | `/api/compare`                | Analisis 2–4 aset — implemented                        |
-| POST   | `/api/simulate`               | Opsional; kalkulasi juga dapat dilakukan di client     |
-| GET    | `/api/assets/:rwaId/evidence` | Sanitized lineage dan normalized excerpt — implemented |
-| POST   | `/api/reports`                | Membuat shared report                                  |
-| GET    | `/api/reports/:id`            | Membaca shared report                                  |
-| GET    | `/api/health`                 | Readiness validasi environment tanpa secret            |
+| Method | Path                          | Fungsi                                                  |
+| ------ | ----------------------------- | ------------------------------------------------------- |
+| GET    | `/api/assets`                 | Explorer dan filter — implemented                       |
+| GET    | `/api/assets/:rwaId`          | Detail, scenario, dan analisis — implemented            |
+| POST   | `/api/compare`                | Analisis 2–4 aset — implemented                         |
+| POST   | `/api/simulate`               | Opsional; kalkulasi juga dapat dilakukan di client      |
+| GET    | `/api/assets/:rwaId/evidence` | Sanitized lineage dan normalized excerpt — implemented  |
+| GET    | `/api/issuers`                | Issuer directory aktif dan terpaginasikan — implemented |
+| GET    | `/api/issuers/:issuerId`      | Issuer metadata dan linked token page — implemented     |
+| POST   | `/api/reports`                | Membuat shared report                                   |
+| GET    | `/api/reports/:id`            | Membaca shared report                                   |
+| GET    | `/api/health`                 | Readiness validasi environment tanpa secret             |
 
 Route handlers memakai application service/DAL dan tidak meneruskan response CMC atau record database mentah. Seluruh query divalidasi dengan Zod, response memakai envelope konsisten, cache key disembunyikan, dan optional source failure dikembalikan sebagai `dataGaps`. Basic per-instance rate limiting adalah defense tambahan; rate limiting Vercel tetap harus diaktifkan untuk enforcement lintas-instance. Security headers diterapkan global melalui `next.config.ts`; production smoke harness memverifikasi halaman, API, readiness, sensitive field names, dan header tersebut.
 

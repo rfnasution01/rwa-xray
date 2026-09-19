@@ -9,6 +9,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const explorerActive =
     pathname === "/assets" || pathname.startsWith("/assets/");
+  const issuersActive =
+    pathname === "/issuers" || pathname.startsWith("/issuers/");
   const compareActive = pathname === "/compare";
   const methodologyActive = pathname === "/methodology";
 
@@ -50,6 +52,17 @@ export function SiteHeader() {
             aria-current={explorerActive ? "page" : undefined}
           >
             Explorer
+          </Link>
+          <Link
+            className={
+              issuersActive
+                ? "fx-nav-link fx-nav-link-active hidden sm:inline-flex"
+                : "fx-nav-link hidden sm:inline-flex"
+            }
+            href="/issuers"
+            aria-current={issuersActive ? "page" : undefined}
+          >
+            Issuers
           </Link>
           <Link
             className={

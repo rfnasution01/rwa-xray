@@ -8,6 +8,8 @@ import {
   detailRequestSchema,
   explorerRequestSchema,
   InvalidRequestBodyError,
+  issuerDetailRequestSchema,
+  issuerDirectoryRequestSchema,
   searchParamsToObject,
 } from "./schemas";
 import {
@@ -17,6 +19,8 @@ import {
 
 export type ApiHandlers = {
   getAssets(request: Request): Promise<Response>;
+  getIssuers(request: Request): Promise<Response>;
+  getIssuerDetail(request: Request, issuerId: string): Promise<Response>;
   getAssetDetail(request: Request, rwaId: string): Promise<Response>;
   compareAssets(request: Request): Promise<Response>;
   getAssetEvidence(request: Request, rwaId: string): Promise<Response>;
@@ -42,6 +46,41 @@ export function createApiHandlers(options: {
           searchParamsToObject(url.searchParams),
         );
         const result = await options.service.getExplorer(input);
+        return successResponse(result, { requestId: id, stale: result.stale });
+      } catch (error) {
+        return errorResponse(error, id);
+      }
+    },
+
+    async getIssuers(request) {
+      const id = requestId();
+      const limited = applyRateLimit(request, id, rateLimiter);
+      if (limited) return limited;
+
+      try {
+        const url = new URL(request.url);
+        const input = issuerDirectoryRequestSchema.parse(
+          searchParamsToObject(url.searchParams),
+        );
+        const result = await options.service.getIssuerDirectory(input);
+        return successResponse(result, { requestId: id, stale: result.stale });
+      } catch (error) {
+        return errorResponse(error, id);
+      }
+    },
+
+    async getIssuerDetail(request, issuerId) {
+      const id = requestId();
+      const limited = applyRateLimit(request, id, rateLimiter);
+      if (limited) return limited;
+
+      try {
+        const url = new URL(request.url);
+        const input = issuerDetailRequestSchema.parse({
+          ...searchParamsToObject(url.searchParams),
+          issuerId,
+        });
+        const result = await options.service.getIssuerDetail(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
         return errorResponse(error, id);
