@@ -13,11 +13,13 @@ import {
   ShieldCheck,
   Store,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, type KeyboardEvent } from "react";
 
 import { TechnicalTerm, type GlossaryTerm } from "@/components/technical-term";
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
+import { safeCmcImageUrl } from "@/lib/external-media";
 import {
   type AssetDetailResponse,
   getAssetDetail,
@@ -55,6 +57,7 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
   const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const { asset, analysis, metadata, marketPairs } = data;
+  const logoUrl = safeCmcImageUrl(metadata?.about?.logo ?? null);
 
   function handleTabKeyDown(
     event: KeyboardEvent<HTMLButtonElement>,
@@ -90,8 +93,18 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
 
         <header className="relative mt-6 overflow-hidden border border-[#174f51] bg-[#041214]/90 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] sm:p-6 lg:flex lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
-            <div className="grid size-16 shrink-0 place-items-center border border-[#3b9b99] bg-[#071a1c] font-mono text-sm font-bold tracking-wider text-[#73f4ed] shadow-[inset_0_0_24px_rgba(52,222,215,0.08),0_0_18px_rgba(52,222,215,0.07)]">
-              {asset.symbol.slice(0, 4)}
+            <div className="relative grid size-16 shrink-0 place-items-center overflow-hidden border border-[#3b9b99] bg-[#071a1c] font-mono text-sm font-bold tracking-wider text-[#73f4ed] shadow-[inset_0_0_24px_rgba(52,222,215,0.08),0_0_18px_rgba(52,222,215,0.07)]">
+              {logoUrl ? (
+                <Image
+                  className="object-contain p-2"
+                  src={logoUrl}
+                  alt={`${asset.name} logo`}
+                  fill
+                  sizes="64px"
+                />
+              ) : (
+                asset.symbol.slice(0, 4)
+              )}
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -592,9 +605,48 @@ function Score({
 
 function MetadataPanel({ data }: { data: AssetDetailResponse }) {
   const metadata = data.metadata;
+  const website = safeExternalUrl(
+    metadata?.website ?? metadata?.about?.website ?? null,
+  );
+  const suppliedLogo = safeExternalUrl(metadata?.about?.logo ?? null);
+  const cikHref =
+    metadata?.cik && /^\d{1,10}$/.test(metadata.cik)
+      ? `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(metadata.cik)}`
+      : null;
+  const tokenizationStatus =
+    data.asset.hasTokens === true
+      ? "Token records available"
+      : data.asset.hasTokens === false
+        ? "No token records reported"
+        : "Unavailable";
+
   return (
     <article className="border border-[#1a5557] bg-[#041214] p-5">
-      <p className="fx-kicker">Asset context</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="fx-kicker">Asset context</p>
+        <div className="flex flex-wrap gap-2">
+          {website ? (
+            <a
+              className="inline-flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.08em] text-[#5ee9e2] uppercase hover:text-[#c3fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
+              href={website}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Asset website <ExternalLink className="size-3" />
+            </a>
+          ) : null}
+          {suppliedLogo ? (
+            <a
+              className="inline-flex items-center gap-1.5 font-mono text-[9px] font-semibold tracking-[0.08em] text-[#5ee9e2] uppercase hover:text-[#c3fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
+              href={suppliedLogo}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Logo source <ExternalLink className="size-3" />
+            </a>
+          ) : null}
+        </div>
+      </div>
       <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#89a6a7]">
         {metadata?.about?.description ??
           "CMC metadata description is unavailable for this asset."}
@@ -608,6 +660,47 @@ function MetadataPanel({ data }: { data: AssetDetailResponse }) {
           term="founded"
           align="right"
           value={metadata?.founded ?? "Unavailable"}
+        />
+        <SmallMetric
+          term="employeeCount"
+          value={
+            metadata?.employees === null || metadata?.employees === undefined
+              ? "Unavailable"
+              : new Intl.NumberFormat("en-US", {
+                  maximumFractionDigits: 0,
+                }).format(metadata.employees)
+          }
+        />
+        <SmallMetric
+          term="cik"
+          align="right"
+          value={
+            cikHref ? (
+              <a
+                className="inline-flex items-center gap-1.5 text-[#5ee9e2] hover:text-[#c3fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
+                href={cikHref}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {metadata?.cik} <ExternalLink className="size-3" />
+              </a>
+            ) : (
+              (metadata?.cik ?? "Unavailable")
+            )
+          }
+        />
+        <SmallMetric
+          term="metadataDateAdded"
+          value={
+            metadata?.about?.dateAdded
+              ? formatDateTime(metadata.about.dateAdded)
+              : "Unavailable"
+          }
+        />
+        <SmallMetric
+          term="tokenizationStatus"
+          align="right"
+          value={tokenizationStatus}
         />
       </dl>
     </article>
@@ -970,7 +1063,7 @@ function SmallMetric({
   align = "left",
 }: {
   term: GlossaryTerm;
-  value: string;
+  value: React.ReactNode;
   align?: "left" | "right";
 }) {
   return (

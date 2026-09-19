@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
+import { safeCmcImageUrl } from "@/lib/external-media";
 import {
   type AssetType,
   type ExplorerItem,
@@ -578,9 +579,7 @@ function AssetRow({
     >
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center border border-[#245c5f] bg-[#082022] font-mono text-[9px] font-bold tracking-wider text-[#61e9e3] transition group-hover:border-[#45beba]">
-            {asset.symbol.slice(0, 4)}
-          </span>
+          <AssetLogo asset={asset} />
           <span className="min-w-0">
             <span className="block max-w-64 truncate text-sm font-medium text-[#dce9e7]">
               {asset.name}
@@ -606,6 +605,25 @@ function AssetRow({
         </Link>
       </td>
     </motion.tr>
+  );
+}
+
+function AssetLogo({ asset }: { asset: ExplorerItem }) {
+  const logoUrl = safeCmcImageUrl(asset.logo);
+  return (
+    <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden border border-[#245c5f] bg-[#082022] font-mono text-[9px] font-bold tracking-wider text-[#61e9e3] transition group-hover:border-[#45beba]">
+      {logoUrl ? (
+        <Image
+          className="object-contain p-1.5"
+          src={logoUrl}
+          alt={`${asset.name} logo`}
+          fill
+          sizes="40px"
+        />
+      ) : (
+        asset.symbol.slice(0, 4)
+      )}
+    </span>
   );
 }
 
@@ -650,9 +668,7 @@ function AssetCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center border border-[#245c5f] bg-[#082022] font-mono text-[9px] font-bold text-[#61e9e3]">
-            {asset.symbol.slice(0, 4)}
-          </span>
+          <AssetLogo asset={asset} />
           <div className="min-w-0">
             <h2 className="truncate text-sm font-medium text-[#dce9e7]">
               {asset.name}

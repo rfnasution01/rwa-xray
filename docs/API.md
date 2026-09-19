@@ -47,7 +47,7 @@ GET /v5/real-world-assets/map
 GET /v5/real-world-assets/info
 ```
 
-**Tujuan:** metadata statis, nominal/company fields, deskripsi, logo, dan website.
+**Tujuan:** metadata statis, nominal/company fields, deskripsi, logo, website, employee count, CIK, primary exchange, founding date, dan waktu metadata ditambahkan. Asset X-Ray memakai field tersebut sebagai context/evidence terpisah dari liquidity score. Website dan CIK memakai safe external links; logo hanya dirender inline dari hostname CMC CDN yang di-allowlist.
 
 Gunakan cache panjang karena data tidak berubah sesering quote.
 
@@ -167,7 +167,7 @@ curl --get 'https://pro-api.coinmarketcap.com/v5/real-world-assets/market-pairs/
 ## 5. Strategi credit dan caching
 
 1. Gunakan `/map` untuk lookup ringan.
-2. Ambil `/assets/list` dalam batch, bukan satu request per card.
+2. Ambil `/assets/list` dalam batch, bukan satu request per card. Explorer melakukan satu batch `/info` tambahan untuk seluruh ID pada page agar logo tersedia; metadata memakai cache panjang dan kegagalannya hanya menghasilkan fallback simbol.
 3. Panggil `/quotes/latest` dan `/market-pairs/list` saat detail dibuka atau snapshot prioritas berjalan.
 4. Compare memuat 50 kandidat awal dari `/assets/list`. Search dua karakter atau lebih dikirim secara debounced ke server dan dibatasi maksimum 50 hasil: exact symbol lookup memakai `/map`, exact normalized slug memakai `/assets/list`, dan name substring dicari pada 250 aset bervolume tertinggi. Browser tidak menerima ribuan record.
 5. Compare menggabungkan 2–4 canonical `rwa_id` dalam satu request `/quotes/latest` dan satu `/info`; market pairs tetap diminta per aset karena upstream hanya menerima satu RWA.

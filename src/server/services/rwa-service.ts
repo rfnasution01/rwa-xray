@@ -91,6 +91,7 @@ export type SourceStatus = {
 };
 
 export type ExplorerItem = ListedAsset & {
+  logo: string | null;
   turnoverRatio: number | null;
 };
 
@@ -301,10 +302,24 @@ export function createRwaApplicationService(options: {
         convert: "USD",
         skipInvalid: true,
       });
+      const rwaIds = result.value.data.items.map((asset) => asset.rwaId);
+      const metadataResult =
+        rwaIds.length > 0
+          ? await options.repository
+              .getInfo({ rwaId: rwaIds.join(","), skipInvalid: true })
+              .catch(() => null)
+          : null;
+      const logosByRwaId = new Map(
+        (metadataResult?.value.data ?? []).map((metadata) => [
+          metadata.rwaId,
+          metadata.about?.logo ?? null,
+        ]),
+      );
 
       return {
         items: result.value.data.items.map((asset) => ({
           ...asset,
+          logo: logosByRwaId.get(asset.rwaId) ?? null,
           turnoverRatio: turnover(asset),
         })),
         pagination: {
@@ -312,7 +327,9 @@ export function createRwaApplicationService(options: {
           hasMore: result.value.data.hasMore,
         },
         sourceStatus: sourceStatus("assets", result),
-        stale: result.cache.state === "stale",
+        stale:
+          result.cache.state === "stale" ||
+          metadataResult?.cache.state === "stale",
       };
     },
 

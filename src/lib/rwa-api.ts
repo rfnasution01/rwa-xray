@@ -56,7 +56,12 @@ const sourceStatusSchema = z.object({
 
 const explorerEnvelopeSchema = z.object({
   data: z.object({
-    items: z.array(assetSchema.extend({ turnoverRatio: nullableNumber })),
+    items: z.array(
+      assetSchema.extend({
+        logo: nullableString,
+        turnoverRatio: nullableNumber,
+      }),
+    ),
     pagination: z.object({
       totalSize: z.number().int().nonnegative().nullable(),
       hasMore: z.boolean().nullable(),

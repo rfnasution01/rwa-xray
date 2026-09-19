@@ -17,7 +17,7 @@
         "primary_exchange": null,
         "about": {
           "description": "Sanitized fixture for automated tests.",
-          "logo": null,
+          "logo": "https://s2.coinmarketcap.com/static/img/rwa/EXTB.png",
           "website": "https://example.invalid",
           "date_added": "2026-01-01T00:00:00.000Z"
         }

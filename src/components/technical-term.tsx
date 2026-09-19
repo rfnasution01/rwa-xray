@@ -204,6 +204,26 @@ const glossary = {
     definition:
       "The founding date or year reported in the asset metadata. It is descriptive, not a verification of legal status.",
   },
+  employeeCount: {
+    label: "Employees",
+    definition:
+      "The latest employee count reported in CMC asset metadata. Reporting periods and coverage can differ between assets.",
+  },
+  cik: {
+    label: "CIK",
+    definition:
+      "The Central Index Key used by the U.S. SEC to identify a company in EDGAR filings. Availability does not verify that a token provides a legal claim on the company.",
+  },
+  metadataDateAdded: {
+    label: "Metadata added",
+    definition:
+      "When this asset metadata record was added to the CoinMarketCap dataset, not when the asset or its tokenization launched.",
+  },
+  tokenizationStatus: {
+    label: "Tokenization status",
+    definition:
+      "Whether CMC reports token records linked to this RWA. It does not verify reserves, redemption rights, or legal ownership.",
+  },
   assetSelection: {
     label: "Select assets",
     definition:

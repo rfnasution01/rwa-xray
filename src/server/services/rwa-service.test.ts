@@ -128,6 +128,7 @@ describe("RWA application service", () => {
 
     expect(result.items[0]).toMatchObject({
       rwaId: 101,
+      logo: "https://s2.coinmarketcap.com/static/img/rwa/EXTB.png",
       turnoverRatio: 0.05,
     });
     expect(result.sourceStatus.cache).not.toHaveProperty("key");
@@ -141,6 +142,23 @@ describe("RWA application service", () => {
         limit: 20,
       }),
     );
+    expect(data.getInfo).toHaveBeenCalledWith({
+      rwaId: "101",
+      skipInvalid: true,
+    });
+  });
+
+  it("keeps Explorer available when optional logo metadata fails", async () => {
+    const data = repository();
+    vi.mocked(data.getInfo).mockRejectedValueOnce(
+      new Error("metadata unavailable"),
+    );
+    const service = createRwaApplicationService({ repository: data });
+
+    const result = await service.getExplorer({ limit: 20 });
+
+    expect(result.items[0]).toMatchObject({ rwaId: 101, logo: null });
+    expect(result.stale).toBe(false);
   });
 
   it("loads bounded initial candidates and performs targeted Compare search", async () => {

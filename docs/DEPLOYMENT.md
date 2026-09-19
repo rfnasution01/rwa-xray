@@ -100,9 +100,9 @@ Harness hanya mencetak status/count, bukan response payload atau credential. Jik
 
 ## 8. Security headers
 
-`next.config.ts` menerapkan CSP allowlist same-origin, `frame-ancestors 'none'`, HSTS production, `X-Frame-Options: DENY`, `nosniff`, restrictive Permissions Policy, dan menghapus framework disclosure header.
+`next.config.ts` menerapkan CSP dengan koneksi same-origin dan image allowlist terbatas untuk CMC CDN, `frame-ancestors 'none'`, HSTS production, `X-Frame-Options: DENY`, `nosniff`, restrictive Permissions Policy, dan menghapus framework disclosure header.
 
-CSP saat ini sengaja hanya mengizinkan koneksi same-origin karena browser memanggil internal API. Ketika Sentry atau PostHog benar-benar diintegrasikan, tambahkan hanya origin vendor yang diperlukan ke directive terkait dan verifikasi ulang melalui browser—jangan membuka wildcard global.
+CSP hanya mengizinkan koneksi same-origin karena browser memanggil internal API. Asset logo dibatasi ke path image pada `s2.coinmarketcap.com` dan `s3.coinmarketcap.com`; external website dan SEC links menggunakan navigation biasa. Ketika Sentry atau PostHog benar-benar diintegrasikan, tambahkan hanya origin vendor yang diperlukan ke directive terkait dan verifikasi ulang melalui browser—jangan membuka wildcard global.
 
 ## 9. Manual release checks
 

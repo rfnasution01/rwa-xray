@@ -61,7 +61,22 @@ async function mockRwaApi(page: Page) {
               },
             ],
           },
-          metadata: null,
+          metadata: {
+            rwaId: 101,
+            website: "https://example.com/assets/tcn",
+            employees: 1250,
+            founded: "2018",
+            industry: "Asset Management",
+            cik: "0001234567",
+            primaryExchange: "Example Exchange",
+            about: {
+              description:
+                "A tokenized Treasury asset used for capacity analysis.",
+              logo: null,
+              website: "https://example.com/assets/tcn",
+              dateAdded: "2025-07-17T06:29:24.000Z",
+            },
+          },
           marketPairs: null,
           analysis: {
             calculatedAt: "2026-09-18T02:31:00.000Z",
@@ -179,8 +194,8 @@ async function mockRwaApi(page: Page) {
       body: JSON.stringify({
         data: {
           items: [
-            { ...asset, turnoverRatio: 0.05 },
-            { ...secondAsset, turnoverRatio: 0.03125 },
+            { ...asset, logo: null, turnoverRatio: 0.05 },
+            { ...secondAsset, logo: null, turnoverRatio: 0.03125 },
           ],
           pagination: { totalSize: 2, hasMore: false },
           sourceStatus: sourceStatus,
@@ -531,6 +546,15 @@ test("filters and opens a live Explorer row", async ({ page }) => {
   await expect(
     page.locator('[role="tooltip"].fx-term-card-visible'),
   ).toContainText("aggregate USD price");
+  await expect(
+    page.getByRole("link", { name: "Asset website" }),
+  ).toHaveAttribute("href", "https://example.com/assets/tcn");
+  await expect(page.getByText("1,250")).toBeVisible();
+  await expect(page.getByRole("link", { name: /0001234567/ })).toHaveAttribute(
+    "href",
+    "https://www.sec.gov/edgar/browse/?CIK=0001234567",
+  );
+  await expect(page.getByText("Token records available")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Exit Capacity Simulator" }),
   ).not.toBeVisible();
