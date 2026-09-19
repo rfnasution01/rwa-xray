@@ -234,6 +234,106 @@ const glossary = {
     definition:
       "A missing or unavailable source that limits one or more comparison metrics. It is not converted into a zero result.",
   },
+  observedData: {
+    label: "Observed data",
+    definition:
+      "Normalized source observations received by RWA X-Ray, including source timestamps and availability status.",
+  },
+  explicitAssumptions: {
+    label: "Explicit assumptions",
+    definition:
+      "Scenario inputs that are shown and adjustable, rather than hidden inside a black-box calculation.",
+  },
+  missingData: {
+    label: "Missing data",
+    definition:
+      "An unavailable input that remains null or unavailable, lowers evidence coverage, and is never silently converted to zero.",
+  },
+  positionVariable: {
+    label: "P · Position value",
+    definition:
+      "The USD value of the position being tested in the capacity scenario.",
+  },
+  volumeVariable: {
+    label: "V · Observed volume",
+    definition:
+      "Reported tokenized trading volume during the latest 24-hour window.",
+  },
+  participationVariable: {
+    label: "r · Participation rate",
+    definition:
+      "The fraction of effective volume used by the scenario, bounded to the supported input range.",
+  },
+  haircutVariable: {
+    label: "h · Stress haircut",
+    definition:
+      "The fraction removed from reported volume to model a lower-activity scenario.",
+  },
+  volumeShare: {
+    label: "Volume share",
+    definition:
+      "An entity's observed volume divided by the total valid volume in the same concentration dimension.",
+  },
+  hhi: {
+    label: "HHI",
+    definition:
+      "Herfindahl–Hirschman Index: the sum of squared volume shares used to describe concentration.",
+  },
+  normalizedHhiMethod: {
+    label: "Normalized HHI",
+    definition:
+      "HHI adjusted for the number of observations so concentration can be compared on a 0–1 scale.",
+  },
+  pairFreshness: {
+    label: "Market-pair freshness",
+    definition:
+      "How recently market-pair observations were updated. Older pairs receive lower evidence treatment or are excluded.",
+  },
+  priceConsistency: {
+    label: "Price consistency",
+    definition:
+      "A Health component describing how closely observed market prices agree after robust dispersion handling.",
+  },
+  marketAvailability: {
+    label: "Market availability",
+    definition:
+      "A Health component based on the number and breadth of available market-pair observations.",
+  },
+  dataFreshness: {
+    label: "Data freshness",
+    definition:
+      "A Health component based on the age of the source observations when analysis is calculated.",
+  },
+  aggregateQuote: {
+    label: "Aggregate quote",
+    definition:
+      "The reported asset-level price, market cap, or volume observation used as a primary input.",
+  },
+  freshTimestamp: {
+    label: "Fresh source timestamp",
+    definition:
+      "A source update timestamp that is present and recent enough for the evidence check.",
+  },
+  marketPairCoverage: {
+    label: "Market-pair coverage",
+    definition:
+      "Evidence that at least the required valid market-pair observations are available for analysis.",
+  },
+  tokenBreakdown: {
+    label: "Token breakdown",
+    definition:
+      "Evidence describing the underlying token representations and their available metrics.",
+  },
+  issuerMapping: {
+    label: "Issuer mapping",
+    definition:
+      "Evidence linking tokenized representations to known issuers where mapping data is available.",
+  },
+  crossFieldConsistency: {
+    label: "Cross-field consistency",
+    definition:
+      "Checks that related fields are valid, non-negative, uniquely identified, and use consistent currency and scope.",
+  },
 } as const;
 
 export type GlossaryTerm = keyof typeof glossary;

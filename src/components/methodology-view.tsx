@@ -14,6 +14,8 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
+
+import { TechnicalTerm } from "@/components/technical-term";
 import { useState, type KeyboardEvent } from "react";
 
 import { ANALYSIS_CONFIG, METHODOLOGY_VERSION } from "@/domain/analysis/config";
@@ -114,9 +116,9 @@ export function MethodologyView() {
   };
 
   return (
-    <article className="relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e7f3f1]">
+    <article className="relative min-h-[calc(100vh-76px)] overflow-visible bg-[#02090b] text-[#e7f3f1]">
       <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
-      <div className="pointer-events-none absolute top-[-15rem] right-[-12rem] size-[42rem] rounded-full bg-[#0d7877]/10 blur-[130px]" />
+      <div className="pointer-events-none absolute top-[-15rem] right-0 size-[42rem] rounded-full bg-[#0d7877]/10 blur-[130px]" />
 
       <div className="relative mx-auto max-w-[1600px] px-5 py-10 sm:px-8 lg:px-14 lg:py-14">
         <motion.header
@@ -159,7 +161,15 @@ export function MethodologyView() {
             <div key={title} className="bg-[#041416] p-5 sm:p-6">
               <Icon className="size-5 text-[#59e8e1]" aria-hidden="true" />
               <h2 className="mt-4 text-sm font-semibold text-[#dcecea]">
-                {title}
+                {title === "Observed data" ? (
+                  <TechnicalTerm term="observedData">{title}</TechnicalTerm>
+                ) : title === "Explicit assumptions" ? (
+                  <TechnicalTerm term="explicitAssumptions">
+                    {title}
+                  </TechnicalTerm>
+                ) : (
+                  <TechnicalTerm term="missingData">{title}</TechnicalTerm>
+                )}
               </h2>
               <p className="mt-2 text-xs leading-6 text-[#6f9395]">{copy}</p>
             </div>
@@ -241,13 +251,10 @@ export function MethodologyView() {
                   <div className="bg-[#061719] p-5 sm:p-7">
                     <p className="fx-kicker">Variable registry</p>
                     <dl className="mt-5 space-y-3">
-                      <Definition symbol="P" label="Position value · USD" />
-                      <Definition symbol="V" label="Observed volume · 24h" />
-                      <Definition
-                        symbol="r"
-                        label="Participation rate · 0.1–20%"
-                      />
-                      <Definition symbol="h" label="Stress haircut · 0–90%" />
+                      <Definition symbol="P" term="positionVariable" />
+                      <Definition symbol="V" term="volumeVariable" />
+                      <Definition symbol="r" term="participationVariable" />
+                      <Definition symbol="h" term="haircutVariable" />
                     </dl>
                     <div className="mt-6 border border-[#73552d] bg-[#1d160c] p-4 font-mono text-[9px] leading-5 text-[#e6bb74]">
                       Capacity is a planning proxy. It is not a promise of
@@ -287,11 +294,15 @@ export function MethodologyView() {
                       Volume concentration
                     </h3>
                     <div className="mt-5 border border-[#174749] bg-[#020d0f] p-5 font-mono text-sm leading-8 text-[#85e8e3]">
-                      shareᵢ = volumeᵢ ÷ Σ volume
+                      <TechnicalTerm term="volumeShare">shareᵢ</TechnicalTerm> =
+                      volumeᵢ ÷ Σ volume
                       <br />
-                      HHI = Σ shareᵢ²
+                      <TechnicalTerm term="hhi">HHI</TechnicalTerm> = Σ shareᵢ²
                       <br />
-                      normalized HHI = (HHI − 1/n) ÷ (1 − 1/n), n &gt; 1
+                      <TechnicalTerm term="normalizedHhiMethod">
+                        normalized HHI
+                      </TechnicalTerm>{" "}
+                      = (HHI − 1/n) ÷ (1 − 1/n), n &gt; 1
                     </div>
                     <p className="mt-4 text-xs leading-6 text-[#719294]">
                       Values near zero are more distributed; values near one are
@@ -309,7 +320,7 @@ export function MethodologyView() {
                         aria-hidden="true"
                       />
                       <h3 className="text-sm font-semibold text-[#dcecea]">
-                        Market-pair freshness
+                        <TechnicalTerm term="pairFreshness" />
                       </h3>
                     </div>
                     <dl className="mt-5 space-y-2">
@@ -523,15 +534,42 @@ function Formula({
   );
 }
 
-function Definition({ symbol, label }: { symbol: string; label: string }) {
+function Definition({
+  symbol,
+  term,
+}: {
+  symbol: string;
+  term: Parameters<typeof TechnicalTerm>[0]["term"];
+}) {
   return (
     <div className="flex items-center gap-3 border-b border-[#173b3d] pb-3 last:border-0">
       <dt className="grid size-8 shrink-0 place-items-center border border-[#2d7678] bg-[#082426] font-mono text-xs text-[#6ce9e3]">
         {symbol}
       </dt>
-      <dd className="text-xs text-[#91acad]">{label}</dd>
+      <dd className="text-xs text-[#91acad]">
+        <TechnicalTerm term={term} />
+      </dd>
     </div>
   );
+}
+
+function weightTerm(
+  label: string,
+): Parameters<typeof TechnicalTerm>[0]["term"] {
+  const terms: Record<string, Parameters<typeof TechnicalTerm>[0]["term"]> = {
+    "Observed activity": "observedMarketActivity",
+    Diversification: "concentrationRisk",
+    "Price consistency": "priceConsistency",
+    "Market availability": "marketAvailability",
+    "Data freshness": "dataFreshness",
+    "Aggregate quote": "aggregateQuote",
+    "Fresh source timestamp": "freshTimestamp",
+    "Market-pair coverage": "marketPairCoverage",
+    "Token breakdown": "tokenBreakdown",
+    "Issuer mapping": "issuerMapping",
+    "Cross-field consistency": "crossFieldConsistency",
+  };
+  return terms[label] ?? "observedData";
 }
 
 function WeightPanel({
@@ -547,13 +585,23 @@ function WeightPanel({
 }) {
   return (
     <div className="bg-[#041416] p-5 sm:p-7">
-      <h3 className="text-sm font-semibold text-[#dcecea]">{title}</h3>
+      <h3 className="text-sm font-semibold text-[#dcecea]">
+        <TechnicalTerm
+          term={
+            title === "Market Capacity Health"
+              ? "marketCapacityHealth"
+              : "evidenceCoverage"
+          }
+        />
+      </h3>
       <p className="mt-2 min-h-10 text-xs leading-5 text-[#719294]">{note}</p>
       <dl className="mt-5 space-y-4">
         {weights.map(([label, weight]) => (
           <div key={label}>
             <div className="flex justify-between gap-4 text-xs">
-              <dt className="text-[#91acad]">{label}</dt>
+              <dt className="text-[#91acad]">
+                <TechnicalTerm term={weightTerm(label)} />
+              </dt>
               <dd className="font-mono text-[10px] text-[#bfd6d4]">
                 {weight}%
               </dd>

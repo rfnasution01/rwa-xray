@@ -209,7 +209,15 @@ test("presents the methodology and guardrails on mobile", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Capacity model" }),
   ).toBeVisible();
-  await expect(page.getByText("Missing ≠ zero")).toBeVisible();
+  const missingDataTerm = page.getByRole("button", {
+    name: "Missing ≠ zero",
+    exact: true,
+  });
+  await expect(missingDataTerm).toBeVisible();
+  await missingDataTerm.click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("unavailable input");
   await expect(
     page.getByRole("heading", {
       name: "What the analysis does not claim",
