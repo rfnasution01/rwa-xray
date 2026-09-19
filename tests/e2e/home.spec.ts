@@ -36,7 +36,19 @@ async function mockRwaApi(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          asset: { ...asset, tokens: [], tradfiMarkets: [] },
+          asset: {
+            ...asset,
+            tokens: [],
+            tradfiMarkets: [
+              {
+                exchangeId: 270,
+                exchangeName: "Example Exchange",
+                exchangeSlug: "example-exchange",
+                ticker: "TCN",
+                marketUrl: "https://example.com/markets/tcn",
+              },
+            ],
+          },
           metadata: null,
           marketPairs: null,
           analysis: {
@@ -405,6 +417,15 @@ test("filters and opens a live Explorer row", async ({ page }) => {
     page.getByRole("heading", { name: "Exit Capacity Simulator" }),
   ).not.toBeVisible();
   await expect(page.getByText(/Partial evidence/)).toBeVisible();
+  await page.getByRole("tab", { name: "Markets" }).click();
+  await expect(
+    page.getByRole("heading", { name: "TradFi markets" }),
+  ).toBeVisible();
+  await expect(page.getByText("Example Exchange")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open market" })).toHaveAttribute(
+    "href",
+    "https://example.com/markets/tcn",
+  );
 });
 
 test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {

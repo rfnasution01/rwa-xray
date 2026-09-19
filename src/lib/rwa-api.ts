@@ -127,7 +127,15 @@ const detailEnvelopeSchema = z.object({
           volume24h: nullableNumber,
         }),
       ),
-      tradfiMarkets: z.array(z.unknown()),
+      tradfiMarkets: z.array(
+        z.object({
+          exchangeId: z.number().int().positive(),
+          exchangeName: z.string(),
+          exchangeSlug: z.string(),
+          ticker: z.string(),
+          marketUrl: nullableString,
+        }),
+      ),
     }),
     metadata: z
       .object({

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Building2,
   Database,
+  ExternalLink,
   Layers3,
   RefreshCw,
   ShieldCheck,
@@ -314,10 +315,11 @@ function DetailContent({ data }: { data: AssetDetailResponse }) {
               <SectionHeading
                 eyebrow="Underlying observations"
                 title="Tokens and markets"
-                description="Token metrics and market-pair observations are shown independently to avoid double counting."
+                description="Token metrics, TradFi references, and market-pair observations are shown independently to avoid double counting."
               />
-              <div className="mt-5 grid gap-4 xl:grid-cols-2">
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
                 <TokenTable tokens={asset.tokens} />
+                <TradfiMarketTable markets={asset.tradfiMarkets} />
                 <MarketTable marketPairs={marketPairs} />
               </div>
             </motion.section>
@@ -698,6 +700,66 @@ function TokenTable({
   );
 }
 
+function TradfiMarketTable({
+  markets,
+}: {
+  markets: AssetDetailResponse["asset"]["tradfiMarkets"];
+}) {
+  return (
+    <DataPanel title="TradFi markets" count={markets.length}>
+      {markets.length === 0 ? (
+        <EmptyRow text="No TradFi market references were returned." />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="table-head">
+              <tr>
+                <th>Exchange</th>
+                <th>Ticker</th>
+                <th className="text-right">Reference</th>
+              </tr>
+            </thead>
+            <tbody className="table-body">
+              {markets.map((market) => {
+                const marketUrl = safeExternalUrl(market.marketUrl);
+                return (
+                  <tr key={`${market.exchangeId}-${market.ticker}`}>
+                    <td>
+                      <strong>{market.exchangeName}</strong>
+                      <span className="block text-xs text-slate-500">
+                        {market.exchangeSlug}
+                      </span>
+                    </td>
+                    <td className="font-mono font-semibold">{market.ticker}</td>
+                    <td className="text-right">
+                      {marketUrl ? (
+                        <a
+                          className="inline-flex items-center gap-1 text-[#5ee9e2] transition hover:text-[#c3fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
+                          href={marketUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open market
+                          <ExternalLink
+                            className="size-3.5"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      ) : (
+                        <span className="text-[#678b8d]">Unavailable</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </DataPanel>
+  );
+}
+
 function MarketTable({
   marketPairs,
 }: {
@@ -1039,6 +1101,18 @@ function formatDays(value: number) {
           maximumFractionDigits: value < 10 ? 1 : 0,
         }).format(value);
 }
+function safeExternalUrl(value: string | null) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function formatType(value: string) {
   return value.replaceAll("_", " ");
 }
