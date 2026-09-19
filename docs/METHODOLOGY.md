@@ -135,7 +135,11 @@ Hitung secara terpisah jika data tersedia:
 
 Untuk issuer, tampilkan persentase volume yang berhasil dipetakan. Jangan menghasilkan issuer concentration score jika mapped volume kurang dari 80%. Jangan mencampur semua dimensi menjadi satu HHI tanpa label.
 
-### 5.4 Pair freshness
+### 5.4 Pair universe completeness
+
+Concentration dan price dispersion hanya dihitung setelah seluruh page `market-pairs/list` selesai dimuat. `total_size`, `has_more`, progres offset, dan keunikan `market_id` harus konsisten. Jika page lanjutan gagal atau jumlah observasi akhir tidak sama dengan total yang dilaporkan, seluruh evidence market-pair untuk kalkulasi tersebut dianggap unavailable; aplikasi tidak menghitung metrik dari page pertama saja.
+
+### 5.5 Pair freshness
 
 - `≤15 menit`: valid;
 - `15–60 menit`: boleh dihitung dengan warning dan penalti confidence;

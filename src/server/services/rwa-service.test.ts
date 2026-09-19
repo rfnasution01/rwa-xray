@@ -201,6 +201,119 @@ describe("RWA application service", () => {
     expect(result.dataGaps).toEqual([]);
   });
 
+  it("loads every market-pair page before analysis", async () => {
+    const data = repository();
+    const base = await data.getMarketPairs({ rwaId: "101" });
+    const pair = base.value.data.pairs[0]!;
+    const firstPagePairs = Array.from({ length: 250 }, (_, index) => ({
+      ...pair,
+      marketId: pair.marketId + index,
+      marketPair: `${pair.marketPair}-${index + 1}`,
+    }));
+    const finalPair = {
+      ...pair,
+      marketId: pair.marketId + 250,
+      marketPair: `${pair.marketPair}-251`,
+    };
+    vi.mocked(data.getMarketPairs).mockReset();
+    vi.mocked(data.getMarketPairs)
+      .mockResolvedValueOnce({
+        ...base,
+        value: {
+          ...base.value,
+          data: {
+            ...base.value.data,
+            pairs: firstPagePairs,
+            totalSize: 251,
+            hasMore: true,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        ...base,
+        value: {
+          ...base.value,
+          data: {
+            ...base.value.data,
+            pairs: [finalPair],
+            totalSize: 251,
+            hasMore: false,
+          },
+        },
+      });
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.marketPairs?.pairs).toHaveLength(251);
+    expect(data.getMarketPairs).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ start: 1, limit: 250 }),
+    );
+    expect(data.getMarketPairs).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ start: 251, limit: 250 }),
+    );
+    expect(result.sourceStatuses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "marketPairs",
+          evidence: expect.objectContaining({ creditCount: 2 }),
+        }),
+      ]),
+    );
+  });
+
+  it("withholds market-pair analysis when a later page fails", async () => {
+    const data = repository();
+    const base = await data.getMarketPairs({ rwaId: "101" });
+    const pair = base.value.data.pairs[0]!;
+    vi.mocked(data.getMarketPairs).mockReset();
+    vi.mocked(data.getMarketPairs)
+      .mockResolvedValueOnce({
+        ...base,
+        value: {
+          ...base.value,
+          data: {
+            ...base.value.data,
+            pairs: Array.from({ length: 250 }, (_, index) => ({
+              ...pair,
+              marketId: pair.marketId + index,
+            })),
+            totalSize: 251,
+            hasMore: true,
+          },
+        },
+      })
+      .mockRejectedValueOnce(new Error("second page unavailable"));
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.marketPairs).toBeNull();
+    expect(result.dataGaps).toContainEqual({
+      source: "marketPairs",
+      code: "SOURCE_UNAVAILABLE",
+    });
+    expect(result.analysis.concentration.market.status).toBe("unavailable");
+  });
+
   it("records a valid detail view without making activity tracking critical", async () => {
     const data = repository();
     const activityRecorder = {

@@ -8,6 +8,7 @@ import type {
   ListedAsset,
   MarketPairs,
   NormalizationWarning,
+  NormalizedDataset,
   SourceEvidence,
 } from "@/domain/assets/models";
 import {
@@ -263,11 +264,7 @@ export function createRwaApplicationService(options: {
             convert: "USD",
             skipInvalid: true,
           }),
-          options.repository.getMarketPairs({
-            rwaId: id,
-            limit: 250,
-            convert: "USD",
-          }),
+          loadAllMarketPairs(options.repository, id),
           options.repository.getInfo({ rwaId: id, skipInvalid: true }),
           options.repository.getAssets({
             limit: 250,
@@ -479,6 +476,118 @@ function sourceStatus(
   };
 }
 
+async function loadAllMarketPairs(
+  repository: RwaRepository,
+  rwaId: string,
+): Promise<CacheResult<NormalizedDataset<MarketPairs>>> {
+  const limit = 250;
+  const pages: Array<CacheResult<NormalizedDataset<MarketPairs>>> = [];
+  let start = 1;
+  let totalSize: number | null = null;
+
+  while (true) {
+    const result = await repository.getMarketPairs({
+      rwaId,
+      sort: "volume_24h",
+      sortDir: "desc",
+      start,
+      limit,
+      convert: "USD",
+    });
+    const page = result.value.data;
+    if (page.rwaId !== Number(rwaId)) {
+      throw new Error("Market-pair page returned a different RWA identifier");
+    }
+    totalSize ??= page.totalSize;
+    if (page.totalSize !== totalSize) {
+      throw new Error("Market-pair pagination total changed between pages");
+    }
+    pages.push(result);
+    if (!page.hasMore) break;
+    if (page.pairs.length === 0) {
+      throw new Error("Market-pair pagination made no progress");
+    }
+    const expectedPages = Math.max(1, Math.ceil(totalSize / limit));
+    if (pages.length >= expectedPages) {
+      throw new Error("Market-pair pagination exceeded its reported total");
+    }
+    start += limit;
+  }
+
+  const first = pages[0];
+  if (!first || totalSize === null) {
+    throw new Error("Market-pair pagination returned no pages");
+  }
+  const pairs = [
+    ...new Map(
+      pages
+        .flatMap((page) => page.value.data.pairs)
+        .map((pair) => [pair.marketId, pair] as const),
+    ).values(),
+  ];
+  if (pairs.length !== totalSize) {
+    throw new Error("Market-pair pagination returned an incomplete dataset");
+  }
+
+  return {
+    value: {
+      data: {
+        ...first.value.data,
+        pairs,
+        totalSize,
+        hasMore: false,
+      },
+      evidence: aggregateEvidence(pages.map((page) => page.value.evidence)),
+      warnings: pages.flatMap((page) => page.value.warnings),
+    },
+    cache: {
+      key: "aggregate:market-pairs",
+      state: aggregateCacheState(pages.map((page) => page.cache.state)),
+      observedAt: latestTimestamp(pages.map((page) => page.cache.observedAt)),
+      expiresAt: earliestTimestamp(pages.map((page) => page.cache.expiresAt)),
+      staleUntil: earliestTimestamp(pages.map((page) => page.cache.staleUntil)),
+      warning: pages.find((page) => page.cache.warning)?.cache.warning ?? null,
+    },
+    refreshError: pages.find((page) => page.refreshError)?.refreshError ?? null,
+  };
+}
+
+function aggregateEvidence(evidence: SourceEvidence[]): SourceEvidence {
+  const first = evidence[0];
+  if (!first) throw new Error("Market-pair evidence is unavailable");
+  const responseTimestamps = evidence
+    .map((item) => item.responseTimestamp)
+    .filter((value): value is string => value !== null);
+  return {
+    ...first,
+    responseTimestamp:
+      responseTimestamps.length > 0
+        ? latestTimestamp(responseTimestamps)
+        : null,
+    observedAt: latestTimestamp(evidence.map((item) => item.observedAt)),
+    creditCount: evidence.reduce((total, item) => total + item.creditCount, 0),
+    notice: evidence.find((item) => item.notice)?.notice ?? null,
+  };
+}
+
+function aggregateCacheState(states: CacheState[]): CacheState {
+  if (states.includes("stale")) return "stale";
+  if (states.includes("refreshed")) return "refreshed";
+  return "fresh";
+}
+
+function latestTimestamp(values: string[]) {
+  return values.reduce((latest, value) =>
+    new Date(value).getTime() > new Date(latest).getTime() ? value : latest,
+  );
+}
+
+function earliestTimestamp(values: string[]) {
+  return values.reduce((earliest, value) =>
+    new Date(value).getTime() < new Date(earliest).getTime() ? value : earliest,
+  );
+}
+
 function settledData<T, R>(
   result: PromiseSettledResult<T>,
   select: (value: T) => R | undefined,
@@ -524,7 +633,16 @@ function evidenceParameters(
 ): Record<string, string | number> {
   if (source === "assets") return { limit: 250, convert: "USD" };
   if (source === "metadata") return { rwaId };
-  if (source === "marketPairs") return { rwaId, limit: 250, convert: "USD" };
+  if (source === "marketPairs")
+    return {
+      rwaId,
+      start: 1,
+      limit: 250,
+      sort: "volume_24h",
+      sortDir: "desc",
+      pagination: "all",
+      convert: "USD",
+    };
   if (source === "issuers") return {};
   return { rwaId, convert: "USD" };
 }

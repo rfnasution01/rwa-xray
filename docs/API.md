@@ -87,7 +87,8 @@ Memerlukan tepat satu dari:
 Menyediakan exchange, pair, price, volume 24 jam, dan waktu pembaruan. Digunakan untuk market concentration dan price dispersion.
 
 **Sort:** `volume_24h` atau `price`.  
-**Pagination:** maksimum 250 per request.  
+**Pagination:** maksimum 250 per request. Detail dan Compare mengambil seluruh page secara berurutan sebelum menghitung concentration atau price dispersion. Jika page lanjutan gagal, kosong ketika `has_more=true`, berubah total, atau tidak lengkap, dataset market-pair diperlakukan unavailable agar metrik tidak dihitung dari subset yang menyesatkan.
+
 **Update:** 1 menit.  
 **Credit:** 1 per 250 market pairs, ditambah conversion tambahan.
 

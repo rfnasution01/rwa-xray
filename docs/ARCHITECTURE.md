@@ -40,7 +40,7 @@ flowchart LR
 - TanStack Query memanggil internal API setiap 60 detik saat tab aktif.
 - Guided demo meminta government securities terlebih dahulu lalu memakai RWA valid bervolume tertinggi dengan label fallback jika category live kosong.
 - Explorer melakukan pagination/filter/sort melalui backend; search saat ini hanya memfilter page yang sudah diterima dan diberi label demikian.
-- `/assets/[rwaId]` menampilkan simulator client-side, concentration per dimensi, price dispersion, token/market tables, methodology warnings, dan sanitized source lineage dari satu detail response.
+- `/assets/[rwaId]` menampilkan simulator client-side, concentration per dimensi, price dispersion, token/market tables, methodology warnings, dan sanitized source lineage dari satu detail response. Backend memuat seluruh page market-pair sebelum analisis; kegagalan atau pagination yang tidak lengkap membuat evidence tersebut unavailable.
 - `/compare` menerapkan satu scenario pada 2–4 canonical RWA IDs, mempertahankan partial results, dan memakai neutral ordering berdasarkan Estimated Exit Days.
 - `/issuers` menampilkan issuer directory terpaginasikan; `/issuers/[issuerId]` menampilkan token yang dilaporkan terkait dan menautkannya kembali ke canonical asset bila `rwa_id` tersedia.
 - Response internal divalidasi dengan Zod di browser sebelum dirender.
