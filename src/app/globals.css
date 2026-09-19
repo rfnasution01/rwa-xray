@@ -234,6 +234,10 @@ a {
   text-transform: none;
 }
 
+.fx-compare-shell[data-processing="true"] .fx-term {
+  visibility: hidden;
+}
+
 .fx-compare-shell .input-label {
   color: #a9c1c0;
   font-family: var(--font-geist-mono), monospace;

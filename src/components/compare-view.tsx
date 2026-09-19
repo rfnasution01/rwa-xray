@@ -87,7 +87,10 @@ export function CompareView() {
   }
 
   return (
-    <section className="fx-compare-shell relative min-h-[calc(100vh-76px)] overflow-visible bg-[#02090b] text-[#e7f3f1]">
+    <section
+      className="fx-compare-shell relative min-h-[calc(100vh-76px)] overflow-visible bg-[#02090b] text-[#e7f3f1]"
+      data-processing={comparison.isPending ? "true" : undefined}
+    >
       <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
       <div className="pointer-events-none absolute top-[-18rem] right-0 size-[42rem] rounded-full bg-[#0b7373]/10 blur-[130px]" />
 
@@ -109,9 +112,6 @@ export function CompareView() {
               not an investment recommendation.
             </p>
           </div>
-          <Link className="fx-compare-secondary shrink-0" href="/assets">
-            Edit universe <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
         </motion.header>
 
         <motion.section
@@ -327,6 +327,7 @@ export function CompareView() {
             <ComparisonResults
               key="comparison-results"
               data={comparison.data}
+              requestedAssets={selectedCandidates}
               reduceMotion={Boolean(reduceMotion)}
             />
           ) : null}
@@ -354,7 +355,7 @@ function ProcessingDialog({
 }) {
   return (
     <motion.div
-      className="fixed inset-0 z-50 grid place-items-center bg-[#010709]/78 px-5 backdrop-blur-[6px]"
+      className="fixed inset-0 z-[1200] grid place-items-center bg-[#010709]/78 px-5 backdrop-blur-[6px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="comparison-processing-title"
@@ -493,9 +494,11 @@ function CompareAssetOption({
 
 function ComparisonResults({
   data,
+  requestedAssets,
   reduceMotion,
 }: {
   data: CompareResponse;
+  requestedAssets: ExplorerItem[];
   reduceMotion: boolean;
 }) {
   return (
@@ -641,6 +644,40 @@ function ComparisonResults({
             </Link>
           </motion.article>
         ))}
+        {data.failures.map((failure, index) => {
+          const asset = requestedAssets.find(
+            (candidate) => candidate.rwaId === failure.rwaId,
+          );
+          return (
+            <motion.article
+              key={`failure-${failure.rwaId}`}
+              className="border border-[#72532b] bg-[#1a160d] p-5 sm:p-6"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.4,
+                delay: reduceMotion ? 0 : (data.items.length + index) * 0.07,
+              }}
+            >
+              <p className="font-mono text-[9px] tracking-[0.16em] text-[#e9b968] uppercase">
+                Comparison unavailable
+              </p>
+              <h3 className="mt-3 text-lg font-semibold text-[#f4ead6]">
+                {asset?.name ?? `Asset ${failure.rwaId}`}
+              </h3>
+              <p className="mt-1 font-mono text-[10px] text-[#bda575]">
+                {asset?.symbol ?? `RWA ID ${failure.rwaId}`}
+              </p>
+              <p className="mt-6 text-sm leading-6 text-[#d5c6a8]">
+                This asset could not be analyzed because a required real-data
+                source was unavailable. No synthetic values were substituted.
+              </p>
+              <p className="mt-4 font-mono text-[9px] tracking-[0.08em] text-[#aa8d5e] uppercase">
+                {failure.code.replaceAll("_", " ")}
+              </p>
+            </motion.article>
+          );
+        })}
       </div>
       <p className="border-t border-[#153b3d] px-5 py-4 font-mono text-[9px] leading-5 tracking-[0.04em] text-[#557b7d] sm:px-6">
         Ordering is a scenario convenience, not a “best asset” ranking or
