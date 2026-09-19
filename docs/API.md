@@ -49,7 +49,9 @@ GET /v5/real-world-assets/info
 
 **Tujuan:** metadata statis, nominal/company fields, deskripsi, logo, website, employee count, CIK, primary exchange, founding date, dan waktu metadata ditambahkan. Asset X-Ray memakai field tersebut sebagai context/evidence terpisah dari liquidity score. Website dan CIK memakai safe external links; logo hanya dirender inline dari hostname CMC CDN yang di-allowlist.
 
-Gunakan cache panjang karena data tidak berubah sesering quote.
+**Update upstream:** sekitar 30 detik menurut dokumentasi CMC.
+
+**TTL aplikasi:** 24 jam. Ini keputusan aplikasi yang disengaja karena field bersifat metadata relatif statis dan `/info` kini dipakai untuk enrichment logo per page Explorer. TTL panjang mengurangi credit, latency, dan repeated batch lookup; ini bukan klaim bahwa upstream hanya berubah setiap 24 jam. Manual/browser refetch tetap dapat menerima cached-fresh metadata sampai TTL berakhir.
 
 ### 2.3 RWA Asset List
 
@@ -121,6 +123,10 @@ GET /v5/real-world-assets/issuers/list
 
 **Tujuan:** daftar issuer untuk discovery dan pemetaan token ke issuer.
 
+**Update upstream:** sekitar 30 detik menurut dokumentasi CMC.
+
+**TTL aplikasi:** 1 jam untuk membatasi repeated directory loads.
+
 ### 2.7 Issuer Detail
 
 ```http
@@ -128,6 +134,10 @@ GET /v5/real-world-assets/issuers
 ```
 
 **Tujuan:** detail issuer berdasarkan identifier yang disyaratkan dokumentasi.
+
+**Update upstream:** sekitar 30 detik menurut dokumentasi CMC.
+
+**TTL aplikasi:** 1 jam karena profil issuer dan relasi token diperlakukan sebagai discovery metadata, bukan market quote.
 
 ## 3. Contoh request aman
 

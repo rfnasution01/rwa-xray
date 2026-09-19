@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { describe, expect, it, vi } from "vitest";
 
-import { createPersistentCache, MAX_CACHE_AGE_MS } from "./service";
+import {
+  CMC_CACHE_TTL_MS,
+  createPersistentCache,
+  MAX_CACHE_AGE_MS,
+} from "./service";
 import type { PersistentCacheEntry, PersistentCacheStore } from "./store";
 
 const valueSchema = z.object({ value: z.string() });
@@ -35,6 +39,18 @@ class MemoryStore implements PersistentCacheStore {
 }
 
 describe("persistent cache policy", () => {
+  it("keeps deliberate application TTLs distinct from upstream frequency", () => {
+    expect(CMC_CACHE_TTL_MS["/v5/real-world-assets/info"]).toBe(
+      24 * 60 * 60 * 1_000,
+    );
+    expect(CMC_CACHE_TTL_MS["/v5/real-world-assets/issuers/list"]).toBe(
+      60 * 60 * 1_000,
+    );
+    expect(CMC_CACHE_TTL_MS["/v5/real-world-assets/issuers"]).toBe(
+      60 * 60 * 1_000,
+    );
+  });
+
   it("stores a miss and serves a subsequent fresh cache hit", async () => {
     const store = new MemoryStore();
     const clock = new Date("2026-09-09T07:00:00.000Z");

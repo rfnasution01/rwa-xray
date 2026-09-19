@@ -77,16 +77,16 @@ Raw response opsional disimpan singkat untuk debugging dan harus bebas secret.
 
 MVP menggunakan PostgreSQL persistent cache melalui Drizzle. Cache menyimpan normalized dataset yang divalidasi ulang saat dibaca; raw API key dan request header tidak pernah disimpan.
 
-| Resource      | TTL awal |
-| ------------- | -------: |
-| RWA map       | 30 detik |
-| Asset list    | 60 detik |
-| Quotes latest | 60 detik |
-| Market pairs  | 60 detik |
-| Metadata      |   24 jam |
-| Issuer data   |    1 jam |
+| Resource      | Update upstream | TTL fresh aplikasi |
+| ------------- | --------------: | -----------------: |
+| RWA map       |        30 detik |           30 detik |
+| Asset list    |        60 detik |           60 detik |
+| Quotes latest |        60 detik |           60 detik |
+| Market pairs  |        60 detik |           60 detik |
+| Metadata      |        30 detik |             24 jam |
+| Issuer data   |        30 detik |              1 jam |
 
-TTL mengikuti update frequency resmi jika tersedia. Browser melakukan refresh adaptif setiap 60 detik saat tab aktif. Cache real terakhir dapat digunakan maksimal 24 jam sejak observasi ketika upstream error dengan label stale yang jelas. Payload invalid dihapus dan dimuat ulang. Kegagalan cache read/write tidak boleh mencegah penggunaan live upstream data.
+Kolom update upstream mendeskripsikan frekuensi publik CMC, sedangkan TTL fresh adalah kebijakan cache aplikasi. Metadata dan issuer sengaja memakai TTL lebih panjang karena relatif statis dan digunakan untuk enrichment/discovery; trade-off-nya, perubahan upstream dapat baru terlihat setelah 24 jam atau 1 jam. Browser dapat meminta ulang setiap 60 detik, tetapi server tetap menyajikan cache fresh sampai TTL aplikasi berakhir. Cache real terakhir dapat digunakan maksimal 24 jam sejak observasi ketika refresh upstream gagal, dengan label stale yang jelas. Payload invalid dihapus dan dimuat ulang. Kegagalan cache read/write tidak boleh mencegah penggunaan live upstream data.
 
 ### Scoring engine
 

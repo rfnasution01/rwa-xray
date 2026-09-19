@@ -222,16 +222,16 @@ GET /v5/real-world-assets/issuers
 
 ### Caching defaults
 
-| Data          | TTL awal |
-| ------------- | -------: |
-| RWA map       | 30 detik |
-| Asset list    | 60 detik |
-| Latest quotes | 60 detik |
-| Market pairs  | 60 detik |
-| Metadata      |   24 jam |
-| Issuer data   |    1 jam |
+| Data          | Update upstream | TTL fresh aplikasi |
+| ------------- | --------------: | -----------------: |
+| RWA map       |        30 detik |           30 detik |
+| Asset list    |        60 detik |           60 detik |
+| Latest quotes |        60 detik |           60 detik |
+| Market pairs  |        60 detik |           60 detik |
+| Metadata      |        30 detik |             24 jam |
+| Issuer data   |        30 detik |              1 jam |
 
-Cache key harus mencakup path dan parameter yang sudah dinormalisasi. Deduplicate request identik yang sedang berjalan.
+Frekuensi update upstream dan TTL aplikasi bukan konsep yang sama. TTL metadata dan issuer sengaja lebih panjang karena relatif statis dan digunakan untuk enrichment/discovery; perubahan upstream dapat terlihat terlambat sesuai TTL tersebut. Cache key harus mencakup path dan parameter yang sudah dinormalisasi. Deduplicate request identik yang sedang berjalan.
 
 ### Historical data
 

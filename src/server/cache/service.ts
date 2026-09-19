@@ -8,6 +8,10 @@ import type { PersistentCacheEntry, PersistentCacheStore } from "./store";
 
 export const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1_000;
 
+/**
+ * Application freshness policy. These TTLs are intentionally independent from
+ * each endpoint's advertised upstream update interval.
+ */
 export const CMC_CACHE_TTL_MS = {
   "/v5/real-world-assets/map": 30_000,
   "/v5/real-world-assets/info": 24 * 60 * 60 * 1_000,

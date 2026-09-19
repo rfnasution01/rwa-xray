@@ -89,19 +89,20 @@ Immutable report storage and Market Cap Mirage are deferred. Scenario URLs may b
 
 ## Platform and engineering
 
-| Area        | Approved decision                                                                 |
-| ----------- | --------------------------------------------------------------------------------- |
-| Application | Next.js App Router, TypeScript strict, pnpm                                       |
-| Hosting     | Vercel                                                                            |
-| Database    | Supabase PostgreSQL                                                               |
-| ORM         | Drizzle ORM                                                                       |
-| Scheduler   | GitHub Actions running a Node.js snapshot script directly                         |
-| License     | MIT                                                                               |
-| Monitoring  | Sentry plus redacted structured application logs                                  |
-| Analytics   | PostHog cookieless anonymous events; no session recording or sensitive properties |
-| CI          | Lint, typecheck, unit tests, production build, secret scan                        |
-| E2E         | Playwright on pull requests to main and before release                            |
-| API outage  | Real stale cache only; never unlabeled mock production data                       |
+| Area        | Approved decision                                                                  |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Application | Next.js App Router, TypeScript strict, pnpm                                        |
+| Hosting     | Vercel                                                                             |
+| Database    | Supabase PostgreSQL                                                                |
+| ORM         | Drizzle ORM                                                                        |
+| Scheduler   | GitHub Actions running a Node.js snapshot script directly                          |
+| License     | MIT                                                                                |
+| Monitoring  | Sentry plus redacted structured application logs                                   |
+| Analytics   | PostHog cookieless anonymous events; no session recording or sensitive properties  |
+| CI          | Lint, typecheck, unit tests, production build, secret scan                         |
+| E2E         | Playwright on pull requests to main and before release                             |
+| API outage  | Real stale cache only; never unlabeled mock production data                        |
+| Cache TTL   | App policy differs from upstream frequency: metadata 24h, issuer 1h; stale max 24h |
 
 ## Evidence of completion
 
