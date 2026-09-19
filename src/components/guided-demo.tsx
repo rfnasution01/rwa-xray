@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
 import {
   type AssetDetailResponse,
@@ -109,7 +110,10 @@ export function GuidedDemo() {
         <div>
           <p className="fx-kicker">Guided live scenario</p>
           <h2 className="mt-3 text-2xl font-medium tracking-[-0.03em] text-[#edf8f6] sm:text-3xl">
-            Stress-test observed market capacity
+            Stress-test{" "}
+            <TechnicalTerm term="observedMarketCapacity">
+              observed market capacity
+            </TechnicalTerm>
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#78999b]">
             Apply one transparent volume-participation scenario to live RWA
@@ -228,19 +232,19 @@ function AssetSummary({ data }: { data: AssetDetailResponse }) {
 
       <dl className="mt-7 grid grid-cols-2 border-y border-[#14383a] lg:grid-cols-4">
         <Metric
-          label="Average tokenized price"
+          label={<TechnicalTerm term="averageTokenizedPrice" />}
           value={formatCurrency(asset.quote.averageTokenizedPrice)}
         />
         <Metric
-          label="Tokenized market cap"
+          label={<TechnicalTerm term="tokenizedMarketCap" align="right" />}
           value={formatCompactCurrency(asset.quote.tokenizedMarketCap)}
         />
         <Metric
-          label="Reported volume · 24h"
+          label={<TechnicalTerm term="reportedVolume24h" />}
           value={formatCompactCurrency(asset.quote.tokenizedVolume24h)}
         />
         <Metric
-          label="Turnover ratio"
+          label={<TechnicalTerm term="turnoverRatio" align="right" />}
           value={formatPercent(analysis.metrics.turnoverRatio)}
         />
       </dl>
@@ -255,12 +259,14 @@ function EvidenceSidebar({ data }: { data: AssetDetailResponse }) {
     <aside className="grid gap-7 bg-[#041113]/80 p-5 sm:p-7 xl:content-start">
       <ScoreDial
         label="Evidence coverage"
+        term="evidenceCoverage"
         score={evidence.score}
         status={evidence.label}
         tone="cyan"
       />
       <ScoreDial
         label="Market capacity health"
+        term="marketCapacityHealth"
         score={health.score}
         status={health.status === "available" ? "Observed" : "Unavailable"}
         tone="amber"
@@ -303,20 +309,22 @@ function ScoreDial({
   score,
   status,
   tone,
+  term,
 }: {
   label: string;
   score: number | null;
   status: string;
   tone: "cyan" | "amber";
+  term: GlossaryTerm;
 }) {
   const reduceMotion = useReducedMotion();
   const value = score === null ? 0 : Math.round(score);
   const color = tone === "cyan" ? "#50eee7" : "#ffd096";
   return (
     <div>
-      <p className="font-mono text-[10px] tracking-[0.16em] text-[#b0c5c5] uppercase">
-        {label}
-      </p>
+      <div className="font-mono text-[10px] tracking-[0.16em] text-[#b0c5c5] uppercase">
+        <TechnicalTerm term={term}>{label}</TechnicalTerm>
+      </div>
       <div className="mt-4 flex items-center gap-5">
         <motion.div
           className="grid size-24 shrink-0 place-items-center rounded-full p-[7px]"
@@ -400,7 +408,9 @@ function ScenarioControls(props: {
         </label>
       </fieldset>
       <fieldset className="mt-7 border-t border-[#14383a] pt-6">
-        <legend className="input-label">02 · Volume participation</legend>
+        <legend className="input-label">
+          02 · <TechnicalTerm term="volumeParticipation" />
+        </legend>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {participationPresets.map((value) => (
             <PresetButton
@@ -431,7 +441,9 @@ function ScenarioControls(props: {
         </label>
       </fieldset>
       <fieldset className="mt-7 border-t border-[#14383a] pt-6">
-        <legend className="input-label">03 · Stress haircut</legend>
+        <legend className="input-label">
+          03 · <TechnicalTerm term="stressHaircut" />
+        </legend>
         <div className="mt-3 grid grid-cols-4 gap-2">
           {haircutPresets.map((value) => (
             <PresetButton
@@ -494,7 +506,9 @@ function ScenarioResults({
           {formatDays(scenario.estimatedExitDays)}
         </span>
         <span className="pb-2 font-mono text-[10px] tracking-[0.12em] text-[#66898b] uppercase">
-          estimated exit days
+          <TechnicalTerm term="estimatedExitDays">
+            estimated exit days
+          </TechnicalTerm>
         </span>
       </div>
       <p className="mt-3 max-w-xl text-sm leading-6 text-[#85a4a5]">
@@ -504,17 +518,17 @@ function ScenarioResults({
       <dl className="mt-7 grid border-y border-[#14383a] sm:grid-cols-3">
         <ResultMetric
           icon={<BarChart3 />}
-          label="Effective volume"
+          label={<TechnicalTerm term="effectiveVolume" />}
           value={formatCompactCurrency(scenario.effectiveVolume)}
         />
         <ResultMetric
           icon={<Gauge />}
-          label="Daily exit capacity"
+          label={<TechnicalTerm term="dailyExitCapacity" />}
           value={formatCompactCurrency(scenario.dailyCapacity)}
         />
         <ResultMetric
           icon={<Clock3 />}
-          label="Position / volume"
+          label={<TechnicalTerm term="positionToVolume" align="right" />}
           value={formatPercent(scenario.positionToVolumeRatio)}
         />
       </dl>
@@ -522,7 +536,7 @@ function ScenarioResults({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value }: { label: React.ReactNode; value: string }) {
   return (
     <div className="border-r border-[#14383a] px-3 py-5 last:border-r-0">
       <dt className="text-[10px] leading-4 text-[#658789]">{label}</dt>
@@ -539,7 +553,7 @@ function ResultMetric({
   value,
 }: {
   icon: React.ReactElement<{ className?: string }>;
-  label: string;
+  label: React.ReactNode;
   value: string;
 }) {
   return (

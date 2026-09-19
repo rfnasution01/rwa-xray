@@ -135,6 +135,105 @@ a {
     #02090b;
 }
 
+.fx-term {
+  z-index: 80;
+  vertical-align: baseline;
+}
+
+.fx-term:hover,
+.fx-term:focus-within {
+  z-index: 900;
+}
+
+.fx-term-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-bottom: 1px dotted #409e9d;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: help;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.fx-term-trigger:hover,
+.fx-term-trigger:focus-visible {
+  border-color: #69f2eb;
+  color: #bff8f4;
+}
+
+.fx-term-trigger:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #4ce3dd;
+  outline-offset: 3px;
+}
+
+.fx-term-card {
+  position: absolute;
+  z-index: 1000;
+  bottom: calc(100% + 0.75rem);
+  left: 0;
+  width: min(15rem, calc(100vw - 3rem));
+  visibility: hidden;
+  border: 1px solid #2b8585;
+  background: #061719;
+  padding: 0.85rem;
+  color: #d8e9e7;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow:
+    0 18px 50px rgb(0 0 0 / 0.48),
+    inset 0 0 24px rgb(49 220 213 / 0.035);
+  transform: translateY(5px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    visibility 150ms ease;
+}
+
+.fx-term-card-right {
+  right: 0;
+  left: auto;
+}
+
+.fx-term:hover .fx-term-card,
+.fx-term:focus-within .fx-term-card,
+.fx-term-card-visible {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fx-term-card-title,
+.fx-term-card-copy {
+  display: block;
+  text-align: left;
+}
+
+.fx-term-card-title {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  letter-spacing: 0.1em;
+  color: #5cece5;
+  text-transform: uppercase;
+}
+
+.fx-term-card-copy {
+  margin-top: 0.4rem;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.15rem;
+  letter-spacing: 0;
+  color: #91acad;
+  text-transform: none;
+}
+
 .fx-compare-shell .input-label {
   color: #a9c1c0;
   font-family: var(--font-geist-mono), monospace;
@@ -712,7 +811,7 @@ a {
 
 .fx-dashboard-frame {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #1a5557;
   background: rgb(3 14 16 / 0.92);
   box-shadow:

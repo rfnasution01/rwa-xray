@@ -161,6 +161,15 @@ test("runs the guided capacity scenario", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("4", { exact: true })).toBeVisible();
 
+  await page
+    .getByRole("button", { name: "Volume participation", exact: true })
+    .focus();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "percentage of effective 24-hour volume",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).not.toBeVisible();
+
   await page.getByRole("button", { name: "1%", exact: true }).click();
   await expect(page.getByText("20", { exact: true })).toBeVisible();
   await expect(page.getByText(/not a promise of execution/i)).toBeVisible();
@@ -177,6 +186,12 @@ test("keeps the redesigned landing usable on mobile", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page.getByText("Live scenario terminal")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Tokenized market cap", exact: true })
+    .click();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "does not guarantee active trading",
+  );
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,

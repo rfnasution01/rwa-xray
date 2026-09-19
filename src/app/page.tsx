@@ -16,6 +16,7 @@ import {
   MotionItem,
   MotionStagger,
 } from "@/components/landing-motion";
+import { TechnicalTerm } from "@/components/technical-term";
 
 const principles = [
   {
@@ -60,9 +61,23 @@ export default function Home() {
             </MotionItem>
             <MotionItem>
               <p className="mt-7 max-w-2xl text-base leading-7 text-[#a2b9ba] sm:text-lg sm:leading-8">
-                Stress-test any tokenized real-world asset against observed
-                market activity, concentration risk, and evidence
-                coverage—before you commit capital.
+                Stress-test any{" "}
+                <TechnicalTerm term="rwa">
+                  tokenized real-world asset
+                </TechnicalTerm>{" "}
+                against{" "}
+                <TechnicalTerm term="observedMarketActivity">
+                  observed market activity
+                </TechnicalTerm>
+                ,{" "}
+                <TechnicalTerm term="concentrationRisk">
+                  concentration risk
+                </TechnicalTerm>
+                , and{" "}
+                <TechnicalTerm term="evidenceCoverage">
+                  evidence coverage
+                </TechnicalTerm>
+                —before you commit capital.
               </p>
             </MotionItem>
             <MotionItem>
