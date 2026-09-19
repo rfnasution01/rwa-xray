@@ -77,6 +77,10 @@ async function mockRwaApi(page: Page) {
               dateAdded: "2025-07-17T06:29:24.000Z",
             },
           },
+          historyCoverage: {
+            firstHistoricalData: "2025-01-01T00:00:00.000Z",
+            lastHistoricalData: "2026-09-18T00:00:00.000Z",
+          },
           marketPairs: null,
           analysis: {
             calculatedAt: "2026-09-18T02:31:00.000Z",
@@ -555,6 +559,12 @@ test("filters and opens a live Explorer row", async ({ page }) => {
     "https://www.sec.gov/edgar/browse/?CIK=0001234567",
   );
   await expect(page.getByText("Token records available")).toBeVisible();
+  await expect(page.getByText(/Jan 1, 2025/)).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: "CMC latest history", exact: true })
+      .locator("xpath=ancestor::div[1]"),
+  ).toContainText("2026");
   await expect(
     page.getByRole("heading", { name: "Exit Capacity Simulator" }),
   ).not.toBeVisible();

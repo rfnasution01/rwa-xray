@@ -4,6 +4,7 @@ import type {
   AssetIdentity,
   AssetMetadata,
   DetailedAsset,
+  DiscoveryAsset,
   IssuerDetail,
   IssuerSummary,
   ListedAsset,
@@ -77,7 +78,7 @@ export type CompareInput = {
 };
 
 export type SourceStatus = {
-  source: "assets" | "quotes" | "marketPairs" | "metadata" | "issuers";
+  source: "assets" | "quotes" | "marketPairs" | "metadata" | "map" | "issuers";
   evidence: SourceEvidence;
   normalizationWarnings: NormalizationWarning[];
   cache: {
@@ -123,11 +124,15 @@ export type CompareUniverseResult = {
 export type AssetDetailResult = {
   asset: DetailedAsset;
   metadata: AssetMetadata | null;
+  historyCoverage: Pick<
+    DiscoveryAsset,
+    "firstHistoricalData" | "lastHistoricalData"
+  > | null;
   marketPairs: MarketPairs | null;
   analysis: AnalysisResult;
   sourceStatuses: SourceStatus[];
   dataGaps: Array<{
-    source: "assets" | "marketPairs" | "metadata";
+    source: "assets" | "marketPairs" | "metadata" | "map";
     code: "SOURCE_UNAVAILABLE" | "ASSET_NOT_RETURNED";
   }>;
   stale: boolean;
@@ -220,6 +225,9 @@ export function createRwaApplicationService(options: {
     assetsResult: PromiseSettledResult<
       Awaited<ReturnType<RwaRepository["getAssets"]>>
     >,
+    mapResult?: PromiseSettledResult<
+      Awaited<ReturnType<RwaRepository["getMap"]>>
+    >,
   ): Promise<AssetDetailResult> {
     if (options.activityRecorder) {
       await options.activityRecorder.recordView(asset).catch(() => undefined);
@@ -239,6 +247,25 @@ export function createRwaApplicationService(options: {
     } else if (!metadata) {
       dataGaps.push({ source: "metadata", code: "ASSET_NOT_RETURNED" });
     }
+
+    const discoveryAsset = mapResult
+      ? settledData(mapResult, (result) =>
+          result.value.data.items.find(
+            (candidate) => candidate.rwaId === input.rwaId,
+          ),
+        )
+      : null;
+    if (mapResult?.status === "rejected") {
+      dataGaps.push({ source: "map", code: "SOURCE_UNAVAILABLE" });
+    } else if (mapResult && !discoveryAsset) {
+      dataGaps.push({ source: "map", code: "ASSET_NOT_RETURNED" });
+    }
+    const historyCoverage = discoveryAsset
+      ? {
+          firstHistoricalData: discoveryAsset.firstHistoricalData,
+          lastHistoricalData: discoveryAsset.lastHistoricalData,
+        }
+      : null;
 
     const benchmarkAssets = settledData(
       assetsResult,
@@ -278,11 +305,15 @@ export function createRwaApplicationService(options: {
       ...(assetsResult.status === "fulfilled"
         ? [sourceStatus("assets", assetsResult.value)]
         : []),
+      ...(mapResult?.status === "fulfilled"
+        ? [sourceStatus("map", mapResult.value)]
+        : []),
     ];
 
     return {
       asset,
       metadata,
+      historyCoverage,
       marketPairs,
       analysis,
       sourceStatuses,
@@ -399,6 +430,10 @@ export function createRwaApplicationService(options: {
         );
       }
 
+      const [mapResult] = await Promise.allSettled([
+        options.repository.getMap({ symbol: asset.symbol, limit: 250 }),
+      ]);
+
       return assembleAssetDetail(
         input,
         asset,
@@ -406,6 +441,7 @@ export function createRwaApplicationService(options: {
         pairsResult,
         infoResult,
         assetsResult,
+        mapResult,
       );
     },
 
@@ -623,7 +659,11 @@ export function createRwaApplicationService(options: {
         calculatedAt: detail.analysis.calculatedAt,
         sources: detail.sourceStatuses.map((status) => ({
           ...status,
-          parameters: evidenceParameters(status.source, input.rwaId),
+          parameters: evidenceParameters(
+            status.source,
+            input.rwaId,
+            detail.asset.symbol,
+          ),
           features: evidenceFeatures(status.source),
         })),
         metricLineage: METRIC_LINEAGE,
@@ -825,9 +865,11 @@ function compareByEstimatedExitDays(
 function evidenceParameters(
   source: SourceStatus["source"],
   rwaId: number,
+  symbol: string,
 ): Record<string, string | number> {
   if (source === "assets") return { limit: 250, convert: "USD" };
   if (source === "metadata") return { rwaId };
+  if (source === "map") return { symbol, limit: 250 };
   if (source === "marketPairs")
     return {
       rwaId,
@@ -845,6 +887,7 @@ function evidenceParameters(
 function evidenceFeatures(source: SourceStatus["source"]): string[] {
   if (source === "assets") return ["peer benchmarks"];
   if (source === "metadata") return ["asset context"];
+  if (source === "map") return ["canonical lookup", "historical coverage"];
   if (source === "marketPairs")
     return [
       "market concentration",

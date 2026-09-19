@@ -241,12 +241,16 @@ describe("RWA application service", () => {
 
     expect(result.asset.rwaId).toBe(101);
     expect(result.metadata?.rwaId).toBe(101);
+    expect(result.historyCoverage).toEqual({
+      firstHistoricalData: "2026-01-01T00:00:00.000Z",
+      lastHistoricalData: "2026-09-09T00:00:00.000Z",
+    });
     expect(result.marketPairs?.pairs).toHaveLength(1);
     expect(result.analysis.scenario).toMatchObject({
       status: "available",
       estimatedExitDays: 4,
     });
-    expect(result.sourceStatuses).toHaveLength(4);
+    expect(result.sourceStatuses).toHaveLength(5);
     expect(JSON.stringify(result)).not.toContain("internal-cache-key");
     expect(result.dataGaps).toEqual([]);
   });
@@ -587,6 +591,11 @@ describe("RWA application service", () => {
           source: "quotes",
           parameters: { rwaId: 101, convert: "USD" },
           features: expect.arrayContaining(["exit capacity"]),
+        }),
+        expect.objectContaining({
+          source: "map",
+          parameters: { symbol: "EXTB", limit: 250 },
+          features: expect.arrayContaining(["historical coverage"]),
         }),
       ]),
     );

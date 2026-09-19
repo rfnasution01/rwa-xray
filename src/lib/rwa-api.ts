@@ -32,7 +32,14 @@ const assetSchema = z.object({
 });
 
 const sourceStatusSchema = z.object({
-  source: z.enum(["assets", "quotes", "marketPairs", "metadata", "issuers"]),
+  source: z.enum([
+    "assets",
+    "quotes",
+    "marketPairs",
+    "metadata",
+    "map",
+    "issuers",
+  ]),
   evidence: z.object({
     provider: z.literal("coinmarketcap"),
     endpoint: z.string(),
@@ -222,6 +229,12 @@ const detailEnvelopeSchema = z.object({
           .nullable(),
       })
       .nullable(),
+    historyCoverage: z
+      .object({
+        firstHistoricalData: nullableString,
+        lastHistoricalData: nullableString,
+      })
+      .nullable(),
     marketPairs: z
       .object({
         rwaId: z.number().int().positive(),
@@ -305,7 +318,7 @@ const detailEnvelopeSchema = z.object({
     sourceStatuses: z.array(sourceStatusSchema),
     dataGaps: z.array(
       z.object({
-        source: z.enum(["assets", "marketPairs", "metadata"]),
+        source: z.enum(["assets", "marketPairs", "metadata", "map"]),
         code: z.enum(["SOURCE_UNAVAILABLE", "ASSET_NOT_RETURNED"]),
       }),
     ),

@@ -34,9 +34,9 @@ Referensi diperiksa dari dokumentasi CoinMarketCap RWA Pro API pada saat dokumen
 GET /v5/real-world-assets/map
 ```
 
-**Tujuan:** mendapatkan `rwa_id` stabil sebelum memanggil endpoint yang lebih berat. Tidak membawa market data.
+**Tujuan:** mendapatkan `rwa_id` stabil sebelum memanggil endpoint yang lebih berat. Tidak membawa market data. Compare memakainya untuk exact-symbol lookup global; Asset X-Ray melakukan lookup symbol lalu memverifikasi canonical `rwa_id` untuk menampilkan `first_historical_data` dan `last_historical_data` sebagai upstream coverage metadata.
 
-**Parameter berguna:** `asset_type`, `symbol`, `sort`, `start`, `limit` sesuai dokumentasi.
+**Parameter berguna:** `asset_type`, `symbol`, `sort`, `start`, `limit` sesuai dokumentasi. Karena endpoint tidak menerima filter `rwa_id`, hasil symbol lookup selalu difilter lagi berdasarkan canonical ID sebelum digunakan.
 
 **Update:** 30 detik.  
 **Credit:** dokumentasi menyatakan tidak menggunakan call credit.

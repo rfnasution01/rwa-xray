@@ -219,6 +219,16 @@ const glossary = {
     definition:
       "When this asset metadata record was added to the CoinMarketCap dataset, not when the asset or its tokenization launched.",
   },
+  firstHistoricalData: {
+    label: "CMC history begins",
+    definition:
+      "The earliest historical-data timestamp reported by the CMC RWA map for this canonical asset. It describes upstream coverage and does not mean RWA X-Ray currently exposes a historical price series.",
+  },
+  lastHistoricalData: {
+    label: "CMC latest history",
+    definition:
+      "The latest historical-data timestamp reported by the CMC RWA map. It is coverage metadata, not the current quote timestamp or a guarantee of continuous observations.",
+  },
   tokenizationStatus: {
     label: "Tokenization status",
     definition:

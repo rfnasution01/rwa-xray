@@ -702,6 +702,23 @@ function MetadataPanel({ data }: { data: AssetDetailResponse }) {
           align="right"
           value={tokenizationStatus}
         />
+        <SmallMetric
+          term="firstHistoricalData"
+          value={
+            data.historyCoverage?.firstHistoricalData
+              ? formatDateTime(data.historyCoverage.firstHistoricalData)
+              : "Unavailable"
+          }
+        />
+        <SmallMetric
+          term="lastHistoricalData"
+          align="right"
+          value={
+            data.historyCoverage?.lastHistoricalData
+              ? formatDateTime(data.historyCoverage.lastHistoricalData)
+              : "Unavailable"
+          }
+        />
       </dl>
     </article>
   );
