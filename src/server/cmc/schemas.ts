@@ -38,6 +38,15 @@ const quoteSchema = z
   })
   .passthrough();
 
+const exchangeReportedQuoteSchema = z
+  .object({
+    price: nullableNumber,
+    volume_24h_base: nullableNumber,
+    volume_24h_quote: nullableNumber,
+    last_updated: nullableString,
+  })
+  .passthrough();
+
 const rwaAssetBaseSchema = z
   .object({
     rwa_id: z.number().int().positive().nullable(),
@@ -120,11 +129,26 @@ const marketPairSchema = z
     category: z.string(),
     fee_type: nullableString,
     market_pair_base: marketCurrencySchema,
-    market_pair_quote: marketCurrencySchema,
-    exchange_reported_quotes: z.array(quoteSchema).optional(),
+    market_pair_quote: marketCurrencySchema.optional(),
+    market_pair_quotes: marketCurrencySchema.optional(),
+    exchange_reported_quotes: z
+      .union([
+        exchangeReportedQuoteSchema,
+        z.array(exchangeReportedQuoteSchema),
+      ])
+      .optional(),
     quotes: z.array(quoteSchema),
   })
-  .passthrough();
+  .passthrough()
+  .refine(
+    (pair) =>
+      pair.market_pair_quote !== undefined ||
+      pair.market_pair_quotes !== undefined,
+    {
+      message: "A market-pair quote currency is required",
+      path: ["market_pair_quote"],
+    },
+  );
 
 const tradfiMarketSchema = z
   .object({

@@ -145,6 +145,7 @@ export function normalizeRwaMarketPairs(
 ): NormalizedDataset<MarketPairs> {
   const warnings: WarningCollector = [];
   const pairs = response.data.market_pairs.map((pair, index): MarketPair => {
+    const quoteCurrency = pair.market_pair_quote ?? pair.market_pair_quotes!;
     const quote = pair.quotes.find((candidate) => candidate.symbol === "USD");
     if (!quote) {
       warnings.push({
@@ -171,10 +172,10 @@ export function normalizeRwaMarketPairs(
         currencyType: nullable(pair.market_pair_base.currency_type),
       },
       quote: {
-        cryptoId: nullable(pair.market_pair_quote.crypto_id),
-        symbol: pair.market_pair_quote.symbol,
-        exchangeSymbol: nullable(pair.market_pair_quote.exchange_symbol),
-        currencyType: nullable(pair.market_pair_quote.currency_type),
+        cryptoId: nullable(quoteCurrency.crypto_id),
+        symbol: quoteCurrency.symbol,
+        exchangeSymbol: nullable(quoteCurrency.exchange_symbol),
+        currencyType: nullable(quoteCurrency.currency_type),
       },
       marketQuote: {
         currency: "USD",

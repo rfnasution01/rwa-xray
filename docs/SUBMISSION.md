@@ -50,7 +50,7 @@ Centang hanya yang benar-benar dipakai implementasi:
 - [x] `GET /v5/real-world-assets/map`
 - [x] `GET /v5/real-world-assets/info`
 - [x] `GET /v5/real-world-assets/assets/list`
-- [x] `GET /v5/real-world-assets/market-pairs/list` — integrated; live entitlement currently returns `403/1006`
+- [x] `GET /v5/real-world-assets/market-pairs/list` — integrated and live-verified with Startup plan
 - [x] `GET /v5/real-world-assets/quotes/latest`
 - [x] `GET /v5/real-world-assets/issuers/list`
 - [x] `GET /v5/real-world-assets/issuers`

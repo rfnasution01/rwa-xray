@@ -72,6 +72,6 @@ Partial run menghasilkan exit code 0 agar scheduler tidak dianggap rusak hanya k
 ## Current limitations
 
 - Live CMC saat ini mengembalikan dataset kosong untuk `government_security`; priority worker membutuhkan asset view sampai data tersebut tersedia.
-- Market Pairs masih diblokir oleh entitlement CMC `403/1006`.
+- Market Pairs tersedia melalui Startup plan dan dapat disimpan oleh priority snapshot worker.
 - Retention raw pair 30 hari dan hourly aggregation belum diaktifkan. Data tidak dihapus sampai agregasi tersedia agar histori tidak hilang.
 - Historical Replay API/UI belum dibangun.

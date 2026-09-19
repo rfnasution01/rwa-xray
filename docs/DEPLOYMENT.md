@@ -108,7 +108,7 @@ CSP saat ini sengaja hanya mengizinkan koneksi same-origin karena browser memang
 
 - Buka URL dengan incognito dan perangkat/jaringan lain.
 - Pastikan DevTools Network hanya memperlihatkan internal `/api/*`; tidak ada CMC key atau database URI.
-- Periksa stale/partial-data label jika Market Pairs tetap `403/1006`.
+- Periksa bahwa Market Pairs menampilkan source status, concentration, dan price dispersion; partial-data label harus tetap tersedia untuk kegagalan sementara.
 - Jalankan mobile viewport dan keyboard navigation.
 - Periksa Vercel logs untuk error yang sudah disanitasi.
 - Rotasi credential segera jika pernah terlihat di log, screenshot, atau git history.

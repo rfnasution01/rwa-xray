@@ -45,11 +45,11 @@ Script tidak mencetak API key atau database URL. Error sengaja disanitasi.
 - Migration Supabase berhasil melalui Session Pooler port 5432.
 - Persistent cache write/read/delete berhasil.
 - Direct connection hanya menyediakan IPv6 pada project yang diuji dan tidak stabil dari jaringan lokal; Session Pooler menjadi konfigurasi lokal aktif.
-- Enam endpoint CMC berhasil diakses dan dinormalisasi.
-- `market-pairs/list` diblokir oleh subscription plan (`403`, CMC code `1006`).
-- Filter live `government_security` saat verifikasi mengembalikan dataset kosong; harness memakai RWA tokenized lain hanya untuk memverifikasi infrastruktur.
+- Seluruh tujuh endpoint CMC berhasil diakses dan dinormalisasi.
+- `market-pairs/list` berhasil melalui Startup plan; response live dengan field plural `market_pair_quotes` juga tercakup parser.
+- Filter live `government_security` saat verifikasi dapat mengembalikan dataset kosong; harness memakai RWA tokenized lain hanya untuk memverifikasi infrastruktur.
 
-`pnpm verify:live` sengaja tetap gagal sampai akses market-pairs tersedia karena endpoint tersebut wajib untuk analisis konsentrasi dan price dispersion.
+`pnpm verify:live` lulus ketika API, database, dan seluruh endpoint wajib tersedia.
 
 ## 3. Command terpisah
 

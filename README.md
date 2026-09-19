@@ -168,7 +168,7 @@ Sudah tersedia:
 - `POST /api/compare` serta dedicated `GET /api/assets/:rwaId/evidence` dengan validated input dan safe response;
 - production security headers, configuration-aware readiness, manual GitHub smoke workflow, dan secret-safe production smoke harness.
 
-Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta enam endpoint CMC. `market-pairs/list` masih diblokir subscription plan (`403/1006`), sehingga verifikasi penuh tetap gagal. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Historical Replay API/UI, raw-pair hourly aggregation/retention, dan monitoring integration belum selesai.
+Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Historical Replay API/UI, raw-pair hourly aggregation/retention, dan monitoring integration belum selesai.
 
 ## Disclaimer
 

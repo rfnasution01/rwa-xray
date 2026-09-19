@@ -793,8 +793,10 @@ function MarketTable({
               </tr>
             </thead>
             <tbody className="table-body">
-              {pairs.map((pair) => (
-                <tr key={pair.marketId}>
+              {pairs.map((pair, index) => (
+                <tr
+                  key={`${pair.marketId}-${pair.exchange.id}-${pair.base.cryptoId ?? "base"}-${pair.quote.cryptoId ?? "quote"}-${index}`}
+                >
                   <td className="font-semibold">{pair.marketPair}</td>
                   <td>{pair.exchange.name}</td>
                   <td className="text-right tabular-nums">

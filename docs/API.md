@@ -89,6 +89,8 @@ Menyediakan exchange, pair, price, volume 24 jam, dan waktu pembaruan. Digunakan
 **Sort:** `volume_24h` atau `price`.  
 **Pagination:** maksimum 250 per request. Detail dan Compare mengambil seluruh page secara berurutan sebelum menghitung concentration atau price dispersion. Jika page lanjutan gagal, kosong ketika `has_more=true`, berubah total, atau tidak lengkap, dataset market-pair diperlakukan unavailable agar metrik tidak dihitung dari subset yang menyesatkan.
 
+Response live Startup plan saat ini menggunakan `market_pair_quotes` dan object `exchange_reported_quotes`, sementara contoh dokumentasi lama menggunakan `market_pair_quote` dan bentuk array. Parser menerima kedua bentuk tervalidasi. Repeated `market_id` dipertahankan sebagai source observations, kemudian volumenya dikelompokkan saat menghitung market concentration.
+
 **Update:** 1 menit.  
 **Credit:** 1 per 250 market pairs, ditambah conversion tambahan.
 
@@ -355,7 +357,7 @@ Setelah `.env.local` memiliki `CMC_API_KEY` dan `DATABASE_URL`, jalankan:
 pnpm verify:live
 ```
 
-Command menerapkan migration, memanggil dan menormalisasi tujuh endpoint RWA, lalu memverifikasi write/read/delete persistent cache. Supabase dan enam endpoint CMC sudah terverifikasi. `market-pairs/list` masih diblokir subscription plan (`403/1006`), sehingga command tetap gagal secara eksplisit. Detail aman tersedia di `docs/LIVE_SETUP.md`.
+Command menerapkan migration, memanggil dan menormalisasi tujuh endpoint RWA, lalu memverifikasi write/read/delete persistent cache. Supabase dan seluruh tujuh endpoint CMC, termasuk `market-pairs/list` melalui Startup plan, sudah terverifikasi. Detail aman tersedia di `docs/LIVE_SETUP.md`.
 
 ## 14. Checklist sebelum demo
 

@@ -304,6 +304,44 @@ describe("RWA application service", () => {
     );
   });
 
+  it("preserves repeated upstream market IDs while grouping concentration", async () => {
+    const data = repository();
+    const base = await data.getMarketPairs({ rwaId: "101" });
+    const pair = base.value.data.pairs[0]!;
+    vi.mocked(data.getMarketPairs).mockResolvedValueOnce({
+      ...base,
+      value: {
+        ...base.value,
+        data: {
+          ...base.value.data,
+          pairs: [pair, { ...pair, marketQuote: { ...pair.marketQuote } }],
+          reportedPairCount: 2,
+          totalSize: 2,
+          hasMore: false,
+        },
+      },
+    });
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.getAssetDetail({
+      rwaId: 101,
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.marketPairs?.pairs).toHaveLength(2);
+    expect(result.analysis.concentration.market).toMatchObject({
+      status: "available",
+      sampleSize: 1,
+      totalVolume: 1_000_000,
+      top1Share: 1,
+    });
+  });
+
   it("withholds market-pair analysis when a later page fails", async () => {
     const data = repository();
     const base = await data.getMarketPairs({ rwaId: "101" });

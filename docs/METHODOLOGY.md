@@ -137,7 +137,7 @@ Untuk issuer, tampilkan persentase volume yang berhasil dipetakan. Jangan mengha
 
 ### 5.4 Pair universe completeness
 
-Concentration dan price dispersion hanya dihitung setelah seluruh page `market-pairs/list` selesai dimuat. `total_size`, `has_more`, progres offset, dan keunikan `market_id` harus konsisten. Jika page lanjutan gagal atau jumlah observasi akhir tidak sama dengan total yang dilaporkan, seluruh evidence market-pair untuk kalkulasi tersebut dianggap unavailable; aplikasi tidak menghitung metrik dari page pertama saja.
+Concentration dan price dispersion hanya dihitung setelah seluruh page `market-pairs/list` selesai dimuat. `total_size`, `has_more`, progres offset, dan jumlah row akhir harus konsisten. Live CMC dapat mengembalikan lebih dari satu observasi dengan `market_id` yang sama; row tersebut dipertahankan untuk price evidence, sedangkan concentration mengelompokkan volumenya berdasarkan `market_id`. Duplicate ID juga menurunkan structural-consistency evidence. Jika page lanjutan gagal atau jumlah observasi akhir tidak sama dengan total yang dilaporkan, seluruh evidence market-pair untuk kalkulasi tersebut dianggap unavailable; aplikasi tidak menghitung metrik dari page pertama saja.
 
 ### 5.5 Pair freshness
 

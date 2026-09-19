@@ -702,13 +702,7 @@ async function loadAllMarketPairs(
   if (!first || totalSize === null) {
     throw new Error("Market-pair pagination returned no pages");
   }
-  const pairs = [
-    ...new Map(
-      pages
-        .flatMap((page) => page.value.data.pairs)
-        .map((pair) => [pair.marketId, pair] as const),
-    ).values(),
-  ];
+  const pairs = pages.flatMap((page) => page.value.data.pairs);
   if (pairs.length !== totalSize) {
     throw new Error("Market-pair pagination returned an incomplete dataset");
   }

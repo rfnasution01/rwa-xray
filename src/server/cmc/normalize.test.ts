@@ -236,6 +236,31 @@ describe("CMC normalization", () => {
     ).toBeNull();
   });
 
+  it("accepts the plural quote fields returned by the live market-pairs API", () => {
+    const pair = marketPairsFixture.data.market_pairs[0]!;
+    const parsed = rwaMarketPairsResponseSchema.parse({
+      ...marketPairsFixture,
+      data: {
+        ...marketPairsFixture.data,
+        market_pairs: [
+          {
+            ...pair,
+            market_pair_quote: undefined,
+            market_pair_quotes: pair.market_pair_quote,
+            exchange_reported_quotes: pair.quotes[0],
+          },
+        ],
+      },
+    });
+
+    const result = normalizeRwaMarketPairs(parsed, { observedAt });
+    expect(result.data.pairs[0]).toMatchObject({
+      marketId: 99001,
+      quote: { symbol: "USDT", cryptoId: 825 },
+      marketQuote: { currency: "USD", price: 100.25, volume24h: 500_000 },
+    });
+  });
+
   it("reports missing USD market quotes without dropping the pair", () => {
     const parsed = rwaMarketPairsResponseSchema.parse({
       ...marketPairsFixture,

@@ -14,9 +14,9 @@ Menghasilkan demo publik yang stabil, berguna, dan dapat diverifikasi—bukan ku
 
 ### Deliverables
 
-- [ ] Registrasi DoraHacks dan Startup tier aktif.
-- [x] API key diuji melalui `pnpm verify:live`; enam endpoint tersedia.
-- [ ] Akses `market-pairs/list` diblokir subscription plan CMC (`403/1006`).
+- [x] Registrasi DoraHacks dan Startup tier aktif.
+- [x] API key diuji melalui `pnpm verify:live`; seluruh tujuh endpoint tersedia.
+- [x] Akses `market-pairs/list` tersedia melalui Startup plan dan response live terverifikasi.
 - [x] Migration dan cache read/write/delete diverifikasi melalui Supabase Session Pooler.
 - [x] Response tujuh endpoint RWA tersedia sebagai fixture tersanitasi.
 - [x] Live CMC + Supabase verification harness tersedia tanpa secret logging.
