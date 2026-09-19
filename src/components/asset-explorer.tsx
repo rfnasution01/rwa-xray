@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  ArrowUpDown,
   BarChart3,
   ChevronDown,
   Database,
@@ -42,6 +43,94 @@ const categories: Array<{ value: AssetType | "all"; label: string }> = [
   { value: "real_estate", label: "Real estate" },
 ];
 
+type ExplorerColumn =
+  "identity" | "classification" | "marketCap" | "volume" | "turnover";
+
+type ExplorerTableSort = {
+  key: ExplorerColumn;
+  direction: "asc" | "desc";
+};
+
+function compareExplorerItems(
+  left: ExplorerItem,
+  right: ExplorerItem,
+  sort: ExplorerTableSort,
+) {
+  const leftValue = explorerSortValue(left, sort.key);
+  const rightValue = explorerSortValue(right, sort.key);
+  if (leftValue === null && rightValue === null) return 0;
+  if (leftValue === null) return 1;
+  if (rightValue === null) return -1;
+  const comparison =
+    typeof leftValue === "string" && typeof rightValue === "string"
+      ? leftValue.localeCompare(rightValue)
+      : Number(leftValue) - Number(rightValue);
+  return sort.direction === "asc" ? comparison : -comparison;
+}
+
+function explorerSortValue(
+  asset: ExplorerItem,
+  column: ExplorerColumn,
+): string | number | null {
+  switch (column) {
+    case "identity":
+      return asset.name;
+    case "classification":
+      return asset.assetType;
+    case "marketCap":
+      return asset.quote.tokenizedMarketCap;
+    case "volume":
+      return asset.quote.tokenizedVolume24h;
+    case "turnover":
+      return asset.turnoverRatio;
+  }
+}
+
+function SortableHeader({
+  label,
+  column,
+  align = "left",
+  sort,
+  onSort,
+}: {
+  label: string;
+  column: ExplorerColumn;
+  align?: "left" | "right";
+  sort: ExplorerTableSort;
+  onSort(sort: ExplorerTableSort): void;
+}) {
+  const active = sort.key === column;
+  return (
+    <th
+      className={`px-5 py-4 font-medium ${align === "right" ? "text-right" : "text-left"}`}
+      aria-sort={
+        active
+          ? sort.direction === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+    >
+      <button
+        className={`inline-flex items-center gap-1.5 ${align === "right" ? "ml-auto" : ""} transition-colors hover:text-[#a9fffa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]`}
+        type="button"
+        onClick={() =>
+          onSort({
+            key: column,
+            direction: active && sort.direction === "asc" ? "desc" : "asc",
+          })
+        }
+      >
+        {label}
+        <ArrowUpDown className="size-3 text-[#4bc9c4]" aria-hidden="true" />
+        <span className="sr-only">
+          {active ? `, currently ${sort.direction}` : ""}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export function AssetExplorer() {
   const reduceMotion = useReducedMotion();
   const [category, setCategory] = useState<AssetType | "all">("all");
@@ -50,6 +139,10 @@ export function AssetExplorer() {
   >("tokenized_volume_24h");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [tableSort, setTableSort] = useState<{
+    key: ExplorerColumn;
+    direction: "asc" | "desc";
+  }>({ key: "volume", direction: "desc" });
   const start = (page - 1) * pageSize + 1;
   const query = useQuery({
     queryKey: ["asset-explorer", category, sort, start],
@@ -66,13 +159,17 @@ export function AssetExplorer() {
 
   const visibleItems = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return query.data?.items ?? [];
-    return (query.data?.items ?? []).filter(
-      (asset) =>
-        asset.name.toLowerCase().includes(needle) ||
-        asset.symbol.toLowerCase().includes(needle),
+    const filtered = needle
+      ? (query.data?.items ?? []).filter(
+          (asset) =>
+            asset.name.toLowerCase().includes(needle) ||
+            asset.symbol.toLowerCase().includes(needle),
+        )
+      : (query.data?.items ?? []);
+    return [...filtered].sort((left, right) =>
+      compareExplorerItems(left, right, tableSort),
     );
-  }, [query.data?.items, search]);
+  }, [query.data?.items, search, tableSort]);
   const pageSummary = useMemo(() => {
     const items = query.data?.items ?? [];
     return {
@@ -323,17 +420,39 @@ export function AssetExplorer() {
                 <table className="w-full border-collapse text-left">
                   <thead className="border-b border-[#153b3d] bg-[#061416] font-mono text-[9px] tracking-[0.14em] text-[#547f81] uppercase">
                     <tr>
-                      <th className="px-5 py-4 font-medium">Asset identity</th>
-                      <th className="px-5 py-4 font-medium">Classification</th>
-                      <th className="px-5 py-4 text-right font-medium">
-                        Market cap
-                      </th>
-                      <th className="px-5 py-4 text-right font-medium">
-                        Volume · 24h
-                      </th>
-                      <th className="px-5 py-4 text-right font-medium">
-                        Turnover
-                      </th>
+                      <SortableHeader
+                        label="Asset identity"
+                        column="identity"
+                        sort={tableSort}
+                        onSort={setTableSort}
+                      />
+                      <SortableHeader
+                        label="Classification"
+                        column="classification"
+                        sort={tableSort}
+                        onSort={setTableSort}
+                      />
+                      <SortableHeader
+                        label="Market cap"
+                        column="marketCap"
+                        align="right"
+                        sort={tableSort}
+                        onSort={setTableSort}
+                      />
+                      <SortableHeader
+                        label="Volume · 24h"
+                        column="volume"
+                        align="right"
+                        sort={tableSort}
+                        onSort={setTableSort}
+                      />
+                      <SortableHeader
+                        label="Turnover"
+                        column="turnover"
+                        align="right"
+                        sort={tableSort}
+                        onSort={setTableSort}
+                      />
                       <th className="px-5 py-4">
                         <span className="sr-only">Open scenario</span>
                       </th>
