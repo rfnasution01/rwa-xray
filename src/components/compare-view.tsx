@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowRight,
@@ -19,7 +20,10 @@ import {
   RwaApiError,
 } from "@/lib/rwa-api";
 
+const comparisonLimit = 4;
+
 export function CompareView() {
+  const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<number[]>([]);
   const [positionValue, setPositionValue] = useState(100_000);
   const [participationRate, setParticipationRate] = useState(0.05);
@@ -54,7 +58,7 @@ export function CompareView() {
     setSelected(
       current.includes(rwaId)
         ? current.filter((id) => id !== rwaId)
-        : current.length < 4
+        : current.length < comparisonLimit
           ? [...current, rwaId]
           : current,
     );
@@ -62,257 +66,483 @@ export function CompareView() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-      <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-        <div>
-          <p className="eyebrow">Shared scenario · 2–4 assets</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Compare market capacity
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-            Apply the same position, participation rate, and stress haircut to
-            every asset. Results are ordered by estimated exit days—not labeled
-            as a recommendation.
-          </p>
-        </div>
-        <Link className="button-secondary" href="/assets">
-          Edit universe <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
-      </div>
+    <section className="fx-compare-shell relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e7f3f1]">
+      <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
+      <div className="pointer-events-none absolute top-[-18rem] right-[-8rem] size-[42rem] rounded-full bg-[#0b7373]/10 blur-[130px]" />
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-center justify-between gap-3">
+      <div className="relative mx-auto max-w-[1600px] px-5 py-10 sm:px-8 lg:px-14 lg:py-12">
+        <motion.header
+          className="flex flex-col justify-between gap-7 lg:flex-row lg:items-end"
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease: [0.2, 0.75, 0.25, 1] }}
+        >
           <div>
-            <h2 className="font-semibold">Select assets</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Suggested peers favor the same asset category when available.
+            <p className="fx-kicker">Shared scenario · 2–4 assets</p>
+            <h1 className="mt-4 text-4xl font-medium tracking-[-0.045em] text-[#f0f7f5] sm:text-5xl lg:text-6xl">
+              Compare <span className="fx-gradient-text">market capacity</span>
+            </h1>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#91acad] sm:text-base">
+              Apply the same position, participation rate, and stress haircut to
+              every asset. Results use neutral ordering by estimated exit days,
+              not an investment recommendation.
             </p>
           </div>
-          <span className="data-badge">{selectedIds.length}/4 selected</span>
-        </div>
-        {universe.isLoading ? <SelectionSkeleton /> : null}
-        {universe.error ? (
-          <InlineError retry={() => void universe.refetch()} />
-        ) : null}
-        {universe.data ? (
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {universe.data.items.slice(0, 16).map((asset) => {
-              const active = selectedIds.includes(asset.rwaId);
-              return (
-                <label
-                  key={asset.rwaId}
-                  className={
-                    active
-                      ? "flex cursor-pointer items-center gap-3 rounded-xl border border-blue-500 bg-blue-50 p-3 dark:bg-blue-950/30"
-                      : "flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 hover:border-blue-300 dark:border-slate-700"
-                  }
-                >
-                  <input
-                    className="sr-only"
-                    type="checkbox"
-                    checked={active}
-                    onChange={() => toggle(asset.rwaId)}
-                  />
-                  <span
-                    className={
-                      active
-                        ? "grid size-5 place-items-center rounded-md bg-blue-600 text-white"
-                        : "size-5 rounded-md border border-slate-300 dark:border-slate-600"
-                    }
-                    aria-hidden="true"
-                  >
-                    {active ? <Check className="size-3" /> : null}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
-                      {asset.symbol}
-                    </span>
-                    <span className="block truncate text-[11px] text-slate-500">
-                      {asset.name}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        ) : null}
-      </section>
+          <Link className="fx-compare-secondary shrink-0" href="/assets">
+            Edit universe <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </motion.header>
 
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="font-semibold">Shared scenario</h2>
-        <div className="mt-4 grid gap-5 lg:grid-cols-3">
-          <label>
-            <span className="input-label">Position value · USD</span>
-            <input
-              className="control-input mt-2"
-              type="number"
-              min="1"
-              max="1000000000"
-              value={positionValue}
-              onChange={(event) => {
-                const value = event.currentTarget.valueAsNumber;
-                if (Number.isFinite(value) && value > 0)
-                  setPositionValue(value);
-              }}
-            />
-          </label>
-          <CompareRange
-            id="compare-participation"
-            label="Volume participation"
-            value={participationRate * 100}
-            min={0.1}
-            max={20}
-            step={0.1}
-            onChange={(value) => setParticipationRate(value / 100)}
-          />
-          <CompareRange
-            id="compare-haircut"
-            label="Stress haircut"
-            value={stressHaircut * 100}
-            min={0}
-            max={90}
-            step={1}
-            onChange={(value) => setStressHaircut(value / 100)}
-          />
-        </div>
-        <button
-          className="button-primary mt-5"
-          type="button"
-          disabled={
-            selectedIds.length < 2 ||
-            selectedIds.length > 4 ||
-            comparison.isPending
-          }
-          onClick={() => comparison.mutate()}
+        <motion.section
+          className="mt-8 border border-[#1b6264] bg-[#031113]/94 shadow-[0_24px_80px_rgba(0,0,0,0.3)]"
+          aria-labelledby="compare-select-assets"
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.65,
+            delay: reduceMotion ? 0 : 0.1,
+            ease: [0.2, 0.75, 0.25, 1],
+          }}
         >
-          <GitCompareArrows className="size-4" aria-hidden="true" />
-          {comparison.isPending ? "Comparing real data…" : "Run comparison"}
-        </button>
-      </section>
+          <div className="flex items-start justify-between gap-4 border-b border-[#153b3d] px-5 py-4 sm:items-center sm:px-6">
+            <div>
+              <h2
+                id="compare-select-assets"
+                className="text-lg font-medium tracking-tight text-[#e6f1ef]"
+              >
+                Select assets
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-[#719294]">
+                Suggested peers favor the same asset category when available.
+              </p>
+            </div>
+            <span className="fx-data-badge shrink-0">
+              {selectedIds.length}/{comparisonLimit} selected
+            </span>
+          </div>
 
-      {comparison.error ? (
-        <CompareError
-          error={comparison.error}
-          retry={() => comparison.mutate()}
-        />
-      ) : null}
-      {comparison.data ? <ComparisonResults data={comparison.data} /> : null}
-    </div>
+          <div className="p-4 sm:p-5">
+            {universe.isLoading ? <SelectionSkeleton /> : null}
+            {universe.error ? (
+              <InlineError retry={() => void universe.refetch()} />
+            ) : null}
+            {universe.data ? (
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                {universe.data.items.slice(0, 15).map((asset, index) => {
+                  const active = selectedIds.includes(asset.rwaId);
+                  const selectionFull =
+                    selectedIds.length >= comparisonLimit && !active;
+                  return (
+                    <motion.label
+                      key={asset.rwaId}
+                      className={
+                        active
+                          ? "fx-compare-asset fx-compare-asset-active"
+                          : "fx-compare-asset"
+                      }
+                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                      animate={{ opacity: selectionFull ? 0.58 : 1, y: 0 }}
+                      transition={{
+                        duration: 0.35,
+                        delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.25),
+                      }}
+                    >
+                      <input
+                        className="sr-only"
+                        type="checkbox"
+                        checked={active}
+                        disabled={selectionFull}
+                        onChange={() => toggle(asset.rwaId)}
+                      />
+                      <span
+                        className={
+                          active
+                            ? "fx-compare-check fx-compare-check-active"
+                            : "fx-compare-check"
+                        }
+                        aria-hidden="true"
+                      >
+                        {active ? <Check className="size-3.5" /> : null}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-[#e7f1ef]">
+                          {asset.symbol}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[11px] text-[#638688]">
+                          {asset.name}
+                        </span>
+                      </span>
+                    </motion.label>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </motion.section>
+
+        <motion.section
+          className="mt-4 border border-[#1b6264] bg-[#031113]/94"
+          aria-labelledby="shared-scenario-heading"
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.65,
+            delay: reduceMotion ? 0 : 0.18,
+            ease: [0.2, 0.75, 0.25, 1],
+          }}
+        >
+          <div className="border-b border-[#153b3d] px-5 py-4 sm:px-6">
+            <h2
+              id="shared-scenario-heading"
+              className="text-lg font-medium tracking-tight"
+            >
+              Shared scenario
+            </h2>
+            <p className="mt-1 text-xs text-[#719294]">
+              Position, participation, and stress are applied to every selected
+              asset.
+            </p>
+          </div>
+
+          <div className="grid gap-px bg-[#153b3d] lg:grid-cols-[1.15fr_1fr_1fr_auto]">
+            <label className="bg-[#041416] p-5">
+              <span className="input-label">Position value · USD</span>
+              <span className="mt-3 flex items-center border border-[#245d60] bg-[#061719] focus-within:border-[#54e6df] focus-within:shadow-[0_0_0_3px_rgba(84,230,223,0.08)]">
+                <input
+                  className="min-w-0 flex-1 bg-transparent px-3 py-2.5 font-mono text-sm text-[#e6f1ef] outline-none"
+                  type="number"
+                  min="1"
+                  max="1000000000"
+                  value={positionValue}
+                  onChange={(event) => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value) && value > 0)
+                      setPositionValue(value);
+                  }}
+                />
+                <output className="border-l border-[#1b4c4e] px-3 font-mono text-xs text-[#6c9a9b]">
+                  {formatMoney(positionValue)}
+                </output>
+              </span>
+            </label>
+            <div className="bg-[#041416] p-5">
+              <CompareRange
+                id="compare-participation"
+                label="Volume participation"
+                value={participationRate * 100}
+                min={0.1}
+                max={20}
+                step={0.1}
+                onChange={(value) => setParticipationRate(value / 100)}
+              />
+            </div>
+            <div className="bg-[#041416] p-5">
+              <CompareRange
+                id="compare-haircut"
+                label="Stress haircut"
+                value={stressHaircut * 100}
+                min={0}
+                max={90}
+                step={1}
+                onChange={(value) => setStressHaircut(value / 100)}
+              />
+            </div>
+            <div className="flex items-center bg-[#041416] p-5">
+              <button
+                className="fx-compare-action w-full lg:w-auto"
+                type="button"
+                disabled={
+                  selectedIds.length < 2 ||
+                  selectedIds.length > comparisonLimit ||
+                  comparison.isPending
+                }
+                onClick={() => comparison.mutate()}
+              >
+                <GitCompareArrows className="size-4" aria-hidden="true" />
+                {comparison.isPending
+                  ? "Comparing real data…"
+                  : "Run comparison"}
+              </button>
+            </div>
+          </div>
+        </motion.section>
+
+        <AnimatePresence mode="wait">
+          {comparison.error ? (
+            <motion.div
+              key="comparison-error"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+            >
+              <CompareError
+                error={comparison.error}
+                retry={() => comparison.mutate()}
+              />
+            </motion.div>
+          ) : null}
+          {comparison.data ? (
+            <ComparisonResults
+              key="comparison-results"
+              data={comparison.data}
+              reduceMotion={Boolean(reduceMotion)}
+            />
+          ) : null}
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence>
+        {comparison.isPending ? (
+          <ProcessingDialog
+            assetCount={selectedIds.length}
+            reduceMotion={Boolean(reduceMotion)}
+          />
+        ) : null}
+      </AnimatePresence>
+    </section>
   );
 }
 
-function ComparisonResults({ data }: { data: CompareResponse }) {
+function ProcessingDialog({
+  assetCount,
+  reduceMotion,
+}: {
+  assetCount: number;
+  reduceMotion: boolean;
+}) {
   return (
-    <section className="mt-8" aria-labelledby="comparison-results">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+    <motion.div
+      className="fixed inset-0 z-50 grid place-items-center bg-[#010709]/78 px-5 backdrop-blur-[6px]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="comparison-processing-title"
+      aria-describedby="comparison-processing-description"
+      aria-live="polite"
+      tabIndex={-1}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="fx-processing-dialog relative w-full max-w-md overflow-hidden border border-[#32aaa8] bg-[#031214] p-6 shadow-[0_24px_100px_rgba(0,0,0,0.62),0_0_40px_rgba(42,225,216,0.1)] sm:p-8"
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98, y: 8 }}
+        transition={{ duration: 0.28, ease: [0.2, 0.75, 0.25, 1] }}
+      >
+        <div className="fx-processing-scan pointer-events-none absolute inset-0" />
+        <div className="relative flex flex-col items-center text-center">
+          <div
+            className="relative grid size-24 place-items-center"
+            aria-hidden="true"
+          >
+            <motion.span
+              className="absolute inset-0 rounded-full border border-[#17494b] border-t-[#5af1ea] border-r-[#2da8a6]"
+              animate={reduceMotion ? undefined : { rotate: 360 }}
+              transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
+            />
+            <motion.span
+              className="absolute inset-3 rounded-full border border-[#173d3f] border-b-[#3bd8d2]"
+              animate={reduceMotion ? undefined : { rotate: -360 }}
+              transition={{ duration: 2.1, ease: "linear", repeat: Infinity }}
+            />
+            <GitCompareArrows className="size-6 text-[#6ef2eb]" />
+          </div>
+
+          <p className="fx-kicker mt-6">Scenario engine active</p>
+          <h2
+            id="comparison-processing-title"
+            className="mt-3 text-2xl font-medium tracking-[-0.03em] text-[#eef8f6]"
+          >
+            Processing comparison
+          </h2>
+          <p
+            id="comparison-processing-description"
+            className="mt-3 max-w-xs text-sm leading-6 text-[#78999b]"
+          >
+            Applying one shared scenario across {assetCount} real-data asset
+            {assetCount === 1 ? "" : "s"} and preserving unavailable evidence.
+          </p>
+
+          <div className="mt-6 flex items-center gap-2 font-mono text-[9px] tracking-[0.12em] text-[#67aaa8] uppercase">
+            {[0, 1, 2].map((index) => (
+              <motion.span
+                key={index}
+                className="size-1.5 rounded-full bg-[#4ce8e1]"
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : { opacity: [0.25, 1, 0.25], scale: [0.8, 1.15, 0.8] }
+                }
+                transition={{
+                  duration: 1.15,
+                  delay: index * 0.16,
+                  repeat: Infinity,
+                }}
+              />
+            ))}
+            Calculating capacity
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function ComparisonResults({
+  data,
+  reduceMotion,
+}: {
+  data: CompareResponse;
+  reduceMotion: boolean;
+}) {
+  return (
+    <motion.section
+      className="mt-4 border border-[#1b6264] bg-[#031113]/94"
+      aria-labelledby="comparison-results"
+      initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+      transition={{ duration: 0.45, ease: [0.2, 0.75, 0.25, 1] }}
+    >
+      <div className="flex flex-col justify-between gap-3 border-b border-[#153b3d] px-5 py-4 sm:flex-row sm:items-end sm:px-6">
         <div>
-          <p className="eyebrow">Neutral ordering</p>
+          <p className="fx-kicker">Neutral ordering</p>
           <h2
             id="comparison-results"
-            className="mt-2 text-2xl font-semibold tracking-tight"
+            className="mt-2 text-2xl font-medium tracking-[-0.025em]"
           >
             Scenario comparison
           </h2>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="font-mono text-[10px] tracking-[0.04em] text-[#74999b]">
           {formatMoney(data.scenario.positionValue)} ·{" "}
           {formatPercent(data.scenario.participationRate)} participation ·{" "}
           {formatPercent(data.scenario.stressHaircut)} haircut
         </p>
       </div>
 
-      {data.stale ? (
-        <div className="status-banner status-banner-warning mt-4">
-          <AlertTriangle className="size-4 shrink-0" /> At least one result uses
-          labeled stale real data.
-        </div>
-      ) : null}
-      {data.failures.length > 0 ? (
-        <div className="status-banner status-banner-warning mt-4">
-          <AlertTriangle className="size-4 shrink-0" />
-          {data.failures.length} requested asset(s) could not be compared; the
-          available results remain visible.
-        </div>
-      ) : null}
+      <div className="px-4 pt-4 sm:px-5">
+        {data.stale ? (
+          <div className="fx-compare-warning">
+            <AlertTriangle className="size-4 shrink-0" /> At least one result
+            uses labeled stale real data.
+          </div>
+        ) : null}
+        {data.failures.length > 0 ? (
+          <div className="fx-compare-warning mt-3">
+            <AlertTriangle className="size-4 shrink-0" />
+            {data.failures.length} requested asset(s) could not be compared; the
+            available results remain visible.
+          </div>
+        ) : null}
+      </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2">
         {data.items.map((item, index) => (
-          <article
+          <motion.article
             key={item.asset.rwaId}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="border border-[#238386] bg-[#041719] p-5 shadow-[inset_0_0_35px_rgba(34,212,204,0.025)] sm:p-6"
+            initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.4,
+              delay: reduceMotion ? 0 : index * 0.07,
+            }}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] text-slate-400">
-                  ORDER {String(index + 1).padStart(2, "0")}
+                <p className="font-mono text-[9px] tracking-[0.16em] text-[#56d9d4] uppercase">
+                  Order {String(index + 1).padStart(2, "0")}
                 </p>
-                <h3 className="mt-1 font-semibold">{item.asset.name}</h3>
-                <p className="text-xs text-slate-500">{item.asset.symbol}</p>
+                <h3 className="mt-3 text-lg font-semibold tracking-tight text-[#eef7f5]">
+                  {item.asset.name}
+                </h3>
+                <p className="mt-1 font-mono text-[10px] text-[#6e9294]">
+                  {item.asset.symbol}
+                </p>
               </div>
-              <span className="data-badge">
+              <span
+                className={evidenceBadgeClass(
+                  item.analysis.evidenceCoverage.label,
+                )}
+              >
                 {item.analysis.evidenceCoverage.label}
               </span>
             </div>
-            <div className="mt-6">
-              <span className="text-4xl font-semibold tracking-tight tabular-nums">
-                {item.analysis.scenario.status === "available"
-                  ? formatDays(item.analysis.scenario.estimatedExitDays)
-                  : "—"}
-              </span>
-              <span className="ml-2 text-xs text-slate-500">exit days</span>
+
+            <div className="mt-6 grid gap-6 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+              <div>
+                <span className="block text-5xl font-medium tracking-[-0.06em] text-[#edf8f6] tabular-nums sm:text-6xl">
+                  {item.analysis.scenario.status === "available"
+                    ? formatDays(item.analysis.scenario.estimatedExitDays)
+                    : "—"}
+                </span>
+                <span className="mt-1 block font-mono text-[10px] tracking-[0.08em] text-[#729496] uppercase">
+                  Estimated exit days
+                </span>
+              </div>
+              <dl className="space-y-2 text-xs">
+                <CompareMetric
+                  label="Daily capacity"
+                  value={
+                    item.analysis.scenario.status === "available"
+                      ? formatMoney(item.analysis.scenario.dailyCapacity)
+                      : "Unavailable"
+                  }
+                />
+                <CompareMetric
+                  label="Turnover"
+                  value={formatPercent(item.analysis.metrics.turnoverRatio)}
+                />
+                <CompareMetric
+                  label="Top market share"
+                  value={formatPercent(
+                    item.analysis.concentration.market.top1Share,
+                  )}
+                />
+                <CompareMetric
+                  label="Market Capacity Health"
+                  value={
+                    item.analysis.marketCapacityHealth.score === null
+                      ? "Insufficient evidence"
+                      : `${Math.round(item.analysis.marketCapacityHealth.score)}/100`
+                  }
+                />
+                <CompareMetric
+                  label="Evidence Coverage"
+                  value={`${item.analysis.evidenceCoverage.score}/100`}
+                />
+              </dl>
             </div>
-            <dl className="mt-5 space-y-2 text-xs">
-              <CompareMetric
-                label="Daily capacity"
-                value={
-                  item.analysis.scenario.status === "available"
-                    ? formatMoney(item.analysis.scenario.dailyCapacity)
-                    : "Unavailable"
-                }
-              />
-              <CompareMetric
-                label="Turnover"
-                value={formatPercent(item.analysis.metrics.turnoverRatio)}
-              />
-              <CompareMetric
-                label="Top market share"
-                value={formatPercent(
-                  item.analysis.concentration.market.top1Share,
-                )}
-              />
-              <CompareMetric
-                label="Health"
-                value={
-                  item.analysis.marketCapacityHealth.score === null
-                    ? "Insufficient evidence"
-                    : `${Math.round(item.analysis.marketCapacityHealth.score)}/100`
-                }
-              />
-              <CompareMetric
-                label="Evidence"
-                value={`${item.analysis.evidenceCoverage.score}/100`}
-              />
-            </dl>
+
             {item.dataGaps.length > 0 ? (
-              <p className="mt-4 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
-                {item.dataGaps.length} evidence gap(s); unavailable metrics are
-                not ranked as zero.
+              <p className="mt-5 flex gap-2 font-mono text-[9px] leading-5 text-[#e9b968]">
+                <AlertTriangle
+                  className="mt-0.5 size-3.5 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  {item.dataGaps.length} evidence gap(s); unavailable metrics
+                  are not ranked as zero.
+                </span>
               </p>
             ) : null}
             <Link
-              className="mt-4 inline-flex text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400"
+              className="mt-4 inline-flex items-center gap-2 border border-[#1f7779] bg-[#08292b] px-3 py-2 font-mono text-[9px] font-bold tracking-[0.08em] text-[#62e8e2] uppercase transition hover:border-[#5cece5] hover:text-[#c9fffc] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55e9e2]"
               href={`/assets/${item.asset.rwaId}`}
             >
-              Open Asset X-Ray
+              Open Asset X-Ray <ArrowRight className="size-3.5" />
             </Link>
-          </article>
+          </motion.article>
         ))}
       </div>
-      <p className="mt-4 text-xs leading-5 text-slate-500">
+      <p className="border-t border-[#153b3d] px-5 py-4 font-mono text-[9px] leading-5 tracking-[0.04em] text-[#557b7d] sm:px-6">
         Ordering is a scenario convenience, not a “best asset” ranking or
         investment recommendation. Reported volume is not order-book depth.
       </p>
-    </section>
+    </motion.section>
   );
 }
 
@@ -327,13 +557,15 @@ function CompareRange(props: {
 }) {
   return (
     <label htmlFor={props.id}>
-      <span className="flex justify-between text-xs font-semibold">
-        <span>{props.label}</span>
-        <output>{formatPercent(props.value / 100)}</output>
+      <span className="flex items-center justify-between gap-3">
+        <span className="input-label">{props.label}</span>
+        <output className="border border-[#245d60] bg-[#082123] px-3 py-2 font-mono text-[10px] text-[#d4efed]">
+          {formatPercent(props.value / 100)}
+        </output>
       </span>
       <input
         id={props.id}
-        className="mt-4 w-full accent-blue-600"
+        className="fx-range mt-5 w-full"
         type="range"
         min={props.min}
         max={props.max}
@@ -347,31 +579,37 @@ function CompareRange(props: {
 
 function CompareMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3 border-b border-slate-100 pb-2 last:border-0 dark:border-slate-800">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="text-right font-semibold tabular-nums">{value}</dd>
+    <div className="flex justify-between gap-3 border-b border-[#174143] pb-2 last:border-0">
+      <dt className="text-[#719294]">{label}</dt>
+      <dd className="max-w-[55%] text-right font-semibold text-[#d8e7e5] tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }
 
 function SelectionSkeleton() {
   return (
-    <div className="mt-4 grid gap-2 sm:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
+    <div
+      className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
+      aria-label="Loading comparison candidates"
+    >
+      {Array.from({ length: 10 }).map((_, index) => (
         <div
           key={index}
-          className="h-14 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"
+          className="fx-explorer-skeleton h-[58px] border border-[#153f41]"
         />
       ))}
+      <span className="sr-only">Loading comparison candidates</span>
     </div>
   );
 }
 
 function InlineError({ retry }: { retry(): void }) {
   return (
-    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-rose-50 p-4 text-sm dark:bg-rose-950/30">
+    <div className="flex flex-col items-start justify-between gap-3 border border-[#783d43] bg-[#211013] p-4 text-sm text-[#efb3b6] sm:flex-row sm:items-center">
       <span>Real asset candidates could not be loaded.</span>
-      <button className="button-secondary" type="button" onClick={retry}>
+      <button className="fx-compare-secondary" type="button" onClick={retry}>
         Retry
       </button>
     </div>
@@ -382,23 +620,33 @@ function CompareError({ error, retry }: { error: unknown; retry(): void }) {
   const rateLimited = error instanceof RwaApiError && error.status === 429;
   return (
     <div
-      className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-6 dark:border-rose-900 dark:bg-rose-950/30"
+      className="mt-4 border border-[#783d43] bg-[#211013] p-6 text-[#f1c4c6]"
       role="alert"
     >
-      <AlertTriangle className="size-6 text-rose-500" />
-      <h2 className="mt-3 font-semibold">
+      <AlertTriangle className="size-6 text-[#ef777d]" />
+      <h2 className="mt-3 font-semibold text-[#ffe5e6]">
         {rateLimited
           ? "Comparison rate limit reached"
           : "Comparison unavailable"}
       </h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mt-2 text-sm text-[#c99da0]">
         No synthetic comparison is substituted. Retry the real-data analysis.
       </p>
-      <button className="button-secondary mt-4" type="button" onClick={retry}>
+      <button
+        className="fx-compare-secondary mt-4"
+        type="button"
+        onClick={retry}
+      >
         <RefreshCw className="size-4" /> Retry
       </button>
     </div>
   );
+}
+
+function evidenceBadgeClass(label: "Limited" | "Moderate" | "High") {
+  if (label === "High") return "fx-compare-badge fx-compare-badge-high";
+  if (label === "Moderate") return "fx-compare-badge fx-compare-badge-moderate";
+  return "fx-compare-badge fx-compare-badge-limited";
 }
 
 function suggestPeers(items: ExplorerItem[]) {
@@ -421,31 +669,28 @@ function suggestPeers(items: ExplorerItem[]) {
 }
 
 function formatMoney(value: number | null) {
-  return value === null
-    ? "Unavailable"
-    : new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        notation: "compact",
-        maximumFractionDigits: 2,
-      }).format(value);
+  if (value === null) return "Unavailable";
+  const absolute = Math.abs(value);
+  const compact =
+    absolute >= 1_000_000_000
+      ? { divisor: 1_000_000_000, suffix: "B" }
+      : absolute >= 1_000_000
+        ? { divisor: 1_000_000, suffix: "M" }
+        : absolute >= 1_000
+          ? { divisor: 1_000, suffix: "K" }
+          : { divisor: 1, suffix: "" };
+  const amount = Number((value / compact.divisor).toFixed(2));
+  return `$${amount}${compact.suffix}`;
 }
 
 function formatPercent(value: number | null) {
   return value === null
     ? "Unavailable"
-    : new Intl.NumberFormat("en-US", {
-        style: "percent",
-        maximumFractionDigits: 2,
-      }).format(value);
+    : `${Number((value * 100).toFixed(2))}%`;
 }
 
 function formatDays(value: number) {
-  return value < 0.1
-    ? "<0.1"
-    : value >= 1_000
-      ? ">999"
-      : new Intl.NumberFormat("en-US", {
-          maximumFractionDigits: value < 10 ? 1 : 0,
-        }).format(value);
+  if (value < 0.1) return "<0.1";
+  if (value >= 1_000) return ">999";
+  return String(Number(value.toFixed(value < 10 ? 1 : 0)));
 }

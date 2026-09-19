@@ -101,6 +101,7 @@ async function mockRwaApi(page: Page) {
   });
 
   await page.route(/\/api\/compare$/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 350));
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -183,6 +184,42 @@ test("keeps the redesigned landing usable on mobile", async ({ page }) => {
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
 });
 
+test("presents the methodology and guardrails on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/methodology");
+
+  await expect(
+    page.getByRole("heading", { name: "Methodology under the X-Ray" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Capacity model" }),
+  ).toBeVisible();
+  await expect(page.getByText("Missing ≠ zero")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "What the analysis does not claim",
+    }),
+  ).not.toBeVisible();
+  await page.getByRole("tab", { name: /Interpretation limits/ }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "What the analysis does not claim",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Capacity model" }),
+  ).not.toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(
+    page.getByRole("heading", { name: "Capacity model" }),
+  ).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+});
+
 test("compares assets under one shared scenario", async ({ page }) => {
   await mockRwaApi(page);
   await page.goto("/compare");
@@ -199,6 +236,35 @@ test("compares assets under one shared scenario", async ({ page }) => {
     page.getByRole("heading", { name: "Treasury Capacity Note II" }),
   ).toBeVisible();
   await expect(page.getByText(/not a “best asset” ranking/i)).toBeVisible();
+});
+
+test("keeps the redesigned Compare workflow usable on mobile", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRwaApi(page);
+  await page.goto("/compare");
+
+  await expect(
+    page.getByRole("heading", { name: "Compare market capacity" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Run comparison" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Processing comparison" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Scenario comparison" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "Processing comparison" }),
+  ).not.toBeVisible();
+  await expect(page.getByText("Market Capacity Health").first()).toBeVisible();
+  await expect(page.getByText("Evidence Coverage").first()).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
 });
 
 test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
