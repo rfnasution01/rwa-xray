@@ -84,6 +84,51 @@ const glossary = {
     definition:
       "Position value divided by reported 24-hour volume. It shows how large the position is relative to observed activity.",
   },
+  sourceRecords: {
+    label: "Source records",
+    definition:
+      "The number of asset records returned by the current API dataset. It is not a global market total when the response is paginated.",
+  },
+  pageMarketCap: {
+    label: "Page market cap",
+    definition:
+      "The sum of available tokenized market caps on the current server-paginated page, not the entire RWA universe.",
+  },
+  pageVolume24h: {
+    label: "Page volume · 24h",
+    definition:
+      "The sum of available reported 24-hour volumes on the current server-paginated page.",
+  },
+  pageAssetTypes: {
+    label: "Page asset types",
+    definition:
+      "The number of distinct asset classifications represented on the current server-paginated page.",
+  },
+  currentPageSearch: {
+    label: "Search current page",
+    definition:
+      "Search filters only the records already loaded on the current server-paginated page; it does not search the full universe.",
+  },
+  assetClassification: {
+    label: "Asset classification",
+    definition:
+      "Filter by the RWA category reported by CoinMarketCap, such as commodity, ETF, or government security.",
+  },
+  orderDataset: {
+    label: "Order dataset",
+    definition:
+      "Choose which reported field determines the order of the current Explorer response. It does not rank assets as recommendations.",
+  },
+  autoRefresh: {
+    label: "Auto-refresh",
+    definition:
+      "The Explorer requests updated data every 60 seconds while the browser tab is active.",
+  },
+  assetRegistry: {
+    label: "Asset registry",
+    definition:
+      "The current paginated list of canonical RWA assets returned by the internal API.",
+  },
 } as const;
 
 export type GlossaryTerm = keyof typeof glossary;

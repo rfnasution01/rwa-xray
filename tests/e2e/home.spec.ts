@@ -189,9 +189,9 @@ test("keeps the redesigned landing usable on mobile", async ({ page }) => {
   await page
     .getByRole("button", { name: "Tokenized market cap", exact: true })
     .click();
-  await expect(page.getByRole("tooltip")).toContainText(
-    "does not guarantee active trading",
-  );
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("does not guarantee active trading");
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -290,7 +290,21 @@ test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Asset Explorer" }),
   ).toBeVisible();
-  await expect(page.getByText("Asset registry")).toBeVisible();
+  const registryTerm = page.getByRole("button", {
+    name: "Asset registry",
+    exact: true,
+  });
+  await expect(registryTerm).toBeVisible();
+  await registryTerm.hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "current paginated list",
+  );
+  await page
+    .getByRole("button", { name: "Page market cap", exact: true })
+    .click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("current server-paginated page");
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,

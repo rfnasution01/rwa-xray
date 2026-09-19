@@ -23,6 +23,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
 import {
   type AssetType,
   type ExplorerItem,
@@ -135,7 +136,9 @@ export function AssetExplorer() {
           </div>
           <div className="flex items-center gap-2 font-mono text-[9px] tracking-[0.12em] text-[#8bb0b0] uppercase">
             <span className="size-2 rounded-full bg-[#43e3a1] shadow-[0_0_10px_#43e3a1]" />
-            Auto-refreshes every 60 seconds while active
+            <TechnicalTerm term="autoRefresh">
+              Auto-refreshes every 60 seconds while active
+            </TechnicalTerm>
           </div>
         </motion.div>
 
@@ -163,7 +166,7 @@ export function AssetExplorer() {
           <div className="grid gap-px bg-[#143638] md:grid-cols-[1fr_230px_210px_auto_auto]">
             <label className="relative block bg-[#041214] p-4">
               <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#557f81] uppercase">
-                Search current page
+                <TechnicalTerm term="currentPageSearch" />
               </span>
               <span className="relative block">
                 <Search
@@ -179,7 +182,7 @@ export function AssetExplorer() {
                 />
               </span>
             </label>
-            <ExplorerSelect label="Asset classification">
+            <ExplorerSelect term="assetClassification">
               <select
                 className="fx-explorer-input appearance-none pr-10"
                 value={category}
@@ -194,7 +197,7 @@ export function AssetExplorer() {
                 ))}
               </select>
             </ExplorerSelect>
-            <ExplorerSelect label="Order dataset">
+            <ExplorerSelect term="orderDataset">
               <select
                 className="fx-explorer-input appearance-none pr-10"
                 value={sort}
@@ -239,7 +242,7 @@ export function AssetExplorer() {
           <div className="mt-4 grid border border-[#174749] bg-[#041214]/90 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryMetric
               icon={BarChart3}
-              label="Source records"
+              term="sourceRecords"
               value={
                 query.data.pagination.totalSize === null
                   ? "Unavailable"
@@ -248,17 +251,17 @@ export function AssetExplorer() {
             />
             <SummaryMetric
               icon={Layers3}
-              label="Page market cap"
+              term="pageMarketCap"
               value={formatMoney(pageSummary.marketCap)}
             />
             <SummaryMetric
               icon={TrendingUp}
-              label="Page volume · 24h"
+              term="pageVolume24h"
               value={formatMoney(pageSummary.volume24h)}
             />
             <SummaryMetric
               icon={Globe2}
-              label="Page asset types"
+              term="pageAssetTypes"
               value={String(pageSummary.assetTypes)}
             />
           </div>
@@ -273,7 +276,7 @@ export function AssetExplorer() {
         ) : null}
 
         <motion.div
-          className="mt-5 overflow-hidden border border-[#174749] bg-[#030e10]/95 shadow-[0_28px_80px_rgba(0,0,0,0.3)]"
+          className="mt-5 overflow-visible border border-[#174749] bg-[#030e10]/95 shadow-[0_28px_80px_rgba(0,0,0,0.3)]"
           initial={reduceMotion ? false : { opacity: 0, y: 16 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{
@@ -286,7 +289,9 @@ export function AssetExplorer() {
             <div className="flex items-center gap-3">
               <Activity className="size-4 text-[#55e8e1]" aria-hidden="true" />
               <h2 className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#b8cecd] uppercase">
-                Asset registry
+                <TechnicalTerm term="assetRegistry">
+                  Asset registry
+                </TechnicalTerm>
               </h2>
             </div>
             <span className="font-mono text-[9px] tracking-[0.13em] text-[#4d7a7c] uppercase">
@@ -383,11 +388,11 @@ export function AssetExplorer() {
 
 function SummaryMetric({
   icon: Icon,
-  label,
+  term,
   value,
 }: {
   icon: LucideIcon;
-  label: string;
+  term: GlossaryTerm;
   value: string;
 }) {
   return (
@@ -398,7 +403,7 @@ function SummaryMetric({
           {value}
         </strong>
         <span className="mt-1 block font-mono text-[8px] tracking-[0.14em] text-[#57a3a3] uppercase">
-          {label}
+          <TechnicalTerm term={term} />
         </span>
       </div>
     </div>
@@ -406,16 +411,16 @@ function SummaryMetric({
 }
 
 function ExplorerSelect({
-  label,
+  term,
   children,
 }: {
-  label: string;
+  term: GlossaryTerm;
   children: React.ReactNode;
 }) {
   return (
     <label className="block bg-[#041214] p-4">
       <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#557f81] uppercase">
-        {label}
+        <TechnicalTerm term={term} />
       </span>
       <span className="relative block">
         {children}
@@ -539,15 +544,15 @@ function AssetCard({
       </div>
       <dl className="mt-5 grid grid-cols-3 divide-x divide-[#153638] border-y border-[#153638] py-4 text-xs">
         <CardMetric
-          label="Market cap"
+          term="tokenizedMarketCap"
           value={formatMoney(asset.quote.tokenizedMarketCap)}
         />
         <CardMetric
-          label="24h volume"
+          term="reportedVolume24h"
           value={formatMoney(asset.quote.tokenizedVolume24h)}
         />
         <CardMetric
-          label="Turnover"
+          term="turnoverRatio"
           value={formatPercent(asset.turnoverRatio)}
           highlight
         />
@@ -557,18 +562,18 @@ function AssetCard({
 }
 
 function CardMetric({
-  label,
+  term,
   value,
   highlight = false,
 }: {
-  label: string;
+  term: GlossaryTerm;
   value: string;
   highlight?: boolean;
 }) {
   return (
     <div className="min-w-0 px-2 first:pl-0 last:pr-0">
       <dt className="truncate font-mono text-[8px] tracking-wider text-[#527b7d] uppercase">
-        {label}
+        <TechnicalTerm term={term} />
       </dt>
       <dd
         className={`mt-2 truncate font-mono text-[10px] font-medium ${highlight ? "text-[#5fe8e1]" : "text-[#c5d5d4]"}`}
