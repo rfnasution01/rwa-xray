@@ -158,7 +158,7 @@ Sudah tersedia:
 - PostgreSQL persistent cache dengan runtime validation, TTL per endpoint, dan stale fallback maksimal 24 jam;
 - cached RWA repository dengan canonical cache keys dan concurrent request deduplication;
 - migration Drizzle untuk cache, canonical asset, dan quote foundation;
-- Analysis Engine v1.0.0 untuk turnover, Exit Capacity, freshness, four-dimensional concentration, normalized HHI, robust price dispersion, Evidence Coverage, dan Market Capacity Health;
+- Analysis Engine v1.1.0 untuk turnover, Exit Capacity dan planning horizon, freshness, four-dimensional concentration, normalized HHI, robust price dispersion, Evidence Coverage, dan Market Capacity Health;
 - application service yang mengorkestrasi quotes, metadata, market pairs, benchmark, dan partial-data fallback;
 - internal API `GET /api/assets` dan `GET /api/assets/:rwaId` dengan safe DTO, validation, standard envelope, dan rate limiting;
 - guided live scenario dengan valid fallback, interactive Exit Capacity presets, evidence/data-gap states, dan contextual disclaimer;

@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 
 import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
+import { formatPlanningHorizon } from "@/lib/utils";
 import {
   type AssetDetailResponse,
   getAssetDetail,
@@ -515,6 +516,14 @@ function ScenarioResults({
         This is a volume-participation scenario—not a promise of execution or a
         slippage estimate.
       </p>
+      <div className="mt-4 inline-flex flex-wrap items-center gap-2 border border-[#1c5557] bg-[#061719] px-3 py-2">
+        <span className="font-mono text-[9px] tracking-[0.08em] text-[#6c9293] uppercase">
+          <TechnicalTerm term="planningHorizon" />
+        </span>
+        <strong className="font-mono text-xs text-[#69ebe5]">
+          {formatPlanningHorizon(scenario.planningHorizon)}
+        </strong>
+      </div>
       <dl className="mt-7 grid border-y border-[#14383a] sm:grid-cols-3">
         <ResultMetric
           icon={<BarChart3 />}

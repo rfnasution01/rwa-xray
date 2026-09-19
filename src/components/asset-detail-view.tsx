@@ -20,6 +20,7 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import { TechnicalTerm, type GlossaryTerm } from "@/components/technical-term";
 import { calculateExitCapacity } from "@/domain/analysis/exit-capacity";
 import { safeCmcImageUrl } from "@/lib/external-media";
+import { formatPlanningHorizon } from "@/lib/utils";
 import {
   type AssetDetailResponse,
   getAssetDetail,
@@ -475,6 +476,14 @@ function CapacitySimulator({ volume24h }: { volume24h: number | null }) {
                 <span className="pb-1 font-mono text-[10px] tracking-wider text-[#628789] uppercase">
                   days
                 </span>
+              </div>
+              <div className="mt-4 inline-flex flex-wrap items-center gap-2 border border-[#1c5557] bg-[#061719] px-3 py-2">
+                <span className="font-mono text-[9px] tracking-[0.08em] text-[#6c9293] uppercase">
+                  <TechnicalTerm term="planningHorizon" />
+                </span>
+                <strong className="font-mono text-xs text-[#69ebe5]">
+                  {formatPlanningHorizon(result.planningHorizon)}
+                </strong>
               </div>
               <dl className="mt-6 grid gap-3 sm:grid-cols-3">
                 <SmallMetric

@@ -7,9 +7,11 @@ export {
 } from "./config";
 export {
   calculateExitCapacity,
+  classifyExitPlanningHorizon,
   EXIT_SCENARIO_LIMITS,
   type ExitCapacityInput,
   type ExitCapacityResult,
+  type ExitPlanningHorizon,
 } from "./exit-capacity";
 export type {
   AnalysisResult,

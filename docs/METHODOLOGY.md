@@ -73,7 +73,20 @@ Default scenario:
 
 Nilai posisi default adalah **$100.000**, dengan preset $10K, $100K, $500K, dan $1M. Stress haircut default 0%, dengan preset 0%, 25%, 50%, dan 75%. Custom rate dibatasi 0,1–20% dan custom haircut 0–90% agar UI tidak memberi asumsi ekstrem tanpa warning.
 
-### 4.4 Batas interpretasi
+### 4.4 Planning horizon
+
+Estimated Exit Days dipetakan ke band netral untuk membantu interpretasi scenario:
+
+| Estimated Exit Days | Planning horizon |
+| ------------------: | ---------------- |
+|               `< 1` | Under 1 day      |
+|           `1`–`≤ 3` | 1–3 days         |
+|         `> 3`–`≤ 7` | 3–7 days         |
+|               `> 7` | Over 7 days      |
+
+Band berasal dari hasil formula yang sama, bukan score tambahan, liquidity grade, atau janji waktu eksekusi. Threshold berada dalam konfigurasi Analysis Engine agar tidak disalin ke UI.
+
+### 4.5 Batas interpretasi
 
 Formula ini **tidak** memodelkan:
 
@@ -295,7 +308,7 @@ Perbedaan tidak selalu merupakan error karena cakupan data dapat berbeda. Jangan
 Setiap hasil menyimpan:
 
 ```text
-methodology_version = "1.0.0"
+methodology_version = "1.1.0"
 calculated_at
 input_snapshot_ids
 configuration_hash

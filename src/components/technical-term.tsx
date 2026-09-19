@@ -69,6 +69,11 @@ const glossary = {
     definition:
       "The estimated number of 24-hour periods needed for the scenario position: position value divided by daily capacity. Lower values indicate more observed capacity relative to the position. It is not a guaranteed execution time and does not model order-book depth, slippage, fees, or market access.",
   },
+  planningHorizon: {
+    label: "Planning horizon",
+    definition:
+      "A neutral band derived from Estimated Exit Days: under 1 day, 1–3 days, 3–7 days, or over 7 days. It helps interpret the scenario and is not a liquidity grade or execution promise.",
+  },
   effectiveVolume: {
     label: "Effective volume",
     definition:

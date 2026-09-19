@@ -1,4 +1,4 @@
-export const METHODOLOGY_VERSION = "1.0.0";
+export const METHODOLOGY_VERSION = "1.1.0";
 
 export const ANALYSIS_CONFIG = {
   categoryBenchmarkMinimum: 10,
@@ -11,6 +11,11 @@ export const ANALYSIS_CONFIG = {
     warningMaxMinutes: 60,
   },
   futureTimestampToleranceMinutes: 5,
+  exitPlanningHorizonDays: {
+    underOneDayMaxExclusive: 1,
+    oneToThreeDaysMaxInclusive: 3,
+    threeToSevenDaysMaxInclusive: 7,
+  },
   healthWeights: {
     activity: 30,
     diversification: 30,

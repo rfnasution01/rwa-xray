@@ -306,6 +306,7 @@ test("runs the guided capacity scenario", async ({ page }) => {
     page.getByRole("heading", { name: "Treasury Capacity Note" }),
   ).toBeVisible();
   await expect(page.getByText("4", { exact: true })).toBeVisible();
+  await expect(page.getByText("3–7 days", { exact: true })).toBeVisible();
 
   await page
     .getByRole("button", { name: "Volume participation", exact: true })
@@ -318,6 +319,7 @@ test("runs the guided capacity scenario", async ({ page }) => {
 
   await page.getByRole("button", { name: "1%", exact: true }).click();
   await expect(page.getByText("20", { exact: true })).toBeVisible();
+  await expect(page.getByText("Over 7 days", { exact: true })).toBeVisible();
   await expect(page.getByText(/not a promise of execution/i)).toBeVisible();
 });
 
@@ -412,6 +414,8 @@ test("compares assets under one shared scenario", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Treasury Capacity Note II" }),
   ).toBeVisible();
+  await expect(page.getByText("3–7 days", { exact: true })).toBeVisible();
+  await expect(page.getByText("Over 7 days", { exact: true })).toBeVisible();
   await expect(page.getByText(/not a “best asset” ranking/i)).toBeVisible();
 
   await page
@@ -650,6 +654,14 @@ function compareItem(item: typeof asset, estimatedExitDays: number) {
         effectiveVolume: item.quote.tokenizedVolume24h,
         dailyCapacity: item.quote.tokenizedVolume24h * 0.05,
         estimatedExitDays,
+        planningHorizon:
+          estimatedExitDays < 1
+            ? "under_one_day"
+            : estimatedExitDays <= 3
+              ? "one_to_three_days"
+              : estimatedExitDays <= 7
+                ? "three_to_seven_days"
+                : "over_seven_days",
         positionToVolumeRatio: estimatedExitDays * 0.05,
       },
       metrics: { turnoverRatio: 0.05, freshnessAgeMinutes: 1 },

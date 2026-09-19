@@ -26,7 +26,7 @@ pnpm snapshot:priority
 - Menambahkan maksimal 20 aset yang dibuka dalam 24 jam terakhir.
 - Mengambil quotes secara batch.
 - Mengambil market pairs hanya untuk aset prioritas.
-- Menyimpan quote, token, pair, dan Analysis Engine result v1.0.0.
+- Menyimpan quote, token, pair, dan Analysis Engine result v1.1.0.
 - Menggunakan `observed_at` dari dataset sumber, bukan waktu scheduler semata.
 
 Jika Market Pairs mengembalikan `401`, `403`, atau `429`, circuit breaker menghentikan request pair berikutnya pada run tersebut. Quote dan analisis parsial tetap disimpan dengan concentration serta price dispersion berstatus unavailable.

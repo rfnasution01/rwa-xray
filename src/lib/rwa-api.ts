@@ -337,6 +337,12 @@ const exitScenarioSchema = z.discriminatedUnion("status", [
     effectiveVolume: z.number().finite(),
     dailyCapacity: z.number().finite(),
     estimatedExitDays: z.number().finite(),
+    planningHorizon: z.enum([
+      "under_one_day",
+      "one_to_three_days",
+      "three_to_seven_days",
+      "over_seven_days",
+    ]),
     positionToVolumeRatio: z.number().finite(),
   }),
   z.object({

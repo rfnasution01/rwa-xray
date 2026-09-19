@@ -249,6 +249,7 @@ describe("RWA application service", () => {
     expect(result.analysis.scenario).toMatchObject({
       status: "available",
       estimatedExitDays: 4,
+      planningHorizon: "three_to_seven_days",
     });
     expect(result.sourceStatuses).toHaveLength(5);
     expect(JSON.stringify(result)).not.toContain("internal-cache-key");

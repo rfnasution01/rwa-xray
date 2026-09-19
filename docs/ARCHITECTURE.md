@@ -103,7 +103,7 @@ interface AnalysisResult {
 }
 ```
 
-Engine tidak melakukan network call agar mudah diuji. Implementasi pure functions tersedia di `src/domain/analysis/` dengan methodology version `1.0.0` dan configuration hash deterministik. Pair berumur 15–60 menit mendapat penalti evidence; pair di atas 60 menit dikeluarkan. Composite health tidak diterbitkan jika bobot komponen tersedia kurang dari 60%.
+Engine tidak melakukan network call agar mudah diuji. Implementasi pure functions tersedia di `src/domain/analysis/` dengan methodology version `1.1.0` dan configuration hash deterministik. Pair berumur 15–60 menit mendapat penalti evidence; pair di atas 60 menit dikeluarkan. Composite health tidak diterbitkan jika bobot komponen tersedia kurang dari 60%.
 
 ### Snapshot worker
 

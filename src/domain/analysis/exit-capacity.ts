@@ -1,3 +1,5 @@
+import { ANALYSIS_CONFIG } from "./config";
+
 export const EXIT_SCENARIO_LIMITS = {
   participationRate: { min: 0.001, max: 0.2 },
   stressHaircut: { min: 0, max: 0.9 },
@@ -10,12 +12,19 @@ export type ExitCapacityInput = {
   stressHaircut: number;
 };
 
+export type ExitPlanningHorizon =
+  | "under_one_day"
+  | "one_to_three_days"
+  | "three_to_seven_days"
+  | "over_seven_days";
+
 export type ExitCapacityResult =
   | {
       status: "available";
       effectiveVolume: number;
       dailyCapacity: number;
       estimatedExitDays: number;
+      planningHorizon: ExitPlanningHorizon;
       positionToVolumeRatio: number;
     }
   | {
@@ -63,11 +72,29 @@ export function calculateExitCapacity(
     return { status: "unavailable", reason: "NO_OBSERVED_CAPACITY" };
   }
 
+  const estimatedExitDays = input.positionValue / dailyCapacity;
   return {
     status: "available",
     effectiveVolume,
     dailyCapacity,
-    estimatedExitDays: input.positionValue / dailyCapacity,
+    estimatedExitDays,
+    planningHorizon: classifyExitPlanningHorizon(estimatedExitDays),
     positionToVolumeRatio: input.positionValue / input.volume24h,
   };
+}
+
+export function classifyExitPlanningHorizon(
+  estimatedExitDays: number,
+): ExitPlanningHorizon {
+  const thresholds = ANALYSIS_CONFIG.exitPlanningHorizonDays;
+  if (estimatedExitDays < thresholds.underOneDayMaxExclusive) {
+    return "under_one_day";
+  }
+  if (estimatedExitDays <= thresholds.oneToThreeDaysMaxInclusive) {
+    return "one_to_three_days";
+  }
+  if (estimatedExitDays <= thresholds.threeToSevenDaysMaxInclusive) {
+    return "three_to_seven_days";
+  }
+  return "over_seven_days";
 }

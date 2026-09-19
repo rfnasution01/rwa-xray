@@ -126,6 +126,7 @@ describe("analyzeAsset", () => {
       status: "available",
       dailyCapacity: 25_000,
       estimatedExitDays: 4,
+      planningHorizon: "three_to_seven_days",
     });
     expect(result.concentration.market).toMatchObject({
       status: "available",

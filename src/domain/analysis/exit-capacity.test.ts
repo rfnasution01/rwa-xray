@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateExitCapacity } from "./exit-capacity";
+import {
+  calculateExitCapacity,
+  classifyExitPlanningHorizon,
+} from "./exit-capacity";
 
 describe("calculateExitCapacity", () => {
   it("calculates the approved default scenario", () => {
@@ -16,6 +19,7 @@ describe("calculateExitCapacity", () => {
       effectiveVolume: 2_000_000,
       dailyCapacity: 100_000,
       estimatedExitDays: 1,
+      planningHorizon: "one_to_three_days",
       positionToVolumeRatio: 0.05,
     });
   });
@@ -33,7 +37,19 @@ describe("calculateExitCapacity", () => {
       effectiveVolume: 1_000_000,
       dailyCapacity: 50_000,
       estimatedExitDays: 2,
+      planningHorizon: "one_to_three_days",
     });
+  });
+
+  it.each([
+    [0.999, "under_one_day"],
+    [1, "one_to_three_days"],
+    [3, "one_to_three_days"],
+    [3.001, "three_to_seven_days"],
+    [7, "three_to_seven_days"],
+    [7.001, "over_seven_days"],
+  ] as const)("classifies %s days as %s", (days, expected) => {
+    expect(classifyExitPlanningHorizon(days)).toBe(expected);
   });
 
   it("preserves missing volume instead of treating it as zero", () => {

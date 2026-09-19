@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
+import { formatPlanningHorizon } from "@/lib/utils";
 import {
   compareAssets,
   type CompareResponse,
@@ -632,6 +633,13 @@ function ComparisonResults({
                   term="estimatedExitDays"
                   className="mt-1 font-mono text-[10px] tracking-[0.08em] text-[#729496] uppercase"
                 />
+                {item.analysis.scenario.status === "available" ? (
+                  <p className="mt-3 font-mono text-[9px] tracking-[0.06em] text-[#63dcd7] uppercase">
+                    {formatPlanningHorizon(
+                      item.analysis.scenario.planningHorizon,
+                    )}
+                  </p>
+                ) : null}
               </div>
               <dl className="space-y-2 text-xs">
                 <CompareMetric
