@@ -8,6 +8,7 @@ import {
   Check,
   GitCompareArrows,
   RefreshCw,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -17,6 +18,7 @@ import {
   compareAssets,
   type CompareResponse,
   type ExplorerItem,
+  type ExplorerResponse,
   getExplorer,
   RwaApiError,
 } from "@/lib/rwa-api";
@@ -26,17 +28,13 @@ const comparisonLimit = 4;
 export function CompareView() {
   const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<number[]>([]);
+  const [assetSearch, setAssetSearch] = useState("");
   const [positionValue, setPositionValue] = useState(100_000);
   const [participationRate, setParticipationRate] = useState(0.05);
   const [stressHaircut, setStressHaircut] = useState(0);
   const universe = useQuery({
-    queryKey: ["compare-universe"],
-    queryFn: () =>
-      getExplorer({
-        sort: "tokenized_volume_24h",
-        sortDir: "desc",
-        limit: 40,
-      }),
+    queryKey: ["compare-universe-all"],
+    queryFn: loadCompareUniverse,
     refetchInterval: 60_000,
   });
   const suggested = useMemo(
@@ -44,6 +42,28 @@ export function CompareView() {
     [universe.data?.items],
   );
   const selectedIds = selected.length > 0 ? selected : suggested;
+  const selectedCandidates = useMemo(
+    () =>
+      (universe.data?.items ?? []).filter((asset) =>
+        selectedIds.includes(asset.rwaId),
+      ),
+    [selectedIds, universe.data?.items],
+  );
+  const visibleCandidates = useMemo(() => {
+    const allCandidates = universe.data?.items ?? [];
+    const needle = assetSearch.trim().toLowerCase();
+    const unselected = allCandidates.filter(
+      (asset) => !selectedIds.includes(asset.rwaId),
+    );
+    if (needle) {
+      return unselected.filter(
+        (asset) =>
+          asset.name.toLowerCase().includes(needle) ||
+          asset.symbol.toLowerCase().includes(needle),
+      );
+    }
+    return unselected.slice(0, 15);
+  }, [assetSearch, selectedIds, universe.data?.items]);
   const comparison = useMutation({
     mutationFn: () =>
       compareAssets({
@@ -115,6 +135,7 @@ export function CompareView() {
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#719294]">
                 Suggested peers favor the same asset category when available.
+                Choose from all loaded candidates below.
               </p>
             </div>
             <span className="fx-data-badge shrink-0">
@@ -123,60 +144,78 @@ export function CompareView() {
           </div>
 
           <div className="p-4 sm:p-5">
+            {universe.data ? (
+              <label className="relative mb-4 block">
+                <span className="sr-only">Search comparison candidates</span>
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#4bc9c4]"
+                  aria-hidden="true"
+                />
+                <input
+                  className="fx-compare-search-input"
+                  type="search"
+                  value={assetSearch}
+                  onChange={(event) => setAssetSearch(event.target.value)}
+                  placeholder="Search all loaded assets by name or symbol"
+                  aria-label="Search comparison candidates"
+                />
+              </label>
+            ) : null}
             {universe.isLoading ? <SelectionSkeleton /> : null}
             {universe.error ? (
               <InlineError retry={() => void universe.refetch()} />
             ) : null}
             {universe.data ? (
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-                {universe.data.items.slice(0, 15).map((asset, index) => {
-                  const active = selectedIds.includes(asset.rwaId);
-                  const selectionFull =
-                    selectedIds.length >= comparisonLimit && !active;
-                  return (
-                    <motion.label
-                      key={asset.rwaId}
-                      className={
-                        active
-                          ? "fx-compare-asset fx-compare-asset-active"
-                          : "fx-compare-asset"
-                      }
-                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                      animate={{ opacity: selectionFull ? 0.58 : 1, y: 0 }}
-                      transition={{
-                        duration: 0.35,
-                        delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.25),
-                      }}
-                    >
-                      <input
-                        className="sr-only"
-                        type="checkbox"
-                        checked={active}
-                        disabled={selectionFull}
-                        onChange={() => toggle(asset.rwaId)}
-                      />
-                      <span
-                        className={
+              <>
+                {selectedCandidates.length > 0 ? (
+                  <div className="mb-5 border border-[#1d7778] bg-[#061b1d] p-3">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="font-mono text-[9px] font-semibold tracking-[0.14em] text-[#66ece5] uppercase">
+                        Selected assets · {selectedCandidates.length}
+                      </p>
+                      <p className="font-mono text-[8px] text-[#527f81] uppercase">
+                        Search-independent
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                      {selectedCandidates.map((asset, index) => (
+                        <CompareAssetOption
+                          key={`selected-${asset.rwaId}`}
+                          asset={asset}
                           active
-                            ? "fx-compare-check fx-compare-check-active"
-                            : "fx-compare-check"
-                        }
-                        aria-hidden="true"
-                      >
-                        {active ? <Check className="size-3.5" /> : null}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-[#e7f1ef]">
-                          {asset.symbol}
-                        </span>
-                        <span className="mt-0.5 block truncate text-[11px] text-[#638688]">
-                          {asset.name}
-                        </span>
-                      </span>
-                    </motion.label>
-                  );
-                })}
-              </div>
+                          disabled={false}
+                          index={index}
+                          reduceMotion={Boolean(reduceMotion)}
+                          onToggle={() => toggle(asset.rwaId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[9px] tracking-[0.08em] text-[#527f81] uppercase">
+                  <span>
+                    Showing {visibleCandidates.length} of{" "}
+                    {universe.data.items.length} loaded candidates
+                    {assetSearch
+                      ? " matching search"
+                      : " (15 shown by default)"}
+                  </span>
+                  {assetSearch ? <span>Search active</span> : null}
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                  {visibleCandidates.map((asset, index) => (
+                    <CompareAssetOption
+                      key={`candidate-${asset.rwaId}`}
+                      asset={asset}
+                      active={false}
+                      disabled={selectedIds.length >= comparisonLimit}
+                      index={index}
+                      reduceMotion={Boolean(reduceMotion)}
+                      onToggle={() => toggle(asset.rwaId)}
+                    />
+                  ))}
+                </div>
+              </>
             ) : null}
           </div>
         </motion.section>
@@ -390,6 +429,65 @@ function ProcessingDialog({
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+function CompareAssetOption({
+  asset,
+  active,
+  disabled,
+  index,
+  reduceMotion,
+  onToggle,
+}: {
+  asset: ExplorerItem;
+  active: boolean;
+  disabled: boolean;
+  index: number;
+  reduceMotion: boolean;
+  onToggle(): void;
+}) {
+  return (
+    <motion.label
+      className={
+        active ? "fx-compare-asset fx-compare-asset-active" : "fx-compare-asset"
+      }
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: disabled ? 0.58 : 1, y: 0 }}
+      transition={{
+        duration: 0.35,
+        delay: reduceMotion ? 0 : Math.min(index * 0.025, 0.25),
+      }}
+    >
+      <input
+        className="sr-only"
+        type="checkbox"
+        checked={active}
+        disabled={disabled}
+        onChange={onToggle}
+      />
+      <span
+        className={
+          active
+            ? "fx-compare-check fx-compare-check-active"
+            : "fx-compare-check"
+        }
+        aria-hidden="true"
+      >
+        {active ? <Check className="size-3.5" /> : null}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold text-[#e7f1ef]">
+          {asset.symbol}
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] text-[#638688]">
+          {asset.name}
+        </span>
+      </span>
+      {active ? (
+        <span className="fx-compare-selected-badge">Selected</span>
+      ) : null}
+    </motion.label>
   );
 }
 
@@ -657,6 +755,49 @@ function evidenceBadgeClass(label: "Limited" | "Moderate" | "High") {
   if (label === "High") return "fx-compare-badge fx-compare-badge-high";
   if (label === "Moderate") return "fx-compare-badge fx-compare-badge-moderate";
   return "fx-compare-badge fx-compare-badge-limited";
+}
+
+async function loadCompareUniverse(): Promise<ExplorerResponse> {
+  const pageSize = 250;
+  const pages: ExplorerResponse[] = [];
+  let start = 1;
+
+  while (true) {
+    const page = await getExplorer({
+      sort: "tokenized_volume_24h",
+      sortDir: "desc",
+      start,
+      limit: pageSize,
+    });
+    pages.push(page);
+
+    if (!page.pagination.hasMore || page.items.length === 0) break;
+    start += page.items.length;
+  }
+
+  const firstPage = pages[0];
+  if (!firstPage) {
+    throw new Error("Comparison universe is empty");
+  }
+
+  const uniqueItems = Array.from(
+    new Map(
+      pages
+        .flatMap((page) => page.items)
+        .map((asset) => [asset.rwaId, asset] as const),
+    ).values(),
+  );
+
+  return {
+    ...firstPage,
+    items: uniqueItems,
+    pagination: {
+      ...firstPage.pagination,
+      hasMore: false,
+      totalSize: firstPage.pagination.totalSize ?? uniqueItems.length,
+    },
+    stale: pages.some((page) => page.stale),
+  };
 }
 
 function suggestPeers(items: ExplorerItem[]) {

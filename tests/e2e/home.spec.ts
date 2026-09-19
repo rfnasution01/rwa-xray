@@ -279,6 +279,27 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
   await expect(
     page.getByRole("heading", { name: "Compare market capacity" }),
   ).toBeVisible();
+  await expect(
+    page.getByText("Selected", { exact: true }).first(),
+  ).toBeVisible();
+  await page
+    .getByPlaceholder("Search all loaded assets by name or symbol")
+    .fill("TCN2");
+  await expect(
+    page.getByText("Selected", { exact: true }).first(),
+  ).toBeVisible();
+  await page
+    .locator("label")
+    .filter({ hasText: "TCN2" })
+    .getByRole("checkbox")
+    .evaluate((checkbox) => (checkbox as HTMLInputElement).click());
+  await expect(page.getByText("1/4 selected")).toBeVisible();
+  await page
+    .locator("label")
+    .filter({ hasText: "TCN2" })
+    .getByRole("checkbox")
+    .evaluate((checkbox) => (checkbox as HTMLInputElement).click());
+  await expect(page.getByText("2/4 selected")).toBeVisible();
   await page
     .getByRole("button", { name: "Select assets", exact: true })
     .click();

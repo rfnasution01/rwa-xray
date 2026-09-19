@@ -334,6 +334,11 @@ const glossary = {
     definition:
       "Checks that related fields are valid, non-negative, uniquely identified, and use consistent currency and scope.",
   },
+  compareAssetSearch: {
+    label: "Search comparison candidates",
+    definition:
+      "Filter the loaded comparison universe by asset name or symbol. This search does not make another upstream request.",
+  },
 } as const;
 
 export type GlossaryTerm = keyof typeof glossary;
