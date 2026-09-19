@@ -124,6 +124,31 @@ async function mockRwaApi(page: Page) {
     });
   });
 
+  await page.route(/\/api\/compare\/universe(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          items: [asset, secondAsset].map((item) => ({
+            rwaId: item.rwaId,
+            name: item.name,
+            symbol: item.symbol,
+            slug: item.slug,
+            assetType: item.assetType,
+            rank: item.rank,
+            hasTokens: item.hasTokens,
+          })),
+          stale: false,
+        },
+        meta: {
+          requestId: "e2e-compare-universe",
+          generatedAt: "2026-09-18T02:31:00.000Z",
+          stale: false,
+        },
+      }),
+    });
+  });
+
   await page.route(/\/api\/compare$/, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 350));
     await route.fulfill({
@@ -369,6 +394,22 @@ test("compares assets under one shared scenario", async ({ page }) => {
     page.getByRole("heading", { name: "Treasury Capacity Note II" }),
   ).toBeVisible();
   await expect(page.getByText(/not a “best asset” ranking/i)).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Estimated exit days", exact: true })
+    .first()
+    .click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("number of 24-hour periods");
+
+  await page
+    .getByRole("button", { name: "1 evidence gap", exact: true })
+    .first()
+    .click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("Market-pair data is unavailable");
 });
 
 test("keeps the redesigned Compare workflow usable on mobile", async ({
@@ -384,9 +425,7 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
   await expect(
     page.getByText("Selected", { exact: true }).first(),
   ).toBeVisible();
-  await page
-    .getByPlaceholder("Search all loaded assets by name or symbol")
-    .fill("TCN2");
+  await page.getByPlaceholder("Search symbol or top asset name").fill("TCN2");
   await expect(
     page.getByText("Selected", { exact: true }).first(),
   ).toBeVisible();

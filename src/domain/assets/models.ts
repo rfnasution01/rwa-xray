@@ -145,6 +145,7 @@ export type Page<T> = {
 
 export type NormalizationWarningCode =
   | "INVALID_ASSET_EXCLUDED"
+  | "INVALID_TOKEN_EXCLUDED"
   | "INVALID_TIMESTAMP"
   | "USD_QUOTE_MISSING"
   | "PAGINATION_METADATA_MISSING";

@@ -144,6 +144,7 @@ export const issuerDetailSchema = issuerSummarySchema.extend({
 const warningSchema = z.object({
   code: z.enum([
     "INVALID_ASSET_EXCLUDED",
+    "INVALID_TOKEN_EXCLUDED",
     "INVALID_TIMESTAMP",
     "USD_QUOTE_MISSING",
     "PAGINATION_METADATA_MISSING",

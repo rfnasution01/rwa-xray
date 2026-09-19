@@ -27,6 +27,12 @@ export const explorerRequestSchema = z
   })
   .strict();
 
+export const compareUniverseRequestSchema = z
+  .object({
+    q: z.string().trim().min(2).max(100).optional(),
+  })
+  .strict();
+
 export const issuerDirectoryRequestSchema = z
   .object({
     active: z

@@ -219,17 +219,29 @@ export function normalizeRwaQuotesLatest(
         `data.rwa_assets[${assetIndex}]`,
         warnings,
       ),
-      tokens: asset.tokens.map((token): RwaToken => ({
-        cryptoId: token.crypto_id,
-        name: token.name,
-        symbol: token.symbol,
-        issuerId: nullable(token.issuer_id),
-        issuerName: nullable(token.issuer_name),
-        currency: "USD",
-        price: nullable(token.price),
-        marketCap: nullable(token.market_cap),
-        volume24h: nullable(token.volume_24h),
-      })),
+      tokens: asset.tokens.flatMap((token, tokenIndex): RwaToken[] => {
+        if (!token.name?.trim() || !token.symbol?.trim()) {
+          warnings.push({
+            code: "INVALID_TOKEN_EXCLUDED",
+            path: `data.rwa_assets[${assetIndex}].tokens[${tokenIndex}]`,
+            message: "An upstream token without a name or symbol was excluded",
+          });
+          return [];
+        }
+        return [
+          {
+            cryptoId: token.crypto_id,
+            name: token.name,
+            symbol: token.symbol,
+            issuerId: nullable(token.issuer_id),
+            issuerName: nullable(token.issuer_name),
+            currency: "USD",
+            price: nullable(token.price),
+            marketCap: nullable(token.market_cap),
+            volume24h: nullable(token.volume_24h),
+          },
+        ];
+      }),
       tradfiMarkets: (asset.tradfi_markets ?? []).map(
         (market): TradfiMarket => ({
           exchangeId: market.exchange.exchange_id,

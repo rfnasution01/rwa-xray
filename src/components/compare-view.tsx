@@ -11,15 +11,14 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
 import {
   compareAssets,
   type CompareResponse,
-  type ExplorerItem,
-  type ExplorerResponse,
-  getExplorer,
+  type CompareUniverseItem,
+  getCompareUniverse,
   RwaApiError,
 } from "@/lib/rwa-api";
 
@@ -29,41 +28,77 @@ export function CompareView() {
   const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<number[]>([]);
   const [assetSearch, setAssetSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [retainedCandidates, setRetainedCandidates] = useState<
+    CompareUniverseItem[]
+  >([]);
   const [positionValue, setPositionValue] = useState(100_000);
   const [participationRate, setParticipationRate] = useState(0.05);
   const [stressHaircut, setStressHaircut] = useState(0);
   const universe = useQuery({
-    queryKey: ["compare-universe-all"],
-    queryFn: loadCompareUniverse,
-    refetchInterval: 60_000,
+    queryKey: ["compare-universe-initial"],
+    queryFn: () => getCompareUniverse(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedSearch(assetSearch.trim()),
+      350,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [assetSearch]);
+  const fullSearchActive = debouncedSearch.length >= 2;
+  const searchUniverse = useQuery({
+    queryKey: ["compare-universe-search", debouncedSearch.toLowerCase()],
+    queryFn: () => getCompareUniverse(debouncedSearch),
+    enabled: fullSearchActive,
+    staleTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
   });
   const suggested = useMemo(
     () => suggestPeers(universe.data?.items ?? []),
     [universe.data?.items],
   );
   const selectedIds = selected.length > 0 ? selected : suggested;
-  const selectedCandidates = useMemo(
-    () =>
-      (universe.data?.items ?? []).filter((asset) =>
-        selectedIds.includes(asset.rwaId),
-      ),
-    [selectedIds, universe.data?.items],
-  );
-  const visibleCandidates = useMemo(() => {
-    const allCandidates = universe.data?.items ?? [];
-    const needle = assetSearch.trim().toLowerCase();
-    const unselected = allCandidates.filter(
-      (asset) => !selectedIds.includes(asset.rwaId),
+  const selectedCandidates = useMemo(() => {
+    const byId = new Map(
+      [
+        ...(universe.data?.items ?? []),
+        ...(searchUniverse.data?.items ?? []),
+        ...retainedCandidates,
+      ].map((asset) => [asset.rwaId, asset] as const),
     );
-    if (needle) {
-      return unselected.filter(
+    return selectedIds
+      .map((rwaId) => byId.get(rwaId))
+      .filter((asset): asset is CompareUniverseItem => asset !== undefined);
+  }, [
+    retainedCandidates,
+    searchUniverse.data?.items,
+    selectedIds,
+    universe.data?.items,
+  ]);
+  const visibleCandidates = useMemo(() => {
+    const needle = assetSearch.trim().toLowerCase();
+    const source = fullSearchActive
+      ? (searchUniverse.data?.items ?? [])
+      : (universe.data?.items ?? []);
+    return source
+      .filter((asset) => !selectedIds.includes(asset.rwaId))
+      .filter(
         (asset) =>
+          !needle ||
           asset.name.toLowerCase().includes(needle) ||
           asset.symbol.toLowerCase().includes(needle),
-      );
-    }
-    return unselected.slice(0, 15);
-  }, [assetSearch, selectedIds, universe.data?.items]);
+      )
+      .slice(0, needle ? 50 : 15);
+  }, [
+    assetSearch,
+    fullSearchActive,
+    searchUniverse.data?.items,
+    selectedIds,
+    universe.data?.items,
+  ]);
   const comparison = useMutation({
     mutationFn: () =>
       compareAssets({
@@ -74,13 +109,18 @@ export function CompareView() {
       }),
   });
 
-  function toggle(rwaId: number) {
+  function toggle(asset: CompareUniverseItem) {
     const current = selected.length > 0 ? selected : suggested;
+    setRetainedCandidates((candidates) => [
+      ...new Map(
+        [...candidates, asset].map((candidate) => [candidate.rwaId, candidate]),
+      ).values(),
+    ]);
     setSelected(
-      current.includes(rwaId)
-        ? current.filter((id) => id !== rwaId)
+      current.includes(asset.rwaId)
+        ? current.filter((id) => id !== asset.rwaId)
         : current.length < comparisonLimit
-          ? [...current, rwaId]
+          ? [...current, asset.rwaId]
           : current,
     );
     comparison.reset();
@@ -135,7 +175,7 @@ export function CompareView() {
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#719294]">
                 Suggested peers favor the same asset category when available.
-                Choose from all loaded candidates below.
+                Search exact symbols globally or top-volume assets by name.
               </p>
             </div>
             <span className="fx-data-badge shrink-0">
@@ -156,7 +196,7 @@ export function CompareView() {
                   type="search"
                   value={assetSearch}
                   onChange={(event) => setAssetSearch(event.target.value)}
-                  placeholder="Search all loaded assets by name or symbol"
+                  placeholder="Search symbol or top asset name"
                   aria-label="Search comparison candidates"
                 />
               </label>
@@ -186,7 +226,7 @@ export function CompareView() {
                           disabled={false}
                           index={index}
                           reduceMotion={Boolean(reduceMotion)}
-                          onToggle={() => toggle(asset.rwaId)}
+                          onToggle={() => toggle(asset)}
                         />
                       ))}
                     </div>
@@ -194,14 +234,17 @@ export function CompareView() {
                 ) : null}
                 <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[9px] tracking-[0.08em] text-[#527f81] uppercase">
                   <span>
-                    Showing {visibleCandidates.length} of{" "}
-                    {universe.data.items.length} loaded candidates
-                    {assetSearch
-                      ? " matching search"
-                      : " (15 shown by default)"}
+                    {fullSearchActive
+                      ? `Showing ${visibleCandidates.length} targeted search results`
+                      : assetSearch.trim()
+                        ? `Type at least 2 characters for server search · ${visibleCandidates.length} initial matches`
+                        : `Showing ${visibleCandidates.length} of ${universe.data.items.length} initial candidates`}
                   </span>
-                  {assetSearch ? <span>Search active</span> : null}
+                  {searchUniverse.isFetching ? <span>Searching…</span> : null}
                 </div>
+                {searchUniverse.error && fullSearchActive ? (
+                  <InlineError retry={() => void searchUniverse.refetch()} />
+                ) : null}
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                   {visibleCandidates.map((asset, index) => (
                     <CompareAssetOption
@@ -211,7 +254,7 @@ export function CompareView() {
                       disabled={selectedIds.length >= comparisonLimit}
                       index={index}
                       reduceMotion={Boolean(reduceMotion)}
-                      onToggle={() => toggle(asset.rwaId)}
+                      onToggle={() => toggle(asset)}
                     />
                   ))}
                 </div>
@@ -441,7 +484,7 @@ function CompareAssetOption({
   reduceMotion,
   onToggle,
 }: {
-  asset: ExplorerItem;
+  asset: CompareUniverseItem;
   active: boolean;
   disabled: boolean;
   index: number;
@@ -498,7 +541,7 @@ function ComparisonResults({
   reduceMotion,
 }: {
   data: CompareResponse;
-  requestedAssets: ExplorerItem[];
+  requestedAssets: CompareUniverseItem[];
   reduceMotion: boolean;
 }) {
   return (
@@ -585,9 +628,10 @@ function ComparisonResults({
                     ? formatDays(item.analysis.scenario.estimatedExitDays)
                     : "—"}
                 </span>
-                <span className="mt-1 block font-mono text-[10px] tracking-[0.08em] text-[#729496] uppercase">
-                  Estimated exit days
-                </span>
+                <TechnicalTerm
+                  term="estimatedExitDays"
+                  className="mt-1 font-mono text-[10px] tracking-[0.08em] text-[#729496] uppercase"
+                />
               </div>
               <dl className="space-y-2 text-xs">
                 <CompareMetric
@@ -630,9 +674,16 @@ function ComparisonResults({
                   aria-hidden="true"
                 />
                 <span>
-                  {item.dataGaps.length}{" "}
-                  <TechnicalTerm term="comparisonEvidenceGap" />
-                  (s); unavailable metrics are not ranked as zero.
+                  <TechnicalTerm
+                    term="comparisonEvidenceGap"
+                    definition={item.dataGaps
+                      .map(describeComparisonEvidenceGap)
+                      .join(" ")}
+                  >
+                    {item.dataGaps.length} evidence gap
+                    {item.dataGaps.length === 1 ? "" : "s"}
+                  </TechnicalTerm>
+                  ; unavailable metrics are not ranked as zero.
                 </span>
               </p>
             ) : null}
@@ -788,56 +839,33 @@ function CompareError({ error, retry }: { error: unknown; retry(): void }) {
   );
 }
 
+function describeComparisonEvidenceGap(
+  gap: CompareResponse["items"][number]["dataGaps"][number],
+) {
+  const unavailable =
+    gap.code === "ASSET_NOT_RETURNED"
+      ? "did not return a record for this asset"
+      : "is unavailable";
+
+  switch (gap.source) {
+    case "marketPairs":
+      return `Market-pair data ${unavailable}; top market share, market and exchange concentration, price dispersion, and pair coverage cannot be calculated.`;
+    case "metadata":
+      return `Asset metadata ${unavailable}; descriptive metadata evidence is incomplete, while available quote-based metrics remain visible.`;
+    case "assets":
+      return `Benchmark asset-list data ${unavailable}; peer benchmark context may be incomplete.`;
+    default:
+      return `${gap.source} data ${unavailable}; affected metrics remain unavailable rather than being treated as zero.`;
+  }
+}
+
 function evidenceBadgeClass(label: "Limited" | "Moderate" | "High") {
   if (label === "High") return "fx-compare-badge fx-compare-badge-high";
   if (label === "Moderate") return "fx-compare-badge fx-compare-badge-moderate";
   return "fx-compare-badge fx-compare-badge-limited";
 }
 
-async function loadCompareUniverse(): Promise<ExplorerResponse> {
-  const pageSize = 250;
-  const pages: ExplorerResponse[] = [];
-  let start = 1;
-
-  while (true) {
-    const page = await getExplorer({
-      sort: "tokenized_volume_24h",
-      sortDir: "desc",
-      start,
-      limit: pageSize,
-    });
-    pages.push(page);
-
-    if (!page.pagination.hasMore || page.items.length === 0) break;
-    start += page.items.length;
-  }
-
-  const firstPage = pages[0];
-  if (!firstPage) {
-    throw new Error("Comparison universe is empty");
-  }
-
-  const uniqueItems = Array.from(
-    new Map(
-      pages
-        .flatMap((page) => page.items)
-        .map((asset) => [asset.rwaId, asset] as const),
-    ).values(),
-  );
-
-  return {
-    ...firstPage,
-    items: uniqueItems,
-    pagination: {
-      ...firstPage.pagination,
-      hasMore: false,
-      totalSize: firstPage.pagination.totalSize ?? uniqueItems.length,
-    },
-    stale: pages.some((page) => page.stale),
-  };
-}
-
-function suggestPeers(items: ExplorerItem[]) {
+function suggestPeers(items: CompareUniverseItem[]) {
   const first = items[0];
   if (!first) return [];
   const peers = items

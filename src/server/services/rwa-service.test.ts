@@ -4,6 +4,7 @@ import assetsListFixture from "../../../tests/fixtures/cmc/rwa-assets-list.json"
 import infoFixture from "../../../tests/fixtures/cmc/rwa-info.json";
 import issuerFixture from "../../../tests/fixtures/cmc/rwa-issuer.json";
 import issuersListFixture from "../../../tests/fixtures/cmc/rwa-issuers-list.json";
+import mapFixture from "../../../tests/fixtures/cmc/rwa-map.json";
 import marketPairsFixture from "../../../tests/fixtures/cmc/rwa-market-pairs.json";
 import quotesLatestFixture from "../../../tests/fixtures/cmc/rwa-quotes-latest.json";
 import type { CacheResult, CacheState } from "@/server/cache/service";
@@ -12,6 +13,7 @@ import {
   normalizeRwaInfo,
   normalizeRwaIssuer,
   normalizeRwaIssuersList,
+  normalizeRwaMap,
   normalizeRwaMarketPairs,
   normalizeRwaQuotesLatest,
 } from "@/server/cmc/normalize";
@@ -20,6 +22,7 @@ import {
   rwaInfoResponseSchema,
   rwaIssuerResponseSchema,
   rwaIssuersListResponseSchema,
+  rwaMapResponseSchema,
   rwaMarketPairsResponseSchema,
   rwaQuotesLatestResponseSchema,
 } from "@/server/cmc/schemas";
@@ -56,7 +59,11 @@ function cached<T>(value: T, state: CacheState = "fresh"): CacheResult<T> {
 
 function repository(): RwaRepository {
   return {
-    getMap: vi.fn(),
+    getMap: vi.fn(async () =>
+      cached(
+        normalizeRwaMap(rwaMapResponseSchema.parse(mapFixture), { observedAt }),
+      ),
+    ),
     getInfo: vi.fn(async () =>
       cached(
         normalizeRwaInfo(rwaInfoResponseSchema.parse(infoFixture), {
@@ -133,6 +140,31 @@ describe("RWA application service", () => {
         convert: "USD",
         limit: 20,
       }),
+    );
+  });
+
+  it("loads bounded initial candidates and performs targeted Compare search", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({ repository: data });
+
+    const initial = await service.getCompareUniverse();
+    expect(initial.items.length).toBeGreaterThan(0);
+    expect(data.getAssets).toHaveBeenCalledWith(
+      expect.objectContaining({ start: 1, limit: 50 }),
+    );
+    expect(data.getMap).not.toHaveBeenCalled();
+
+    const result = await service.getCompareUniverse("EXTB");
+
+    expect(result.items.map((item) => item.rwaId)).toContain(101);
+    expect(data.getMap).toHaveBeenCalledTimes(1);
+    expect(data.getMap).toHaveBeenCalledWith({ symbol: "extb", limit: 50 });
+    expect(data.getAssets).toHaveBeenCalledTimes(3);
+    expect(data.getAssets).toHaveBeenCalledWith(
+      expect.objectContaining({ rwaSlug: "extb", limit: 50 }),
+    );
+    expect(data.getAssets).toHaveBeenCalledWith(
+      expect.objectContaining({ start: 1, limit: 250 }),
     );
   });
 
@@ -396,6 +428,7 @@ describe("RWA application service", () => {
         ],
       },
     });
+    vi.mocked(data.getQuotesLatest).mockClear();
     const service = createRwaApplicationService({
       repository: data,
       now: () => calculatedAt,
@@ -415,6 +448,67 @@ describe("RWA application service", () => {
       stressHaircut: 0,
     });
     expect(result.failures).toEqual([]);
+    expect(data.getQuotesLatest).toHaveBeenCalledTimes(1);
+    expect(data.getQuotesLatest).toHaveBeenCalledWith({
+      rwaId: "102,101",
+      convert: "USD",
+      skipInvalid: true,
+    });
+    expect(data.getInfo).toHaveBeenCalledTimes(1);
+    expect(data.getInfo).toHaveBeenCalledWith({
+      rwaId: "102,101",
+      skipInvalid: true,
+    });
+    expect(data.getAssets).toHaveBeenCalledTimes(1);
+    expect(data.getMarketPairs).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps successful batch results when one quote is not returned", async () => {
+    const data = repository();
+    const service = createRwaApplicationService({
+      repository: data,
+      now: () => calculatedAt,
+    });
+
+    const result = await service.compareAssets({
+      rwaIds: [101, 102],
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.items.map((item) => item.asset.rwaId)).toEqual([101]);
+    expect(result.failures).toEqual([{ rwaId: 102, code: "ASSET_NOT_FOUND" }]);
+    expect(data.getQuotesLatest).toHaveBeenCalledTimes(1);
+    expect(data.getInfo).toHaveBeenCalledTimes(1);
+    expect(data.getAssets).toHaveBeenCalledTimes(1);
+    expect(data.getMarketPairs).toHaveBeenCalledTimes(1);
+    expect(data.getMarketPairs).toHaveBeenCalledWith(
+      expect.objectContaining({ rwaId: "101" }),
+    );
+  });
+
+  it("does not request market pairs when the batched quote source fails", async () => {
+    const data = repository();
+    vi.mocked(data.getQuotesLatest).mockRejectedValueOnce(
+      new Error("quote batch unavailable"),
+    );
+    const service = createRwaApplicationService({ repository: data });
+
+    const result = await service.compareAssets({
+      rwaIds: [101, 102],
+      positionValue: 100_000,
+      participationRate: 0.05,
+      stressHaircut: 0,
+    });
+
+    expect(result.items).toEqual([]);
+    expect(result.failures).toEqual([
+      { rwaId: 101, code: "REQUIRED_SOURCE_UNAVAILABLE" },
+      { rwaId: 102, code: "REQUIRED_SOURCE_UNAVAILABLE" },
+    ]);
+    expect(data.getQuotesLatest).toHaveBeenCalledTimes(1);
+    expect(data.getMarketPairs).not.toHaveBeenCalled();
   });
 
   it("returns sanitized evidence parameters, lineage, and excerpts", async () => {

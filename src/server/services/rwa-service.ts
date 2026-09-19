@@ -1,6 +1,7 @@
 import "server-only";
 
 import type {
+  AssetIdentity,
   AssetMetadata,
   DetailedAsset,
   IssuerDetail,
@@ -113,6 +114,11 @@ export type IssuerDetailResult = {
   stale: boolean;
 };
 
+export type CompareUniverseResult = {
+  items: AssetIdentity[];
+  stale: boolean;
+};
+
 export type AssetDetailResult = {
   asset: DetailedAsset;
   metadata: AssetMetadata | null;
@@ -177,6 +183,7 @@ export type RwaApplicationService = {
   ): Promise<IssuerDirectoryResult>;
   getIssuerDetail(input: IssuerDetailInput): Promise<IssuerDetailResult>;
   getAssetDetail(input: DetailInput): Promise<AssetDetailResult>;
+  getCompareUniverse(search?: string): Promise<CompareUniverseResult>;
   compareAssets(input: CompareInput): Promise<CompareResult>;
   getAssetEvidence(input: DetailInput): Promise<EvidenceResult>;
 };
@@ -198,6 +205,90 @@ export function createRwaApplicationService(options: {
   now?: () => Date;
 }): RwaApplicationService {
   const now = options.now ?? (() => new Date());
+
+  async function assembleAssetDetail(
+    input: DetailInput,
+    asset: DetailedAsset,
+    quotesResult: Awaited<ReturnType<RwaRepository["getQuotesLatest"]>>,
+    pairsResult: PromiseSettledResult<
+      Awaited<ReturnType<RwaRepository["getMarketPairs"]>>
+    >,
+    infoResult: PromiseSettledResult<
+      Awaited<ReturnType<RwaRepository["getInfo"]>>
+    >,
+    assetsResult: PromiseSettledResult<
+      Awaited<ReturnType<RwaRepository["getAssets"]>>
+    >,
+  ): Promise<AssetDetailResult> {
+    if (options.activityRecorder) {
+      await options.activityRecorder.recordView(asset).catch(() => undefined);
+    }
+
+    const dataGaps: AssetDetailResult["dataGaps"] = [];
+    const marketPairs = settledData(pairsResult, (result) => result.value.data);
+    if (pairsResult.status === "rejected") {
+      dataGaps.push({ source: "marketPairs", code: "SOURCE_UNAVAILABLE" });
+    }
+
+    const metadata = settledData(infoResult, (result) =>
+      result.value.data.find((candidate) => candidate.rwaId === input.rwaId),
+    );
+    if (infoResult.status === "rejected") {
+      dataGaps.push({ source: "metadata", code: "SOURCE_UNAVAILABLE" });
+    } else if (!metadata) {
+      dataGaps.push({ source: "metadata", code: "ASSET_NOT_RETURNED" });
+    }
+
+    const benchmarkAssets = settledData(
+      assetsResult,
+      (result) => result.value.data.items,
+    );
+    if (assetsResult.status === "rejected") {
+      dataGaps.push({ source: "assets", code: "SOURCE_UNAVAILABLE" });
+    }
+    const benchmarks = buildBenchmarks(
+      benchmarkAssets ?? [],
+      asset,
+      marketPairs,
+    );
+    const calculatedAt = now();
+    if (!Number.isFinite(calculatedAt.getTime())) {
+      throw new TypeError("Application clock returned an invalid Date");
+    }
+
+    const analysis = analyzeAsset({
+      asset,
+      marketPairs,
+      benchmarks,
+      positionValue: input.positionValue,
+      participationRate: input.participationRate,
+      stressHaircut: input.stressHaircut,
+      calculatedAt,
+    });
+
+    const sourceStatuses = [
+      sourceStatus("quotes", quotesResult),
+      ...(pairsResult.status === "fulfilled"
+        ? [sourceStatus("marketPairs", pairsResult.value)]
+        : []),
+      ...(infoResult.status === "fulfilled"
+        ? [sourceStatus("metadata", infoResult.value)]
+        : []),
+      ...(assetsResult.status === "fulfilled"
+        ? [sourceStatus("assets", assetsResult.value)]
+        : []),
+    ];
+
+    return {
+      asset,
+      metadata,
+      marketPairs,
+      analysis,
+      sourceStatuses,
+      dataGaps,
+      stale: sourceStatuses.some((status) => status.cache.state === "stale"),
+    };
+  }
 
   const service: RwaApplicationService = {
     async getExplorer(input) {
@@ -291,90 +382,183 @@ export function createRwaApplicationService(options: {
         );
       }
 
-      if (options.activityRecorder) {
-        await options.activityRecorder.recordView(asset).catch(() => undefined);
-      }
-
-      const dataGaps: AssetDetailResult["dataGaps"] = [];
-      const marketPairs = settledData(
+      return assembleAssetDetail(
+        input,
+        asset,
+        quotesResult.value,
         pairsResult,
-        (result) => result.value.data,
-      );
-      if (pairsResult.status === "rejected") {
-        dataGaps.push({ source: "marketPairs", code: "SOURCE_UNAVAILABLE" });
-      }
-
-      const metadata = settledData(infoResult, (result) =>
-        result.value.data.find((candidate) => candidate.rwaId === input.rwaId),
-      );
-      if (infoResult.status === "rejected") {
-        dataGaps.push({ source: "metadata", code: "SOURCE_UNAVAILABLE" });
-      } else if (!metadata) {
-        dataGaps.push({ source: "metadata", code: "ASSET_NOT_RETURNED" });
-      }
-
-      const benchmarkAssets = settledData(
+        infoResult,
         assetsResult,
-        (result) => result.value.data.items,
       );
-      if (assetsResult.status === "rejected") {
-        dataGaps.push({ source: "assets", code: "SOURCE_UNAVAILABLE" });
+    },
+
+    async getCompareUniverse(search) {
+      const needle = search?.trim().toLowerCase();
+      if (!needle) {
+        const result = await options.repository.getAssets({
+          sort: "tokenized_volume_24h",
+          sortDir: "desc",
+          start: 1,
+          limit: 50,
+          convert: "USD",
+          skipInvalid: true,
+        });
+        return {
+          items: result.value.data.items.map(
+            ({ rwaId, name, symbol, slug, assetType, rank, hasTokens }) => ({
+              rwaId,
+              name,
+              symbol,
+              slug,
+              assetType,
+              rank,
+              hasTokens,
+            }),
+          ),
+          stale: result.cache.state === "stale",
+        };
       }
-      const benchmarks = buildBenchmarks(
-        benchmarkAssets ?? [],
-        asset,
-        marketPairs,
+
+      const slug = needle.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const symbolLookup = /^[0-9a-z$@-]+$/i.test(needle)
+        ? options.repository.getMap({ symbol: needle, limit: 50 })
+        : Promise.resolve(null);
+      const slugLookup = slug
+        ? options.repository.getAssets({
+            rwaSlug: slug,
+            limit: 50,
+            convert: "USD",
+            skipInvalid: true,
+          })
+        : Promise.resolve(null);
+      const [topResult, symbolResult, slugResult] = await Promise.allSettled([
+        options.repository.getAssets({
+          sort: "tokenized_volume_24h",
+          sortDir: "desc",
+          start: 1,
+          limit: 250,
+          convert: "USD",
+          skipInvalid: true,
+        }),
+        symbolLookup,
+        slugLookup,
+      ] as const);
+      if (topResult.status === "rejected") throw topResult.reason;
+
+      const topMatches = topResult.value.value.data.items.filter(
+        (asset) =>
+          asset.name.toLowerCase().includes(needle) ||
+          asset.symbol.toLowerCase().includes(needle),
       );
-      const calculatedAt = now();
-      if (!Number.isFinite(calculatedAt.getTime())) {
-        throw new TypeError("Application clock returned an invalid Date");
-      }
-
-      const analysis = analyzeAsset({
-        asset,
-        marketPairs,
-        benchmarks,
-        positionValue: input.positionValue,
-        participationRate: input.participationRate,
-        stressHaircut: input.stressHaircut,
-        calculatedAt,
-      });
-
-      const sourceStatuses = [
-        sourceStatus("quotes", quotesResult.value),
-        ...(pairsResult.status === "fulfilled"
-          ? [sourceStatus("marketPairs", pairsResult.value)]
-          : []),
-        ...(infoResult.status === "fulfilled"
-          ? [sourceStatus("metadata", infoResult.value)]
-          : []),
-        ...(assetsResult.status === "fulfilled"
-          ? [sourceStatus("assets", assetsResult.value)]
-          : []),
-      ];
-
+      const symbolMatches =
+        symbolResult.status === "fulfilled" && symbolResult.value
+          ? symbolResult.value.value.data.items
+          : [];
+      const slugMatches =
+        slugResult.status === "fulfilled" && slugResult.value
+          ? slugResult.value.value.data.items
+          : [];
+      const items = [
+        ...new Map(
+          [...symbolMatches, ...slugMatches, ...topMatches].map((asset) => [
+            asset.rwaId,
+            {
+              rwaId: asset.rwaId,
+              name: asset.name,
+              symbol: asset.symbol,
+              slug: asset.slug,
+              assetType: asset.assetType,
+              rank: asset.rank,
+              hasTokens: asset.hasTokens,
+            },
+          ]),
+        ).values(),
+      ].slice(0, 50);
       return {
-        asset,
-        metadata,
-        marketPairs,
-        analysis,
-        sourceStatuses,
-        dataGaps,
-        stale: sourceStatuses.some((status) => status.cache.state === "stale"),
+        items,
+        stale:
+          topResult.value.cache.state === "stale" ||
+          (symbolResult.status === "fulfilled" &&
+            symbolResult.value?.cache.state === "stale") ||
+          (slugResult.status === "fulfilled" &&
+            slugResult.value?.cache.state === "stale"),
       };
     },
 
     async compareAssets(input) {
-      const settled = await Promise.allSettled(
-        input.rwaIds.map((rwaId) =>
-          service.getAssetDetail({
-            rwaId,
-            positionValue: input.positionValue,
-            participationRate: input.participationRate,
-            stressHaircut: input.stressHaircut,
+      const rwaIdList = input.rwaIds.join(",");
+      const [quotesResult, infoResult, assetsResult] = await Promise.allSettled(
+        [
+          options.repository.getQuotesLatest({
+            rwaId: rwaIdList,
+            convert: "USD",
+            skipInvalid: true,
           }),
-        ),
+          options.repository.getInfo({
+            rwaId: rwaIdList,
+            skipInvalid: true,
+          }),
+          options.repository.getAssets({
+            limit: 250,
+            convert: "USD",
+            skipInvalid: true,
+          }),
+        ] as const,
       );
+
+      let settled: PromiseSettledResult<AssetDetailResult>[];
+      if (quotesResult.status === "rejected") {
+        settled = input.rwaIds.map((): PromiseRejectedResult => ({
+          status: "rejected",
+          reason: new ApplicationServiceError(
+            "REQUIRED_SOURCE_UNAVAILABLE",
+            "The required asset quote source is unavailable",
+            quotesResult.reason,
+          ),
+        }));
+      } else {
+        const assetsById = new Map(
+          quotesResult.value.value.data.map((asset) => [asset.rwaId, asset]),
+        );
+        const returnedIds = input.rwaIds.filter((rwaId) =>
+          assetsById.has(rwaId),
+        );
+        const pairResults = await Promise.allSettled(
+          returnedIds.map((rwaId) =>
+            loadAllMarketPairs(options.repository, String(rwaId)),
+          ),
+        );
+        const pairsById = new Map(
+          returnedIds.map(
+            (rwaId, index) => [rwaId, pairResults[index]!] as const,
+          ),
+        );
+
+        settled = await Promise.allSettled(
+          input.rwaIds.map(async (rwaId) => {
+            const asset = assetsById.get(rwaId);
+            if (!asset) {
+              throw new ApplicationServiceError(
+                "ASSET_NOT_FOUND",
+                "The requested RWA asset was not returned",
+              );
+            }
+            return assembleAssetDetail(
+              {
+                rwaId,
+                positionValue: input.positionValue,
+                participationRate: input.participationRate,
+                stressHaircut: input.stressHaircut,
+              },
+              asset,
+              quotesResult.value,
+              pairsById.get(rwaId)!,
+              infoResult,
+              assetsResult,
+            );
+          }),
+        );
+      }
       const items: CompareResult["items"] = [];
       const failures: CompareResult["failures"] = [];
       settled.forEach((result, index) => {

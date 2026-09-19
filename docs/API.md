@@ -167,11 +167,13 @@ curl --get 'https://pro-api.coinmarketcap.com/v5/real-world-assets/market-pairs/
 1. Gunakan `/map` untuk lookup ringan.
 2. Ambil `/assets/list` dalam batch, bukan satu request per card.
 3. Panggil `/quotes/latest` dan `/market-pairs/list` saat detail dibuka atau snapshot prioritas berjalan.
-4. Deduplicate request identik yang terjadi bersamaan.
-5. Cache sesuai update frequency upstream.
-6. Gunakan satu conversion (`USD`) pada MVP.
-7. Jangan prefetch seluruh pair untuk semua aset.
-8. Catat `status.credit_count` untuk observability.
+4. Compare memuat 50 kandidat awal dari `/assets/list`. Search dua karakter atau lebih dikirim secara debounced ke server dan dibatasi maksimum 50 hasil: exact symbol lookup memakai `/map`, exact normalized slug memakai `/assets/list`, dan name substring dicari pada 250 aset bervolume tertinggi. Browser tidak menerima ribuan record.
+5. Compare menggabungkan 2–4 canonical `rwa_id` dalam satu request `/quotes/latest` dan satu `/info`; market pairs tetap diminta per aset karena upstream hanya menerima satu RWA.
+6. Deduplicate request identik yang terjadi bersamaan.
+7. Cache sesuai update frequency upstream.
+8. Gunakan satu conversion (`USD`) pada MVP.
+9. Jangan prefetch seluruh pair untuk semua aset.
+10. Catat `status.credit_count` untuk observability.
 
 ## 6. Normalized response internal
 
@@ -244,7 +246,8 @@ Daftar tujuh endpoint RWA yang diverifikasi tidak mencantumkan endpoint historic
 - `401/403`: configuration alert; jangan tampilkan detail secret.
 - `429`: patuhi backoff dan gunakan stale cache jika ada.
 - `5xx`: retry terbatas dengan jitter.
-- response parsial: simpan field valid dan tandai missing data.
+- response parsial: simpan field valid dan tandai missing data;
+- token row tanpa `name` atau `symbol` dikeluarkan dengan warning `INVALID_TOKEN_EXCLUDED`, tanpa membuang parent RWA atau menggagalkan batch asset lain.
 
 ## 11. Status implementasi client
 
@@ -295,6 +298,14 @@ GET /api/issuers/6878977dcbbf471de3366e85?start=1&limit=100
 
 Issuer detail mengembalikan metadata issuer dan relasi token ke canonical `rwa_id`. Relasi tersebut merupakan metadata CoinMarketCap, bukan verifikasi reserve, redemption rights, atau legal claim.
 
+### Compare universe
+
+```http
+GET /api/compare/universe
+```
+
+Tanpa query, response hanya berisi 50 kandidat awal berdasarkan volume untuk suggested peers. Dengan `?q=gold`, server melakukan targeted exact symbol/slug lookup serta name matching pada 250 aset bervolume tertinggi, lalu mengembalikan maksimum 50 hasil. Browser tidak menerima ribuan record dan tidak mengulang full-universe load setiap 60 detik.
+
 ### Compare
 
 ```http
@@ -309,7 +320,7 @@ Content-Type: application/json
 }
 ```
 
-Compare menerima 2–4 canonical ID unik dan body maksimum 4 KB. Semua aset memakai scenario yang sama. Hasil tersedia diurutkan berdasarkan Estimated Exit Days, sedangkan kegagalan per aset dikembalikan terpisah tanpa menggagalkan hasil lain.
+Compare menerima 2–4 canonical ID unik dan body maksimum 4 KB. Semua aset memakai scenario yang sama. Quotes dan metadata diminta secara batch dengan `skip_invalid=true`; benchmark asset list juga digunakan bersama. Market pairs tetap dimuat per aset setelah quote canonical ditemukan. Hasil tersedia diurutkan berdasarkan Estimated Exit Days, sedangkan aset yang tidak dikembalikan batch quote masuk ke `failures` tanpa menggagalkan hasil lain.
 
 ### Dedicated evidence
 

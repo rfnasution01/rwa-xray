@@ -67,7 +67,7 @@ const glossary = {
   estimatedExitDays: {
     label: "Estimated exit days",
     definition:
-      "Position value divided by daily scenario capacity. It is a planning estimate—not a guaranteed execution time.",
+      "The estimated number of 24-hour periods needed for the scenario position: position value divided by daily capacity. Lower values indicate more observed capacity relative to the position. It is not a guaranteed execution time and does not model order-book depth, slippage, fees, or market access.",
   },
   effectiveVolume: {
     label: "Effective volume",
@@ -337,7 +337,7 @@ const glossary = {
   compareAssetSearch: {
     label: "Search comparison candidates",
     definition:
-      "Filter the loaded comparison universe by asset name or symbol. This search does not make another upstream request.",
+      "Search exact symbols and normalized asset slugs through a bounded server lookup, with partial-name matching among top-volume assets. At most 50 candidates are returned.",
   },
 } as const;
 
@@ -346,11 +346,13 @@ export type GlossaryTerm = keyof typeof glossary;
 export function TechnicalTerm({
   term,
   children,
+  definition,
   className = "",
   align = "left",
 }: {
   term: GlossaryTerm;
   children?: ReactNode;
+  definition?: ReactNode;
   className?: string;
   align?: "left" | "right";
 }) {
@@ -385,7 +387,9 @@ export function TechnicalTerm({
         role="tooltip"
       >
         <span className="fx-term-card-title">{entry.label}</span>
-        <span className="fx-term-card-copy">{entry.definition}</span>
+        <span className="fx-term-card-copy">
+          {definition ?? entry.definition}
+        </span>
       </span>
     </span>
   );

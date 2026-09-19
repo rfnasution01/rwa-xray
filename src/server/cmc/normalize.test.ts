@@ -131,6 +131,39 @@ describe("CMC normalization", () => {
     });
   });
 
+  it("keeps a quote asset while excluding malformed token rows", () => {
+    const firstAsset = quotesLatestFixture.data.rwa_assets[0]!;
+    const parsed = rwaQuotesLatestResponseSchema.parse({
+      ...quotesLatestFixture,
+      data: {
+        ...quotesLatestFixture.data,
+        rwa_assets: [
+          {
+            ...firstAsset,
+            tokens: [
+              ...firstAsset.tokens,
+              {
+                ...firstAsset.tokens[0],
+                crypto_id: 49999,
+                name: null,
+                symbol: null,
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const result = normalizeRwaQuotesLatest(parsed, { observedAt });
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.tokens).toHaveLength(firstAsset.tokens.length);
+    expect(result.warnings).toContainEqual({
+      code: "INVALID_TOKEN_EXCLUDED",
+      path: `data.rwa_assets[0].tokens[${firstAsset.tokens.length}]`,
+      message: "An upstream token without a name or symbol was excluded",
+    });
+  });
+
   it("maps snake_case fields and excludes passthrough fields", () => {
     const parsed = rwaAssetsListResponseSchema.parse({
       ...assetsListFixture,

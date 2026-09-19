@@ -46,6 +46,7 @@ function service(): RwaApplicationService {
     getIssuerDetail: vi.fn(async () => {
       throw new Error("not configured");
     }),
+    getCompareUniverse: vi.fn(async () => ({ items: [], stale: false })),
     getAssetDetail: vi.fn(async (): Promise<AssetDetailResult> => {
       throw new Error("not configured");
     }),
@@ -225,6 +226,33 @@ describe("API handlers", () => {
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBe("30");
     expect(applicationService.getExplorer).not.toHaveBeenCalled();
+  });
+
+  it("returns the server-assembled Compare universe", async () => {
+    const applicationService = service();
+    const { handlers: api } = handlers(applicationService);
+
+    const response = await api.getCompareUniverse(
+      new Request("https://example.test/api/compare/universe"),
+    );
+    const search = await api.getCompareUniverse(
+      new Request("https://example.test/api/compare/universe?q=gold"),
+    );
+    const invalid = await api.getCompareUniverse(
+      new Request("https://example.test/api/compare/universe?unexpected=true"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(search.status).toBe(200);
+    expect(applicationService.getCompareUniverse).toHaveBeenNthCalledWith(
+      1,
+      undefined,
+    );
+    expect(applicationService.getCompareUniverse).toHaveBeenNthCalledWith(
+      2,
+      "gold",
+    );
+    expect(invalid.status).toBe(400);
   });
 
   it("validates and forwards a compare request", async () => {

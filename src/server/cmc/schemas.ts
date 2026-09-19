@@ -85,8 +85,8 @@ const rwaListedAssetSchema = rwaAssetBaseSchema.extend({
 const rwaTokenSchema = z
   .object({
     crypto_id: z.number().int().positive(),
-    name: z.string(),
-    symbol: z.string(),
+    name: nullableString,
+    symbol: nullableString,
     issuer_id: nullableString,
     issuer_name: nullableString,
     price: nullableNumber,

@@ -71,6 +71,18 @@ const explorerEnvelopeSchema = z.object({
   }),
 });
 
+const compareUniverseEnvelopeSchema = z.object({
+  data: z.object({
+    items: z.array(assetSchema.omit({ quote: true })),
+    stale: z.boolean(),
+  }),
+  meta: z.object({
+    requestId: z.string(),
+    generatedAt: z.string(),
+    stale: z.boolean().optional(),
+  }),
+});
+
 const issuerSummarySchema = z.object({
   issuerId: z.string().regex(/^[0-9a-f]{24}$/),
   name: z.string(),
@@ -379,6 +391,10 @@ export type ExplorerResponse = z.infer<typeof explorerEnvelopeSchema>["data"];
 export type ExplorerItem = ExplorerResponse["items"][number];
 export type AssetDetailResponse = z.infer<typeof detailEnvelopeSchema>["data"];
 export type CompareResponse = z.infer<typeof compareEnvelopeSchema>["data"];
+export type CompareUniverseResponse = z.infer<
+  typeof compareUniverseEnvelopeSchema
+>["data"];
+export type CompareUniverseItem = CompareUniverseResponse["items"][number];
 export type IssuerDirectoryResponse = z.infer<
   typeof issuerDirectoryEnvelopeSchema
 >["data"];
@@ -417,6 +433,16 @@ export async function getExplorer(input: {
     headers: { Accept: "application/json" },
   });
   return parseResponse(response, explorerEnvelopeSchema);
+}
+
+export async function getCompareUniverse(
+  search?: string,
+): Promise<CompareUniverseResponse> {
+  const query = search ? `?q=${encodeURIComponent(search)}` : "";
+  const response = await fetch(`/api/compare/universe${query}`, {
+    headers: { Accept: "application/json" },
+  });
+  return parseResponse(response, compareUniverseEnvelopeSchema);
 }
 
 export async function getIssuerDirectory(input: {

@@ -41,7 +41,7 @@ flowchart LR
 - Guided demo meminta government securities terlebih dahulu lalu memakai RWA valid bervolume tertinggi dengan label fallback jika category live kosong.
 - Explorer melakukan pagination/filter/sort melalui backend; search saat ini hanya memfilter page yang sudah diterima dan diberi label demikian.
 - `/assets/[rwaId]` menampilkan simulator client-side, concentration per dimensi, price dispersion, token/market tables, methodology warnings, dan sanitized source lineage dari satu detail response. Backend memuat seluruh page market-pair sebelum analisis; kegagalan atau pagination yang tidak lengkap membuat evidence tersebut unavailable.
-- `/compare` menerapkan satu scenario pada 2–4 canonical RWA IDs, mempertahankan partial results, dan memakai neutral ordering berdasarkan Estimated Exit Days.
+- `/compare` menerapkan satu scenario pada 2–4 canonical RWA IDs, mempertahankan partial results, dan memakai neutral ordering berdasarkan Estimated Exit Days. Initial selection hanya menerima 50 kandidat `assets/list` berdasarkan volume. Search dua karakter atau lebih berjalan server-side secara debounced dan dibatasi 50 hasil: exact symbol melalui `/map`, exact normalized slug melalui `/assets/list`, serta name matching pada 250 aset bervolume tertinggi. Browser tidak memuat seluruh universe atau melakukan refetch semua page setiap 60 detik. Quotes dan metadata dimuat dalam batch multi-ID, benchmark list dibagikan, sedangkan market pairs tetap dimuat per canonical asset yang benar-benar dikembalikan quote batch.
 - `/issuers` menampilkan issuer directory terpaginasikan; `/issuers/[issuerId]` menampilkan token yang dilaporkan terkait dan menautkannya kembali ke canonical asset bila `rwa_id` tersedia.
 - Response internal divalidasi dengan Zod di browser sebelum dirender.
 - Tidak pernah menerima `X-CMC_PRO_API_KEY`.
@@ -158,6 +158,7 @@ sequenceDiagram
 | ------ | ----------------------------- | ------------------------------------------------------- |
 | GET    | `/api/assets`                 | Explorer dan filter — implemented                       |
 | GET    | `/api/assets/:rwaId`          | Detail, scenario, dan analisis — implemented            |
+| GET    | `/api/compare/universe`       | Initial candidates dan bounded server-side search       |
 | POST   | `/api/compare`                | Analisis 2–4 aset — implemented                         |
 | POST   | `/api/simulate`               | Opsional; kalkulasi juga dapat dilakukan di client      |
 | GET    | `/api/assets/:rwaId/evidence` | Sanitized lineage dan normalized excerpt — implemented  |
@@ -235,7 +236,7 @@ analysis_snapshots
 - Simpan currency pada setiap monetary value.
 - Hindari menjumlahkan volume tanpa memeriksa apakah agregat dan pair data akan menyebabkan double counting.
 
-Implementation tersedia di `src/server/cmc/normalize.ts` dan menghasilkan model pada `src/domain/assets/models.ts`. Hanya field allowlisted yang keluar dari adapter; field passthrough upstream tidak diteruskan. Setiap dataset membawa endpoint, response timestamp, observation timestamp, credit count, notice, serta typed normalization warnings.
+Implementation tersedia di `src/server/cmc/normalize.ts` dan menghasilkan model pada `src/domain/assets/models.ts`. Hanya field allowlisted yang keluar dari adapter; field passthrough upstream tidak diteruskan. Token row tanpa identitas minimum (`name` atau `symbol`) dikeluarkan dengan typed warning tanpa membuang parent RWA, sehingga satu row malformed tidak menggagalkan multi-asset quote batch. Setiap dataset membawa endpoint, response timestamp, observation timestamp, credit count, notice, serta typed normalization warnings.
 
 ## 8. Error handling
 

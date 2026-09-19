@@ -5,6 +5,7 @@ import { apiRateLimiter, clientRateLimitKey } from "./rate-limit";
 import { errorResponse, rateLimitResponse, successResponse } from "./responses";
 import {
   compareRequestSchema,
+  compareUniverseRequestSchema,
   detailRequestSchema,
   explorerRequestSchema,
   InvalidRequestBodyError,
@@ -22,6 +23,7 @@ export type ApiHandlers = {
   getIssuers(request: Request): Promise<Response>;
   getIssuerDetail(request: Request, issuerId: string): Promise<Response>;
   getAssetDetail(request: Request, rwaId: string): Promise<Response>;
+  getCompareUniverse(request: Request): Promise<Response>;
   compareAssets(request: Request): Promise<Response>;
   getAssetEvidence(request: Request, rwaId: string): Promise<Response>;
 };
@@ -95,6 +97,23 @@ export function createApiHandlers(options: {
       try {
         const input = parseDetailRequest(request, rwaId);
         const result = await options.service.getAssetDetail(input);
+        return successResponse(result, { requestId: id, stale: result.stale });
+      } catch (error) {
+        return errorResponse(error, id);
+      }
+    },
+
+    async getCompareUniverse(request) {
+      const id = requestId();
+      const limited = applyRateLimit(request, id, rateLimiter);
+      if (limited) return limited;
+
+      try {
+        const url = new URL(request.url);
+        const input = compareUniverseRequestSchema.parse(
+          searchParamsToObject(url.searchParams),
+        );
+        const result = await options.service.getCompareUniverse(input.q);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
         return errorResponse(error, id);
