@@ -103,6 +103,14 @@ export function AssetExplorer() {
     setPage(1);
   }
 
+  function changePage(nextPage: number) {
+    setPage(nextPage);
+    window.scrollTo({
+      top: 0,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }
+
   return (
     <section className="relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#02090b] text-[#e7f3f1]">
       <div className="fx-explorer-grid pointer-events-none absolute inset-0" />
@@ -216,10 +224,10 @@ export function AssetExplorer() {
                 className="fx-explorer-tool"
                 type="button"
                 onClick={resetFilters}
-                aria-label="Reset all Explorer filters"
+                aria-label="Reset Explorer filters"
               >
                 <SlidersHorizontal className="size-4" aria-hidden="true" />
-                Filters
+                Reset filters
               </button>
             </div>
             <div className="flex items-end bg-[#041214] p-4 md:pl-2">
@@ -368,13 +376,13 @@ export function AssetExplorer() {
             <div className="flex gap-2">
               <PaginationButton
                 disabled={page === 1}
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                onClick={() => changePage(Math.max(1, page - 1))}
               >
                 <ArrowLeft className="size-4" aria-hidden="true" /> Previous
               </PaginationButton>
               <PaginationButton
                 disabled={!query.data.pagination.hasMore}
-                onClick={() => setPage((value) => value + 1)}
+                onClick={() => changePage(page + 1)}
               >
                 Next <ArrowRight className="size-4" aria-hidden="true" />
               </PaginationButton>
