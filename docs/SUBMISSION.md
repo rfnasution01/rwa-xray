@@ -164,7 +164,7 @@ Sesuaikan mention dan tautan dengan akun/event resmi ketika submission.
 - [x] Fixture API telah disanitasi dan lulus forbidden-secret scan.
 - [x] README mempunyai screenshot dan live URL.
 - [ ] Commit/tag final dibuat.
-- [ ] Branch default lulus CI.
+- [x] Branch default lulus CI dan manual E2E workflow.
 
 ## 9. Final smoke test
 

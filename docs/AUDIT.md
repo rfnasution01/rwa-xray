@@ -4,17 +4,17 @@ Audit date: 2026-09-20
 
 ## Scope and evidence
 
-| Area                | Evidence                                                                                       | Result                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Desktop             | Chromium desktop flows for landing, Explorer, Asset X-Ray, Compare, and Issuers                | Passed locally                                 |
-| Mobile              | 390 × 844 viewport, horizontal-overflow assertions, tooltip and tab interactions               | Passed locally                                 |
-| Keyboard only       | Landing → Explorer → search → Asset X-Ray → tab navigation without pointer input               | Passed locally                                 |
-| WCAG automated scan | Axe WCAG 2 A/AA and WCAG 2.1 A/AA on primary desktop/mobile views                              | Passed after remediations                      |
-| Focus               | Keyboard targets require a visible outline or focus shadow                                     | Passed locally                                 |
-| Failure states      | Empty, stale, 429, upstream/timeout-equivalent 503, and Compare partial failure                | Passed with deterministic API mocks            |
-| Browser safety      | Browser request URL/header/body and console scan for upstream hosts and credential identifiers | Passed locally                                 |
-| Live infrastructure | Seven CMC endpoints plus PostgreSQL write/read/delete through `pnpm verify:live`               | Passed                                         |
-| Production release  | Database readiness and Market Pairs release gate                                               | Pending deployment of the latest local commits |
+| Area                | Evidence                                                                                       | Result                              |
+| ------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Desktop             | Chromium desktop flows for landing, Explorer, Asset X-Ray, Compare, and Issuers                | Passed locally                      |
+| Mobile              | 390 × 844 viewport, horizontal-overflow assertions, tooltip and tab interactions               | Passed locally                      |
+| Keyboard only       | Landing → Explorer → search → Asset X-Ray → tab navigation without pointer input               | Passed locally                      |
+| WCAG automated scan | Axe WCAG 2 A/AA and WCAG 2.1 A/AA on primary desktop/mobile views                              | Passed after remediations           |
+| Focus               | Keyboard targets require a visible outline or focus shadow                                     | Passed locally                      |
+| Failure states      | Empty, stale, 429, upstream/timeout-equivalent 503, and Compare partial failure                | Passed with deterministic API mocks |
+| Browser safety      | Browser request URL/header/body and console scan for upstream hosts and credential identifiers | Passed locally                      |
+| Live infrastructure | Seven CMC endpoints plus PostgreSQL write/read/delete through `pnpm verify:live`               | Passed                              |
+| Production release  | Database readiness, seven-endpoint verification, Market Pairs gate, and smoke test             | Passed on production                |
 
 The mobile checks use browser emulation, not a claim of testing every physical device or assistive-technology combination. A final physical-device and screen-reader spot check remains recommended before submission.
 
@@ -68,15 +68,20 @@ One sequential live sample was taken without logging payloads or credentials:
 
 This is a single network sample, not a latency SLA. Application caching, batching, request deduplication, and bounded Compare discovery reduce repeated calls and credit use. Continue monitoring `credit_count`, endpoint latency, cache state, and stale fallback in production.
 
-## Final deployment checks
+## Production verification evidence
 
-After the latest commits are deployed:
+The production release confirmed:
 
-1. Run **Production release verification** from `main`.
-2. Confirm `/api/health` reports the production database as reachable.
-3. Confirm at least one sampled asset returns real Market Pairs.
-4. Inspect desktop and a physical mobile device in an incognito session.
-5. Inspect keyboard focus and perform a screen-reader spot check.
-6. Confirm no credential or upstream API request appears in DevTools.
-7. Confirm the Sentry test event arrives without request headers, body, query, cookies, or user context.
-8. Capture final production screenshots for the submission and video.
+- CI and the manual E2E workflow passed on `main`;
+- `/api/health` reported the production database as reachable;
+- all seven CMC endpoint checks and PostgreSQL write/read/delete passed;
+- production smoke returned four Explorer assets and confirmed detail, Market Pairs, Evidence, and Compare;
+- a manual priority snapshot persisted 13 of 13 discovered assets and snapshots without stale sources or issues.
+
+## Remaining manual checks
+
+1. Inspect desktop and a physical mobile device in an incognito session.
+2. Inspect keyboard focus and perform a screen-reader spot check.
+3. Confirm no credential or upstream API request appears in DevTools.
+4. Configure `SENTRY_DSN`, then confirm the Sentry test event arrives without request headers, body, query, cookies, or user context.
+5. Capture final production screenshots for the submission and video.

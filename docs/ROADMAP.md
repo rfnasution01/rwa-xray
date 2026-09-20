@@ -137,7 +137,7 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 ## Hari 21 — Submission
 
 - [ ] Freeze fitur.
-- [ ] Final release-verification workflow dan smoke test setelah deployment commit terbaru.
+- [x] Final release-verification workflow dan smoke test lulus pada deployment production terbaru.
 - [x] Public repository dapat diakses.
 - [x] Demo URL production tersedia dan lulus external smoke test.
 - [ ] DoraHacks submission lengkap.
