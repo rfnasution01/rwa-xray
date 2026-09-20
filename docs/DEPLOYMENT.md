@@ -46,7 +46,7 @@ Atur melalui **Vercel Project → Settings → Environment Variables**, bukan me
 
 Jangan menyalin `DATABASE_URL` production ke preview jika database preview terpisah tersedia. Web runtime menggunakan `prepare: false`, sehingga kompatibel dengan Supabase pooler. Gunakan Session Pooler port 5432 untuk migration terkontrol; runtime serverless dapat memakai pooler yang direkomendasikan Supabase untuk workload serverless.
 
-`/api/health` memvalidasi bahwa required server environment dapat diparse, tetapi tidak menghubungi vendor. Production smoke test kemudian memanggil Explorer untuk memverifikasi CMC dan database/cache path.
+`/api/health` memvalidasi required server environment dan menjalankan probe database `SELECT 1` tanpa mengembalikan detail koneksi. Production release verification kemudian menguji ketujuh endpoint CMC dan operasi cache PostgreSQL memakai protected release secrets, sementara smoke deployment memastikan database Vercel reachable serta Market Pairs tersedia melalui API production.
 
 ## 4. Migration release step
 
@@ -87,16 +87,17 @@ Jalankan setelah deployment:
 pnpm smoke:production -- https://your-production-domain.example
 ```
 
-Atau gunakan workflow manual **Production smoke** dan masukkan origin HTTPS. Harness memeriksa:
+Atau gunakan workflow manual **Production release verification** dari branch `main` dan masukkan origin HTTPS. Job memakai GitHub `production` environment, mewajibkan repository/environment secrets `CMC_API_KEY` dan `DATABASE_URL`, menjalankan migration serta `pnpm test:live`, lalu menjalankan smoke terhadap deployment. Harness memeriksa:
 
 - landing, Explorer, Compare, dan Methodology;
 - readiness endpoint;
 - Explorer, detail, Evidence, dan Compare APIs;
+- setidaknya satu dari empat aset volume teratas memiliki observasi Market Pairs, sehingga Startup-plan access benar-benar teruji;
 - JSON envelope dan forbidden sensitive field names;
 - CSP, HSTS, anti-framing, MIME sniffing, referrer, permissions, dan opener headers;
 - tidak adanya `X-Powered-By`.
 
-Harness hanya mencetak status/count, bukan response payload atau credential. Jika hanya satu aset canonical tersedia, Compare dilewati dan dilaporkan sebagai `false`.
+Harness hanya mencetak status/count, bukan response payload atau credential. Jika hanya satu aset canonical tersedia, Compare dilewati dan dilaporkan sebagai `false`. Release gate gagal bila live CMC/database verification gagal atau seluruh aset sampel tidak memiliki Market Pairs.
 
 ## 8. Security headers
 

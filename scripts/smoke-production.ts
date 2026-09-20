@@ -36,12 +36,16 @@ await request("/methodology");
 
 const health = await requestJson("/api/health");
 const healthData = readRecord(health.body.data);
-if (health.response.status !== 200 || healthData?.status !== "ready") {
-  fail("Readiness endpoint did not report ready");
+if (
+  health.response.status !== 200 ||
+  healthData?.status !== "ready" ||
+  healthData.database !== "reachable"
+) {
+  fail("Readiness endpoint did not confirm a reachable production database");
 }
 
 const explorer = await requestJson(
-  "/api/assets?sort=tokenized_volume_24h&sortDir=desc&limit=2",
+  "/api/assets?sort=tokenized_volume_24h&sortDir=desc&limit=4",
 );
 const explorerData = readRecord(explorer.body.data);
 const items = explorerData?.items;
@@ -50,7 +54,22 @@ if (!Array.isArray(items) || items.length === 0) {
 }
 
 const firstId = readRwaId(items[0]);
-await requestJson(`/api/assets/${firstId}`);
+let marketPairsVerified = false;
+for (const item of items) {
+  const rwaId = readRwaId(item);
+  const detail = await requestJson(`/api/assets/${rwaId}`);
+  const detailData = readRecord(detail.body.data);
+  const marketPairs = readRecord(detailData?.marketPairs);
+  if (Array.isArray(marketPairs?.pairs) && marketPairs.pairs.length > 0) {
+    marketPairsVerified = true;
+    break;
+  }
+}
+if (!marketPairsVerified) {
+  fail(
+    "No sampled asset returned Market Pairs; confirm the production CMC key has Startup-plan access",
+  );
+}
 await requestJson(`/api/assets/${firstId}/evidence`);
 
 if (items.length >= 2) {
@@ -74,6 +93,7 @@ console.log(
     readiness: true,
     explorerAssets: items.length,
     detail: true,
+    marketPairs: marketPairsVerified,
     evidence: true,
     compare: items.length >= 2,
   }),

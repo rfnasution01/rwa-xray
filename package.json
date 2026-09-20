@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:live": "node --env-file=.env.local ./node_modules/vitest/vitest.mjs run --config vitest.live.config.ts",
+    "test:live": "node --env-file-if-exists=.env.local ./node_modules/vitest/vitest.mjs run --config vitest.live.config.ts",
     "verify:live": "pnpm db:migrate && pnpm test:live",
     "smoke:production": "tsx scripts/smoke-production.ts",
     "snapshot:broad": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx scripts/snapshot.ts --mode=broad",

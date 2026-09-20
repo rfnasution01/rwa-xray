@@ -165,7 +165,7 @@ describe("live infrastructure verification", () => {
 function requiredEnvironmentVariable(name: "CMC_API_KEY" | "DATABASE_URL") {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`${name} is required in .env.local for live verification`);
+    throw new Error(`${name} is required for live verification`);
   }
   return value;
 }
