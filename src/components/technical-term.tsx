@@ -129,6 +129,16 @@ const glossary = {
     definition:
       "The Explorer requests updated data every 60 seconds while the browser tab is active.",
   },
+  explorerCacheState: {
+    label: "Cache status",
+    definition:
+      "Fresh means a valid cached response was served; refreshed means this request fetched and cached upstream data; stale means an upstream refresh failed and the latest real cached response is being shown.",
+  },
+  explorerObservedAt: {
+    label: "Observed",
+    definition:
+      "When RWA X-Ray received and normalized this asset-list dataset. This application observation time is separate from each asset's upstream market-data timestamp.",
+  },
   assetRegistry: {
     label: "Asset registry",
     definition:

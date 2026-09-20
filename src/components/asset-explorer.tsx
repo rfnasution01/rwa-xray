@@ -391,7 +391,7 @@ export function AssetExplorer() {
             ease: [0.2, 0.75, 0.25, 1],
           }}
         >
-          <div className="flex items-center justify-between border-b border-[#153b3d] px-5 py-3">
+          <div className="flex flex-col gap-3 border-b border-[#153b3d] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Activity className="size-4 text-[#55e8e1]" aria-hidden="true" />
               <h2 className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[#b8cecd] uppercase">
@@ -400,9 +400,33 @@ export function AssetExplorer() {
                 </TechnicalTerm>
               </h2>
             </div>
-            <span className="font-mono text-[9px] tracking-[0.13em] text-[#4d7a7c] uppercase">
-              {visibleItems.length.toString().padStart(2, "0")} visible records
-            </span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] tracking-[0.1em] uppercase sm:justify-end sm:text-right">
+              <span className="text-[#4d7a7c]">
+                {visibleItems.length.toString().padStart(2, "0")} visible
+                records
+              </span>
+              {query.data ? (
+                <>
+                  <span
+                    className={cacheStateClass(
+                      query.data.sourceStatus.cache.state,
+                    )}
+                  >
+                    <TechnicalTerm term="explorerCacheState" align="right">
+                      Cache {query.data.sourceStatus.cache.state}
+                    </TechnicalTerm>
+                  </span>
+                  <span className="text-[#668b8d]">
+                    <TechnicalTerm term="explorerObservedAt" align="right">
+                      Observed{" "}
+                      {formatObservedAt(
+                        query.data.sourceStatus.cache.observedAt,
+                      )}
+                    </TechnicalTerm>
+                  </span>
+                </>
+              ) : null}
+            </div>
           </div>
 
           {query.isLoading ? <ExplorerSkeleton /> : null}
@@ -838,6 +862,25 @@ function formatPercent(value: number | null) {
         style: "percent",
         maximumFractionDigits: 2,
       }).format(value);
+}
+
+function cacheStateClass(state: "fresh" | "refreshed" | "stale") {
+  if (state === "refreshed") return "text-[#59e5ae]";
+  if (state === "stale") return "text-[#e9b968]";
+  return "text-[#57d9d4]";
+}
+
+function formatObservedAt(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "Unavailable";
+  return `${new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(date)} UTC`;
 }
 
 function formatType(value: string) {

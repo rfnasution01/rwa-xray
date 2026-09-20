@@ -511,10 +511,25 @@ test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
     exact: true,
   });
   await expect(registryTerm).toBeVisible();
+  const cacheStatus = page.getByRole("button", {
+    name: "Cache fresh",
+    exact: true,
+  });
+  await expect(cacheStatus).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: /Observed Sep 18, 2026, 2:31 AM UTC/,
+    }),
+  ).toBeVisible();
+  await cacheStatus.click();
+  await expect(
+    page.locator('[role="tooltip"].fx-term-card-visible'),
+  ).toContainText("valid cached response was served");
+  await page.keyboard.press("Escape");
   await registryTerm.hover();
-  await expect(page.getByRole("tooltip")).toContainText(
-    "current paginated list",
-  );
+  await expect(
+    page.getByRole("tooltip", { name: /Asset registry/ }),
+  ).toContainText("current paginated list");
   await page
     .getByRole("button", { name: "Page market cap", exact: true })
     .click();
