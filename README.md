@@ -166,9 +166,9 @@ Sudah tersedia:
 - full Asset X-Ray page dengan simulator, four-dimensional concentration, price dispersion, token/market tables, Health/Evidence breakdown, sanitized lineage, warnings, dan partial-data states;
 - Compare Mode 2–4 aset dengan shared scenario, neutral ordering, partial results, dan data-gap labels;
 - `POST /api/compare` serta dedicated `GET /api/assets/:rwaId/evidence` dengan validated input dan safe response;
-- production security headers, configuration-aware readiness, manual GitHub smoke workflow, dan secret-safe production smoke harness.
+- production security headers, server/edge Sentry, redacted structured logs, configuration-aware readiness, manual GitHub smoke workflow, dan secret-safe production smoke harness.
 
-Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Historical Replay API/UI, raw-pair hourly aggregation/retention, dan monitoring integration belum selesai.
+Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Minimal production monitoring telah terintegrasi; deployment masih perlu memverifikasi event Sentry pada project production. Historical Replay API/UI dan raw-pair hourly aggregation/retention belum selesai.
 
 ## Disclaimer
 

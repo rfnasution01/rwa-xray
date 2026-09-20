@@ -5,6 +5,8 @@ import {
   DuplicateQueryParameterError,
   InvalidRequestBodyError,
 } from "@/server/http/schemas";
+import { logServerEvent } from "@/server/observability/logger";
+import { reportHandledServerError } from "@/server/observability/report";
 import { ApplicationServiceError } from "@/server/services/rwa-service";
 
 export function successResponse<T>(
@@ -27,7 +29,11 @@ export function successResponse<T>(
   );
 }
 
-export function errorResponse(error: unknown, requestId: string) {
+export function errorResponse(
+  error: unknown,
+  requestId: string,
+  route?: string,
+) {
   if (error instanceof ZodError) {
     return jsonError(
       400,
@@ -71,6 +77,12 @@ export function errorResponse(error: unknown, requestId: string) {
         requestId,
       );
     }
+    reportHandledServerError(error, {
+      event: "api.service_unavailable",
+      requestId,
+      route,
+      status: 503,
+    });
     return jsonError(
       503,
       error.code,
@@ -86,6 +98,12 @@ export function errorResponse(error: unknown, requestId: string) {
         : error.status && error.status < 500
           ? 502
           : 503;
+    reportHandledServerError(error, {
+      event: "api.upstream_unavailable",
+      requestId,
+      route,
+      status,
+    });
     return jsonError(
       status,
       "UPSTREAM_UNAVAILABLE",
@@ -94,6 +112,12 @@ export function errorResponse(error: unknown, requestId: string) {
       requestId,
     );
   }
+  reportHandledServerError(error, {
+    event: "api.internal_error",
+    requestId,
+    route,
+    status: 500,
+  });
   return jsonError(
     500,
     "INTERNAL_ERROR",
@@ -106,7 +130,14 @@ export function errorResponse(error: unknown, requestId: string) {
 export function rateLimitResponse(
   requestId: string,
   retryAfterSeconds: number,
+  route?: string,
 ) {
+  logServerEvent("warn", "api.rate_limited", {
+    requestId,
+    route,
+    retryAfterSeconds,
+    status: 429,
+  });
   const response = jsonError(
     429,
     "RATE_LIMITED",

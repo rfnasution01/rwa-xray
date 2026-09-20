@@ -50,7 +50,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getExplorer(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -67,7 +67,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getIssuerDirectory(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -85,7 +85,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getIssuerDetail(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -99,7 +99,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getAssetDetail(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -116,7 +116,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getCompareUniverse(input.q);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -130,7 +130,7 @@ export function createApiHandlers(options: {
         const result = await options.service.compareAssets(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
 
@@ -144,7 +144,7 @@ export function createApiHandlers(options: {
         const result = await options.service.getAssetEvidence(input);
         return successResponse(result, { requestId: id, stale: result.stale });
       } catch (error) {
-        return errorResponse(error, id);
+        return errorResponse(error, id, requestPath(request));
       }
     },
   };
@@ -185,7 +185,34 @@ function applyRateLimit(
   const decision = rateLimiter.check(clientRateLimitKey(request));
   return decision.allowed
     ? null
-    : rateLimitResponse(requestId, decision.retryAfterSeconds);
+    : rateLimitResponse(
+        requestId,
+        decision.retryAfterSeconds,
+        requestPath(request),
+      );
+}
+
+function requestPath(request: Request) {
+  try {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === "/api/assets") return pathname;
+    if (/^\/api\/assets\/[^/]+\/evidence$/.test(pathname)) {
+      return "/api/assets/[rwaId]/evidence";
+    }
+    if (/^\/api\/assets\/[^/]+$/.test(pathname)) {
+      return "/api/assets/[rwaId]";
+    }
+    if (pathname === "/api/issuers") return pathname;
+    if (/^\/api\/issuers\/[^/]+$/.test(pathname)) {
+      return "/api/issuers/[issuerId]";
+    }
+    if (pathname === "/api/compare" || pathname === "/api/compare/universe") {
+      return pathname;
+    }
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 
 let singleton: ApiHandlers | undefined;

@@ -3,6 +3,7 @@ import "server-only";
 import type { z } from "zod";
 
 import { CmcApiError } from "@/server/cmc/error";
+import { errorIdentity, logServerEvent } from "@/server/observability/logger";
 
 import type { PersistentCacheEntry, PersistentCacheStore } from "./store";
 
@@ -96,11 +97,18 @@ export function createPersistentCache(options: {
           cached = { entry, value: parsed.data };
         } else {
           cacheWarning = "CACHE_ENTRY_INVALID";
+          logServerEvent("warn", "cache.entry_invalid", {
+            endpoint: loadOptions.endpoint,
+          });
           await safeDelete(options.store, loadOptions.key);
         }
       }
-    } catch {
+    } catch (error) {
       cacheWarning = "CACHE_READ_FAILED";
+      logServerEvent("warn", "cache.read_failed", {
+        endpoint: loadOptions.endpoint,
+        ...errorIdentity(error),
+      });
     }
 
     if (cached && readTime.getTime() <= cached.entry.expiresAt.getTime()) {
@@ -129,13 +137,21 @@ export function createPersistentCache(options: {
 
       try {
         await options.store.put(entry);
-      } catch {
+      } catch (error) {
         cacheWarning = "CACHE_WRITE_FAILED";
+        logServerEvent("warn", "cache.write_failed", {
+          endpoint: loadOptions.endpoint,
+          ...errorIdentity(error),
+        });
       }
 
       return resultFromEntry(parsed, entry, "refreshed", cacheWarning, null);
     } catch (error) {
       if (cached && readTime.getTime() <= cached.entry.staleUntil.getTime()) {
+        logServerEvent("warn", "cache.stale_served", {
+          endpoint: loadOptions.endpoint,
+          ...errorIdentity(error),
+        });
         return resultFromEntry(
           cached.value,
           cached.entry,

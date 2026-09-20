@@ -40,7 +40,7 @@ Atur melalui **Vercel Project → Settings → Environment Variables**, bukan me
 | `NEXT_PUBLIC_APP_URL`      | Ya       | Per environment        | Public canonical origin; nilai ini memang terlihat browser. |
 | `AI_PROVIDER`              | Opsional | Preview dan Production | `gemini`; adapter AI belum diaktifkan.                      |
 | `GEMINI_API_KEY`           | Opsional | Preview dan Production | Server-only; biarkan unset sampai AI diaktifkan.            |
-| `SENTRY_DSN`               | Opsional | Preview dan Production | SDK monitoring belum diintegrasikan.                        |
+| `SENTRY_DSN`               | Opsional | Production             | Server/edge error monitoring; disarankan sebelum release.   |
 | `NEXT_PUBLIC_POSTHOG_KEY`  | Opsional | Preview dan Production | Analytics belum diintegrasikan.                             |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Opsional | Preview dan Production | Analytics belum diintegrasikan.                             |
 
@@ -102,9 +102,13 @@ Harness hanya mencetak status/count, bukan response payload atau credential. Jik
 
 `next.config.ts` menerapkan CSP dengan koneksi same-origin dan image allowlist terbatas untuk CMC CDN, `frame-ancestors 'none'`, HSTS production, `X-Frame-Options: DENY`, `nosniff`, restrictive Permissions Policy, dan menghapus framework disclosure header.
 
-CSP hanya mengizinkan koneksi same-origin karena browser memanggil internal API. Asset logo dibatasi ke path image pada `s2.coinmarketcap.com` dan `s3.coinmarketcap.com`; external website dan SEC links menggunakan navigation biasa. Ketika Sentry atau PostHog benar-benar diintegrasikan, tambahkan hanya origin vendor yang diperlukan ke directive terkait dan verifikasi ulang melalui browser—jangan membuka wildcard global.
+CSP hanya mengizinkan koneksi same-origin karena browser memanggil internal API. Asset logo dibatasi ke path image pada `s2.coinmarketcap.com` dan `s3.coinmarketcap.com`; external website dan SEC links menggunakan navigation biasa. Sentry berjalan hanya pada server/edge dan menggunakan `SENTRY_DSN`, sehingga CSP browser tidak perlu membuka origin vendor. Jika monitoring client atau PostHog kelak diaktifkan, tambahkan hanya origin yang diperlukan—jangan membuka wildcard global.
 
-## 9. Manual release checks
+## 9. Monitoring dan manual release checks
+
+Sentry diinisialisasi hanya ketika `SENTRY_DSN` tersedia pada production. Hook instrumentation menangkap server render/route errors yang tidak tertangani, sedangkan API errors yang sudah dipetakan ke response 5xx dilaporkan secara eksplisit. Event menghapus headers, cookies, body, query string, dan configured secret values sebelum transport. Structured JSON logs mencakup request ID, route pattern/path, status, cache warning/stale fallback, dan rate-limit event tanpa raw error message atau cache key.
+
+Sebelum release, picu error terkontrol di Preview/Production yang aman atau gunakan test event terpisah, lalu pastikan event tiba pada project Sentry yang benar tanpa credential, query, cookie, atau request body. Setelah itu:
 
 - Buka URL dengan incognito dan perangkat/jaringan lain.
 - Pastikan DevTools Network hanya memperlihatkan internal `/api/*`; tidak ada CMC key atau database URI.

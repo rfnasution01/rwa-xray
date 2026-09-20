@@ -121,7 +121,7 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 - [x] Dependency audit (`pnpm audit --prod`: no known vulnerabilities).
 - [x] Secret scan staged tree sebelum initial commit; CI memindai full history pada setiap push.
 - [ ] API key rotation jika diperlukan.
-- [ ] Production monitoring.
+- [x] Production monitoring: server/edge Sentry dan redacted structured logs.
 - [x] Security headers, readiness check, deployment guide, dan production smoke harness.
 
 ## Hari 20 — Dokumentasi dan video

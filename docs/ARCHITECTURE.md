@@ -261,6 +261,8 @@ Implementation tersedia di `src/server/cmc/normalize.ts` dan menghasilkan model 
 
 ## 10. Observability
 
+Sentry server/edge aktif di production ketika `SENTRY_DSN` tersedia. `instrumentation.ts` menangkap unhandled request errors, dan mapped API 5xx dilaporkan secara eksplisit. Sebelum transport, request headers, cookies, body, query string, serta configured secret values dihapus. Structured JSON logs memakai event name stabil dan safe context untuk API failures, cache failures/stale fallback, serta rate limiting; raw error message dan cache key tidak dicatat. Integrasi ini tidak memerlukan perubahan CSP karena tidak ada Sentry browser transport.
+
 Pantau melalui Sentry dan structured logs:
 
 - upstream latency dan status code;
