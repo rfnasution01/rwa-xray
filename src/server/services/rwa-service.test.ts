@@ -166,7 +166,11 @@ describe("RWA application service", () => {
     const service = createRwaApplicationService({ repository: data });
 
     const initial = await service.getCompareUniverse();
-    expect(initial.items.length).toBeGreaterThan(0);
+    expect(initial.items[0]).toMatchObject({
+      rwaId: 101,
+      tokenizedMarketCap: 10_000_000,
+      tokenizedVolume24h: 500_000,
+    });
     expect(data.getAssets).toHaveBeenCalledWith(
       expect.objectContaining({ start: 1, limit: 50 }),
     );

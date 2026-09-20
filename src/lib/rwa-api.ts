@@ -85,7 +85,12 @@ const explorerEnvelopeSchema = z.object({
 
 const compareUniverseEnvelopeSchema = z.object({
   data: z.object({
-    items: z.array(assetSchema.omit({ quote: true })),
+    items: z.array(
+      assetSchema.omit({ quote: true }).extend({
+        tokenizedMarketCap: nullableNumber,
+        tokenizedVolume24h: nullableNumber,
+      }),
+    ),
     stale: z.boolean(),
   }),
   meta: z.object({

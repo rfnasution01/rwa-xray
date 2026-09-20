@@ -117,7 +117,12 @@ export type IssuerDetailResult = {
 };
 
 export type CompareUniverseResult = {
-  items: AssetIdentity[];
+  items: Array<
+    AssetIdentity & {
+      tokenizedMarketCap: number | null;
+      tokenizedVolume24h: number | null;
+    }
+  >;
   stale: boolean;
 };
 
@@ -458,7 +463,7 @@ export function createRwaApplicationService(options: {
         });
         return {
           items: result.value.data.items.map(
-            ({ rwaId, name, symbol, slug, assetType, rank, hasTokens }) => ({
+            ({
               rwaId,
               name,
               symbol,
@@ -466,6 +471,17 @@ export function createRwaApplicationService(options: {
               assetType,
               rank,
               hasTokens,
+              quote,
+            }) => ({
+              rwaId,
+              name,
+              symbol,
+              slug,
+              assetType,
+              rank,
+              hasTokens,
+              tokenizedMarketCap: quote.tokenizedMarketCap,
+              tokenizedVolume24h: quote.tokenizedVolume24h,
             }),
           ),
           stale: result.cache.state === "stale",
@@ -523,6 +539,10 @@ export function createRwaApplicationService(options: {
               assetType: asset.assetType,
               rank: asset.rank,
               hasTokens: asset.hasTokens,
+              tokenizedMarketCap:
+                "quote" in asset ? asset.quote.tokenizedMarketCap : null,
+              tokenizedVolume24h:
+                "quote" in asset ? asset.quote.tokenizedVolume24h : null,
             },
           ]),
         ).values(),

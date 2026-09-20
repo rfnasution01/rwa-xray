@@ -242,7 +242,7 @@ const glossary = {
   assetSelection: {
     label: "Select assets",
     definition:
-      "Choose two to four canonical RWA assets to evaluate under the same scenario assumptions.",
+      "Choose two to four canonical RWA assets to evaluate under the same scenario assumptions. Initial peers prioritize the target category and similarity in tokenized market cap and 24-hour volume.",
   },
   sharedScenario: {
     label: "Shared scenario",

@@ -179,7 +179,7 @@ curl --get 'https://pro-api.coinmarketcap.com/v5/real-world-assets/market-pairs/
 1. Gunakan `/map` untuk lookup ringan.
 2. Ambil `/assets/list` dalam batch, bukan satu request per card. Explorer melakukan satu batch `/info` tambahan untuk seluruh ID pada page agar logo tersedia; metadata memakai cache panjang dan kegagalannya hanya menghasilkan fallback simbol.
 3. Panggil `/quotes/latest` dan `/market-pairs/list` saat detail dibuka atau snapshot prioritas berjalan.
-4. Compare memuat 50 kandidat awal dari `/assets/list`. Search dua karakter atau lebih dikirim secara debounced ke server dan dibatasi maksimum 50 hasil: exact symbol lookup memakai `/map`, exact normalized slug memakai `/assets/list`, dan name substring dicari pada 250 aset bervolume tertinggi. Browser tidak menerima ribuan record.
+4. Compare memuat 50 kandidat awal dari `/assets/list`; default peers memprioritaskan kategori yang sama lalu kemiripan tokenized market cap dan volume 24 jam. Search dua karakter atau lebih dikirim secara debounced ke server dan dibatasi maksimum 50 hasil: exact symbol lookup memakai `/map`, exact normalized slug memakai `/assets/list`, dan name substring dicari pada 250 aset bervolume tertinggi. Browser tidak menerima ribuan record.
 5. Compare menggabungkan 2–4 canonical `rwa_id` dalam satu request `/quotes/latest` dan satu `/info`; market pairs tetap diminta per aset karena upstream hanya menerima satu RWA.
 6. Deduplicate request identik yang terjadi bersamaan.
 7. Cache sesuai update frequency upstream.
@@ -316,7 +316,7 @@ Issuer detail mengembalikan metadata issuer dan relasi token ke canonical `rwa_i
 GET /api/compare/universe
 ```
 
-Tanpa query, response hanya berisi 50 kandidat awal berdasarkan volume untuk suggested peers. Dengan `?q=gold`, server melakukan targeted exact symbol/slug lookup serta name matching pada 250 aset bervolume tertinggi, lalu mengembalikan maksimum 50 hasil. Browser tidak menerima ribuan record dan tidak mengulang full-universe load setiap 60 detik.
+Tanpa query, response berisi 50 kandidat awal beserta tokenized market cap dan volume 24 jam untuk menghitung suggested-peer similarity. Dengan `?q=gold`, server melakukan targeted exact symbol/slug lookup serta name matching pada 250 aset bervolume tertinggi, lalu mengembalikan maksimum 50 hasil. Browser tidak menerima ribuan record dan tidak mengulang full-universe load setiap 60 detik.
 
 ### Compare
 

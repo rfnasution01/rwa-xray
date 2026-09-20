@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { type GlossaryTerm, TechnicalTerm } from "@/components/technical-term";
+import { suggestComparablePeerIds } from "@/domain/assets/compare-peers";
 import { formatPlanningHorizon } from "@/lib/utils";
 import {
   compareAssets,
@@ -58,7 +59,7 @@ export function CompareView() {
     refetchOnWindowFocus: false,
   });
   const suggested = useMemo(
-    () => suggestPeers(universe.data?.items ?? []),
+    () => suggestComparablePeerIds(universe.data?.items ?? []),
     [universe.data?.items],
   );
   const selectedIds = selected.length > 0 ? selected : suggested;
@@ -175,8 +176,9 @@ export function CompareView() {
                 <TechnicalTerm term="assetSelection" />
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#719294]">
-                Suggested peers favor the same asset category when available.
-                Search exact symbols globally or top-volume assets by name.
+                Suggested peers prioritize the same category, then similarity in
+                tokenized market cap and 24-hour volume. Search exact symbols
+                globally or top-volume assets by name.
               </p>
             </div>
             <span className="fx-data-badge shrink-0">
@@ -871,25 +873,6 @@ function evidenceBadgeClass(label: "Limited" | "Moderate" | "High") {
   if (label === "High") return "fx-compare-badge fx-compare-badge-high";
   if (label === "Moderate") return "fx-compare-badge fx-compare-badge-moderate";
   return "fx-compare-badge fx-compare-badge-limited";
-}
-
-function suggestPeers(items: CompareUniverseItem[]) {
-  const first = items[0];
-  if (!first) return [];
-  const peers = items
-    .filter(
-      (asset) =>
-        asset.rwaId !== first.rwaId && asset.assetType === first.assetType,
-    )
-    .slice(0, 3);
-  const fallback = items
-    .filter(
-      (asset) =>
-        asset.rwaId !== first.rwaId &&
-        !peers.some((peer) => peer.rwaId === asset.rwaId),
-    )
-    .slice(0, Math.max(0, 3 - peers.length));
-  return [first, ...peers, ...fallback].slice(0, 4).map((asset) => asset.rwaId);
 }
 
 function formatMoney(value: number | null) {

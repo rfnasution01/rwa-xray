@@ -156,6 +156,8 @@ async function mockRwaApi(page: Page) {
             assetType: item.assetType,
             rank: item.rank,
             hasTokens: item.hasTokens,
+            tokenizedMarketCap: item.quote.tokenizedMarketCap,
+            tokenizedVolume24h: item.quote.tokenizedVolume24h,
           })),
           stale: false,
         },
