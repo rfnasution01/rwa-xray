@@ -82,7 +82,17 @@ async function mockRwaApi(page: Page) {
             firstHistoricalData: "2025-01-01T00:00:00.000Z",
             lastHistoricalData: "2026-09-18T00:00:00.000Z",
           },
-          marketPairs: null,
+          marketPairs: {
+            rwaId: 101,
+            name: "Treasury Capacity Note",
+            symbol: "TCN",
+            reportedPairCount: 12,
+            pairs: Array.from({ length: 12 }, (_, index) =>
+              marketPair(index + 1),
+            ),
+            totalSize: 12,
+            hasMore: false,
+          },
           analysis: {
             calculatedAt: "2026-09-18T02:31:00.000Z",
             methodologyVersion: "1.0.0",
@@ -745,16 +755,62 @@ test("filters and opens a live Explorer row", async ({ page }) => {
   await expect(page.getByText(/Partial evidence/)).toBeVisible();
   await page.getByRole("tab", { name: "Markets" }).click();
   await expect(
-    page.getByRole("heading", { name: "TradFi markets" }),
+    page.getByRole("tab", { name: /Underlying tokens/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("heading", { name: "Underlying tokens" }),
   ).toBeVisible();
-  await expect(page.getByText("Example Exchange")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "TradFi markets" }),
+  ).not.toBeVisible();
   await expect(
     page.getByRole("link", { name: "Example Issuer" }),
   ).toHaveAttribute("href", "/issuers/6878977dcbbf471de3366e85");
+  await expect(page.getByRole("button", { name: /Sort by/ })).toHaveCount(4);
+  await page.getByRole("button", { name: /Sort by Price/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Sort by Price/ }).locator("xpath=.."),
+  ).toHaveAttribute("aria-sort", "ascending");
+
+  await page.getByRole("tab", { name: /TradFi markets/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "TradFi markets" }),
+  ).toBeVisible();
+  await expect(page.getByText("Example Exchange")).toBeVisible();
   await expect(page.getByRole("link", { name: "Open market" })).toHaveAttribute(
     "href",
     "https://example.com/markets/tcn",
   );
+  await expect(page.getByRole("button", { name: /Sort by/ })).toHaveCount(3);
+  await page.getByRole("button", { name: /Sort by Ticker/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Sort by Ticker/ }).locator("xpath=.."),
+  ).toHaveAttribute("aria-sort", "ascending");
+
+  await page.getByRole("tab", { name: /Market pairs/ }).click();
+  const pairTable = page.getByRole("table");
+  await expect(pairTable.getByRole("row")).toHaveCount(11);
+  await expect(pairTable.getByRole("row").nth(1)).toContainText("TCN-12/USD");
+  for (const label of ["Pair", "Exchange", "Price"]) {
+    const sortButton = page.getByRole("button", {
+      name: new RegExp(`Sort by ${label}`),
+    });
+    await sortButton.click();
+    await expect(sortButton.locator("xpath=..")).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    await sortButton.click();
+    await expect(sortButton.locator("xpath=..")).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+  }
+  await page.getByRole("button", { name: /Sort by 24h volume/ }).click();
+  await expect(pairTable.getByRole("row").nth(1)).toContainText("TCN-1/USD");
+  await page.getByRole("button", { name: "Next page of market pairs" }).click();
+  await expect(page.getByText("Showing 11–12 of 12")).toBeVisible();
+  await expect(pairTable.getByRole("row")).toHaveCount(3);
   await expectNoA11yViolations(page);
 });
 
@@ -870,6 +926,22 @@ test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {
   await expect(page.getByText("Asset context")).not.toBeVisible();
   await page.keyboard.press("Home");
   await expect(page.getByText("Asset context")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Markets" }).click();
+  const underlyingTab = page.getByRole("tab", { name: /Underlying tokens/ });
+  await expect(underlyingTab).toHaveAttribute("aria-selected", "true");
+  await underlyingTab.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(
+    page.getByRole("tab", { name: /TradFi markets/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("tab", { name: /Market pairs/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByRole("table").getByRole("row")).toHaveCount(11);
+
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -952,6 +1024,38 @@ function compareItem(item: typeof asset, estimatedExitDays: number) {
     },
     dataGaps: [{ source: "marketPairs", code: "SOURCE_UNAVAILABLE" }],
     stale: false,
+  };
+}
+
+function marketPair(index: number) {
+  return {
+    marketId: 9000 + index,
+    marketPair: `TCN-${index}/USD`,
+    category: "spot",
+    feeType: null,
+    exchange: {
+      id: 500 + index,
+      name: `Exchange ${index}`,
+      slug: `exchange-${index}`,
+    },
+    base: {
+      cryptoId: 40_000 + index,
+      symbol: `TCN${index}`,
+      exchangeSymbol: null,
+      currencyType: "cryptocurrency",
+    },
+    quote: {
+      cryptoId: 2781,
+      symbol: "USD",
+      exchangeSymbol: null,
+      currencyType: "fiat",
+    },
+    marketQuote: {
+      currency: "USD",
+      price: 100 + index / 100,
+      volume24h: index * 1_000,
+      sourceUpdatedAt: "2026-09-18T02:30:00.000Z",
+    },
   };
 }
 
