@@ -11,7 +11,12 @@ let database: ReturnType<typeof drizzle<typeof schema>> | undefined;
 
 export function getDatabase() {
   if (!database) {
-    const client = postgres(getServerEnv().DATABASE_URL, { prepare: false });
+    const client = postgres(getServerEnv().DATABASE_URL, {
+      prepare: false,
+      max: 1,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    });
     database = drizzle(client, { schema });
   }
 

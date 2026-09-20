@@ -44,7 +44,7 @@ Atur melalui **Vercel Project → Settings → Environment Variables**, bukan me
 | `NEXT_PUBLIC_POSTHOG_KEY`  | Opsional | Preview dan Production | Analytics belum diintegrasikan.                             |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Opsional | Preview dan Production | Analytics belum diintegrasikan.                             |
 
-Jangan menyalin `DATABASE_URL` production ke preview jika database preview terpisah tersedia. Web runtime menggunakan `prepare: false`, sehingga kompatibel dengan Supabase pooler. Gunakan Session Pooler port 5432 untuk migration terkontrol; runtime serverless dapat memakai pooler yang direkomendasikan Supabase untuk workload serverless.
+Jangan menyalin `DATABASE_URL` production ke preview jika database preview terpisah tersedia. Web runtime menggunakan `prepare: false`, maksimum satu koneksi per instance, dan idle timeout 20 detik agar tidak menghabiskan batas koneksi pooler saat fungsi serverless membeku. Gunakan Session Pooler port 5432 untuk migration terkontrol; runtime serverless dapat memakai pooler yang direkomendasikan Supabase untuk workload serverless.
 
 `/api/health` memvalidasi required server environment dan menjalankan probe database `SELECT 1` tanpa mengembalikan detail koneksi. Production release verification kemudian menguji ketujuh endpoint CMC dan operasi cache PostgreSQL memakai protected release secrets, sementara smoke deployment memastikan database Vercel reachable serta Market Pairs tersedia melalui API production.
 
