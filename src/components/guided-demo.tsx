@@ -279,7 +279,7 @@ function EvidenceSidebar({ data }: { data: AssetDetailResponse }) {
             <p className="text-xs font-semibold text-[#dcebea]">
               Same asset. A clearer picture.
             </p>
-            <p className="mt-1 font-mono text-[8px] tracking-[0.22em] text-[#4d8587] uppercase">
+            <p className="mt-1 font-mono text-[8px] tracking-[0.22em] text-[#65999b] uppercase">
               Methodology v{data.analysis.methodologyVersion}
             </p>
           </div>
@@ -567,8 +567,15 @@ function ResultMetric({
 }) {
   return (
     <div className="border-r border-[#14383a] px-3 py-5 last:border-r-0">
-      <span className="text-[#51eae3] [&>svg]:size-4">{icon}</span>
-      <dt className="mt-3 text-[10px] text-[#64888a]">{label}</dt>
+      <dt className="text-[10px] text-[#64888a]">
+        <span
+          className="mb-3 block text-[#51eae3] [&>svg]:size-4"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        {label}
+      </dt>
       <dd className="mt-1 text-sm font-medium text-[#e3f0ee] tabular-nums">
         {value}
       </dd>

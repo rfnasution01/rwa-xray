@@ -220,6 +220,7 @@ export function AssetExplorer() {
             src="/illustrations/rwa-market-globe.webp"
             alt=""
             fill
+            priority
             sizes="54vw"
             className="object-cover object-[50%_42%]"
           />
@@ -271,7 +272,7 @@ export function AssetExplorer() {
 
           <div className="grid gap-px bg-[#143638] md:grid-cols-[1fr_230px_210px_auto_auto]">
             <label className="relative block bg-[#041214] p-4">
-              <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#557f81] uppercase">
+              <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#739799] uppercase">
                 <TechnicalTerm term="currentPageSearch" />
               </span>
               <span className="relative block">
@@ -571,7 +572,7 @@ function ExplorerSelect({
 }) {
   return (
     <label className="block bg-[#041214] p-4">
-      <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#557f81] uppercase">
+      <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#739799] uppercase">
         <TechnicalTerm term={term} />
       </span>
       <span className="relative block">
@@ -608,7 +609,7 @@ function AssetRow({
             <span className="block max-w-64 truncate text-sm font-medium text-[#dce9e7]">
               {asset.name}
             </span>
-            <span className="mt-1 block font-mono text-[9px] tracking-[0.1em] text-[#527b7d] uppercase">
+            <span className="mt-1 block font-mono text-[9px] tracking-[0.1em] text-[#739799] uppercase">
               {asset.symbol} · RWA #{asset.rwaId}
             </span>
           </span>
@@ -697,7 +698,7 @@ function AssetCard({
             <h2 className="truncate text-sm font-medium text-[#dce9e7]">
               {asset.name}
             </h2>
-            <p className="mt-1 font-mono text-[8px] tracking-[0.1em] text-[#527b7d] uppercase">
+            <p className="mt-1 font-mono text-[8px] tracking-[0.1em] text-[#739799] uppercase">
               {asset.symbol} · {formatType(asset.assetType)}
             </p>
           </div>
@@ -739,7 +740,7 @@ function CardMetric({
 }) {
   return (
     <div className="min-w-0 px-2 first:pl-0 last:pr-0">
-      <dt className="truncate font-mono text-[8px] tracking-wider text-[#527b7d] uppercase">
+      <dt className="truncate font-mono text-[8px] tracking-wider text-[#739799] uppercase">
         <TechnicalTerm term={term} />
       </dt>
       <dd

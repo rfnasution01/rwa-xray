@@ -20,9 +20,9 @@ Menghasilkan demo publik yang stabil, berguna, dan dapat diverifikasi—bukan ku
 - [x] Migration dan cache read/write/delete diverifikasi melalui Supabase Session Pooler.
 - [x] Response tujuh endpoint RWA tersedia sebagai fixture tersanitasi.
 - [x] Live CMC + Supabase verification harness tersedia tanpa secret logging.
-- [ ] Field matrix dan data gap dicatat.
-- [ ] Wireframe Explorer, Detail, Simulator, Compare.
-- [ ] Metodologi v1 disetujui.
+- [x] Field matrix dan data gap dicatat.
+- [x] Wireframe/reference Explorer, Detail, Simulator, Compare tersedia.
+- [x] Metodologi v1 disetujui dan di-versioning.
 
 ### Exit criteria
 
@@ -92,11 +92,11 @@ Pengguna dapat memverifikasi sumber metrik tanpa melihat secret.
 
 ## Hari 15–16 — UX dan accessibility
 
-- [ ] Mobile layout.
-- [ ] Keyboard navigation.
-- [ ] Chart fallback table.
-- [ ] Number/date formatting.
-- [ ] Disclaimer kontekstual.
+- [x] Mobile layout dan overflow audit pada viewport 390 × 844.
+- [x] Keyboard-only navigation dan visible-focus audit.
+- [x] Chart fallback requirement ditinjau: belum ada chart; seluruh visual metric tetap memiliki nilai/tabel teks.
+- [x] Number/date formatting konsisten melalui `Intl` helpers.
+- [x] Disclaimer kontekstual pada scenario dan Asset X-Ray.
 - [x] First-use guided scenario.
 
 ### Exit criteria
@@ -126,18 +126,18 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 
 ## Hari 20 — Dokumentasi dan video
 
-- [ ] README final.
-- [ ] Architecture dan methodology sesuai implementasi aktual.
-- [ ] Endpoint usage lengkap.
-- [ ] Limitations jujur.
-- [ ] Screenshot dan diagram.
+- [x] README final dengan product preview dan release status.
+- [x] Architecture dan methodology sesuai implementasi aktual.
+- [x] Endpoint usage lengkap.
+- [x] Limitations jujur.
+- [x] Screenshot dan diagram.
 - [ ] Rekam demo 2–3 menit.
 - [ ] Caption/subtitle video.
 
 ## Hari 21 — Submission
 
 - [ ] Freeze fitur.
-- [x] Smoke test production.
+- [ ] Final release-verification workflow dan smoke test setelah deployment commit terbaru.
 - [x] Public repository dapat diakses.
 - [x] Demo URL production tersedia dan lulus external smoke test.
 - [ ] DoraHacks submission lengkap.
@@ -159,11 +159,14 @@ Shareable scenario URL boleh dikerjakan jika low-risk. Immutable report dan Mark
 - Evidence Panel
 - Public deployment
 
-### P1
+### P1 — deferred, bukan release blocker
 
-- Historical Replay
-- Grounded AI Due-Diligence Memo
-- Shareable scenario URL jika low-risk
+- Historical Replay API/UI.
+- Hourly market-pair aggregation dan retention.
+- Grounded AI Due-Diligence Memo.
+- Shareable scenario URL.
+- PostHog cookieless analytics.
+- Chart visualisasi; fallback table/teks wajib ditambahkan bersamaan jika chart dibuat.
 
 ### P2
 

@@ -1,12 +1,30 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstMobileLinkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    firstMobileLinkRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setMobileOpen(false);
+      menuButtonRef.current?.focus();
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [mobileOpen]);
   const explorerActive =
     pathname === "/assets" || pathname.startsWith("/assets/");
   const issuersActive =
@@ -46,7 +64,9 @@ export function SiteHeader() {
         >
           <Link
             className={
-              explorerActive ? "fx-nav-link fx-nav-link-active" : "fx-nav-link"
+              explorerActive
+                ? "fx-nav-link fx-nav-link-active hidden sm:inline-flex"
+                : "fx-nav-link hidden sm:inline-flex"
             }
             href="/assets"
             aria-current={explorerActive ? "page" : undefined}
@@ -86,10 +106,76 @@ export function SiteHeader() {
           >
             Methodology
           </Link>
-          <Link className="fx-header-cta ml-2" href="/#demo">
-            <span className="hidden sm:inline">Get started</span>
+          <Link
+            className="fx-header-cta ml-2 hidden sm:inline-flex"
+            href="/#demo"
+            aria-label="Get started"
+          >
+            <span>Get started</span>
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
+          <button
+            ref={menuButtonRef}
+            className="ml-2 grid size-11 place-items-center border border-[#276467] bg-[#051315] text-[#8dd4d1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5ff5ee] sm:hidden"
+            type="button"
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            {mobileOpen ? (
+              <X className="size-5" aria-hidden="true" />
+            ) : (
+              <Menu className="size-5" aria-hidden="true" />
+            )}
+          </button>
+          {mobileOpen ? (
+            <div
+              id="mobile-navigation"
+              className="fixed inset-x-0 top-[76px] z-50 grid border-b border-[#1d6062] bg-[#031012]/98 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.5)] sm:hidden"
+            >
+              <Link
+                ref={firstMobileLinkRef}
+                className="fx-nav-link justify-start"
+                href="/assets"
+                aria-current={explorerActive ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                Explorer
+              </Link>
+              <Link
+                className="fx-nav-link justify-start"
+                href="/issuers"
+                aria-current={issuersActive ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                Issuers
+              </Link>
+              <Link
+                className="fx-nav-link justify-start"
+                href="/compare"
+                aria-current={compareActive ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                Compare
+              </Link>
+              <Link
+                className="fx-nav-link justify-start"
+                href="/methodology"
+                aria-current={methodologyActive ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                Methodology
+              </Link>
+              <Link
+                className="fx-header-cta mt-3 justify-center"
+                href="/#demo"
+                onClick={() => setMobileOpen(false)}
+              >
+                Get started <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </div>
+          ) : null}
         </nav>
       </div>
     </header>

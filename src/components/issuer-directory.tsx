@@ -74,7 +74,7 @@ export function IssuerDirectory() {
 
         <div className="mt-8 grid gap-px border border-[#174749] bg-[#143638] md:grid-cols-[1fr_auto_auto]">
           <label className="bg-[#041214] p-4">
-            <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#557f81] uppercase">
+            <span className="mb-2 block font-mono text-[8px] tracking-[0.16em] text-[#739799] uppercase">
               Search current page
             </span>
             <span className="relative block">
@@ -218,7 +218,7 @@ function IssuerCard({
           <h3 className="truncate font-semibold text-[#edf7f5]">
             {issuer.name}
           </h3>
-          <p className="mt-1 font-mono text-[9px] text-[#557f81] uppercase">
+          <p className="mt-1 font-mono text-[9px] text-[#739799] uppercase">
             {issuer.tokenCount === null
               ? "Token count unavailable"
               : `${issuer.tokenCount.toLocaleString("en-US")} linked tokens`}

@@ -71,6 +71,27 @@ Integrasi utama menggunakan endpoint RWA v5:
 
 Lihat [docs/API.md](docs/API.md) untuk kontrak integrasi dan strategi penggunaan credit.
 
+## Product preview
+
+![RWA X-Ray live scenario and market-capacity dashboard](docs/design/landing-reference.png)
+
+Additional audited views: [Explorer](docs/design/assets-reference.png), [Asset X-Ray](docs/design/asset-detail-reference.png), and [Compare](docs/design/compare-reference.png).
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+  Browser[Browser UI] --> API[Validated Next.js API]
+  API --> Service[Application service]
+  Service --> Cache[(PostgreSQL cache)]
+  Service --> CMC[CoinMarketCap RWA v5]
+  Service --> Engine[Deterministic analysis engine]
+  Engine --> API
+  API --> Evidence[Safe DTO + evidence lineage]
+```
+
+The API key and database connection remain server-side. Full boundaries, cache policy, snapshot flow, and failure semantics are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Dokumentasi
 
 - [Product Requirements Document](docs/PRD.md)
@@ -83,6 +104,7 @@ Lihat [docs/API.md](docs/API.md) untuk kontrak integrasi dan strategi penggunaan
 - [Live Infrastructure Setup](docs/LIVE_SETUP.md)
 - [Adaptive Snapshot Worker](docs/SNAPSHOTS.md)
 - [Production Deployment](docs/DEPLOYMENT.md)
+- [Final UX, Accessibility, and Release Audit](docs/AUDIT.md)
 
 ## Local development
 
@@ -168,7 +190,9 @@ Sudah tersedia:
 - `POST /api/compare` serta dedicated `GET /api/assets/:rwaId/evidence` dengan validated input dan safe response;
 - production security headers, server/edge Sentry, redacted structured logs, configuration-aware readiness, manual GitHub release-verification workflow, serta secret-safe live/production smoke gate yang mewajibkan bukti Market Pairs.
 
-Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Minimal production monitoring telah terintegrasi; deployment masih perlu memverifikasi event Sentry pada project production. Historical Replay API/UI dan raw-pair hourly aggregation/retention belum selesai.
+Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Minimal production monitoring telah terintegrasi; deployment masih perlu memverifikasi event Sentry pada project production.
+
+Deferred P1 yang bukan release blocker: Historical Replay API/UI, hourly market-pair aggregation/retention, Grounded AI Due-Diligence Memo, shareable scenario URL, PostHog analytics, dan chart visualisasi. Jika chart ditambahkan kelak, fallback table/teks wajib tersedia pada perubahan yang sama.
 
 ## Disclaimer
 

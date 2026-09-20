@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const asset = {
   rwaId: 101,
@@ -323,6 +324,7 @@ test("runs the guided capacity scenario", async ({ page }) => {
   await expect(page.getByText("20", { exact: true })).toBeVisible();
   await expect(page.getByText("Over 7 days", { exact: true })).toBeVisible();
   await expect(page.getByText(/not a promise of execution/i)).toBeVisible();
+  await expectNoA11yViolations(page);
 });
 
 test("keeps the redesigned landing usable on mobile", async ({ page }) => {
@@ -342,11 +344,21 @@ test("keeps the redesigned landing usable on mobile", async ({ page }) => {
   await expect(
     page.locator('[role="tooltip"].fx-term-card-visible'),
   ).toContainText("does not guarantee active trading");
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  await expect(
+    page.getByRole("link", { name: "Compare", exact: true }),
+  ).toBeVisible();
+  await expectNoA11yViolations(page);
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Open navigation" }),
+  ).toBeFocused();
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  await expectNoA11yViolations(page);
 });
 
 test("presents the methodology and guardrails on mobile", async ({ page }) => {
@@ -399,6 +411,7 @@ test("presents the methodology and guardrails on mobile", async ({ page }) => {
     document: document.documentElement.scrollWidth,
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  await expectNoA11yViolations(page);
 });
 
 test("compares assets under one shared scenario", async ({ page }) => {
@@ -435,6 +448,8 @@ test("compares assets under one shared scenario", async ({ page }) => {
   await expect(
     page.locator('[role="tooltip"].fx-term-card-visible'),
   ).toContainText("Market-pair data is unavailable");
+  await page.keyboard.press("Escape");
+  await expectNoA11yViolations(page);
 });
 
 test("keeps the redesigned Compare workflow usable on mobile", async ({
@@ -496,6 +511,7 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
     document: document.documentElement.scrollWidth,
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  await expectNoA11yViolations(page);
 });
 
 test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
@@ -541,6 +557,132 @@ test("keeps the redesigned Explorer usable on mobile", async ({ page }) => {
     document: document.documentElement.scrollWidth,
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  await expectNoA11yViolations(page);
+});
+
+test("renders empty, stale, rate-limit, and upstream failure states", async ({
+  page,
+}) => {
+  let state: "empty" | "stale" | "rate-limit" | "upstream" = "empty";
+  await page.route(/\/api\/assets\?.*$/, async (route) => {
+    if (state === "rate-limit" || state === "upstream") {
+      const rateLimited = state === "rate-limit";
+      await route.fulfill({
+        status: rateLimited ? 429 : 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: rateLimited ? "RATE_LIMITED" : "UPSTREAM_UNAVAILABLE",
+            message: rateLimited
+              ? "Too many requests"
+              : "Market data is temporarily unavailable",
+            retryable: true,
+          },
+          meta: { requestId: `e2e-${state}` },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          items:
+            state === "empty"
+              ? []
+              : [{ ...asset, logo: null, turnoverRatio: 0.05 }],
+          pagination: {
+            totalSize: state === "empty" ? 0 : 1,
+            hasMore: false,
+          },
+          sourceStatus: {
+            ...sourceStatus,
+            cache: {
+              ...sourceStatus.cache,
+              state: state === "stale" ? "stale" : "fresh",
+            },
+            refreshErrorCode: state === "stale" ? "CMC_TIMEOUT" : null,
+          },
+          stale: state === "stale",
+        },
+        meta: {
+          requestId: `e2e-${state}`,
+          generatedAt: "2026-09-18T02:31:00.000Z",
+          stale: state === "stale",
+        },
+      }),
+    });
+  });
+
+  await page.goto("/assets");
+  await expect(
+    page.getByRole("heading", { name: "No assets returned" }),
+  ).toBeVisible();
+
+  state = "stale";
+  await page.reload();
+  await expect(
+    page.getByText(/Showing the latest real cached dataset/),
+  ).toBeVisible();
+
+  state = "rate-limit";
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Refresh limit reached" }),
+  ).toBeVisible();
+
+  state = "upstream";
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "RWA universe unavailable" }),
+  ).toBeVisible();
+});
+
+test("preserves available Compare results during a partial failure", async ({
+  page,
+}) => {
+  await mockRwaApi(page);
+  await page.route(/\/api\/compare$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          items: [compareItem(asset, 4)],
+          failures: [
+            { rwaId: secondAsset.rwaId, code: "REQUIRED_SOURCE_UNAVAILABLE" },
+          ],
+          scenario: {
+            positionValue: 100_000,
+            participationRate: 0.05,
+            stressHaircut: 0,
+          },
+          stale: false,
+        },
+        meta: {
+          requestId: "e2e-compare-partial",
+          generatedAt: "2026-09-18T02:31:00.000Z",
+          stale: false,
+        },
+      }),
+    });
+  });
+
+  await page.goto("/compare");
+  await page.getByRole("button", { name: "Run comparison" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Scenario comparison" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/1 requested asset\(s\) could not be compared/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Treasury Capacity Note",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Comparison unavailable")).toBeVisible();
 });
 
 test("filters and opens a live Explorer row", async ({ page }) => {
@@ -613,6 +755,7 @@ test("filters and opens a live Explorer row", async ({ page }) => {
     "href",
     "https://example.com/markets/tcn",
   );
+  await expectNoA11yViolations(page);
 });
 
 test("opens an issuer and traces its token to an RWA asset", async ({
@@ -625,6 +768,7 @@ test("opens an issuer and traces its token to an RWA asset", async ({
     page.getByRole("heading", { name: "Issuer Directory" }),
   ).toBeVisible();
   await expect(page.getByText("Example Issuer")).toBeVisible();
+  await expectNoA11yViolations(page);
   await page.getByRole("link", { name: "View issuer" }).click();
 
   await expect(
@@ -638,6 +782,77 @@ test("opens an issuer and traces its token to an RWA asset", async ({
   await expect(
     page.getByRole("link", { name: "Issuers", exact: true }),
   ).toHaveAttribute("aria-current", "page");
+  await expectNoA11yViolations(page);
+});
+
+test("supports the Explorer to Asset X-Ray flow with keyboard only", async ({
+  page,
+}) => {
+  await mockRwaApi(page);
+  await page.goto("/");
+
+  const explorerLink = page
+    .getByRole("link", { name: "Explorer", exact: true })
+    .first();
+  await tabTo(page, explorerLink);
+  await expectFocusIndicator(explorerLink);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/assets$/);
+
+  const search = page.getByPlaceholder("Search name or symbol");
+  await tabTo(page, search);
+  await expectFocusIndicator(search);
+  await page.keyboard.type("missing");
+  await expect(
+    page.getByRole("heading", { name: "No match on this page" }),
+  ).toBeVisible();
+  await page.keyboard.press("Control+A");
+  await page.keyboard.press("Backspace");
+
+  const openXray = page.getByRole("link", { name: "Open X-Ray" }).first();
+  await tabTo(page, openXray);
+  await expectFocusIndicator(openXray);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/assets\/101$/);
+
+  const overviewTab = page.getByRole("tab", { name: "Overview" });
+  await tabTo(page, overviewTab);
+  await expectFocusIndicator(overviewTab);
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Simulator" })).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Exit Capacity Simulator" }),
+  ).toBeVisible();
+});
+
+test("keeps credentials and upstream hosts out of browser traffic and logs", async ({
+  page,
+}) => {
+  await mockRwaApi(page);
+  const findings: string[] = [];
+  const forbidden =
+    /(pro-api\.coinmarketcap\.com|x-cmc-pro-api-key|cmc_api_key|database_url|postgres(?:ql)?:\/\/|gemini_api_key|sentry_dsn)/i;
+
+  page.on("request", (request) => {
+    const inspected = JSON.stringify({
+      url: request.url(),
+      headers: request.headers(),
+      postData: request.postData(),
+    });
+    if (forbidden.test(inspected)) findings.push(`request:${request.url()}`);
+  });
+  page.on("console", (message) => {
+    if (forbidden.test(message.text()))
+      findings.push(`console:${message.type()}`);
+  });
+
+  await page.goto("/assets");
+  await expect(page.getByText("Treasury Capacity Note").first()).toBeVisible();
+  await page.getByRole("link", { name: "Open X-Ray" }).first().click();
+  await expect(
+    page.getByRole("heading", { name: "Treasury Capacity Note", level: 1 }),
+  ).toBeVisible();
+  expect(findings).toEqual([]);
 });
 
 test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {
@@ -660,7 +875,47 @@ test("keeps tabbed Asset X-Ray usable on mobile", async ({ page }) => {
     document: document.documentElement.scrollWidth,
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  await expectNoA11yViolations(page);
 });
+
+async function expectNoA11yViolations(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+
+  expect(
+    results.violations,
+    results.violations
+      .map(
+        (violation) =>
+          `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
+      )
+      .join("\n"),
+  ).toEqual([]);
+}
+
+async function tabTo(page: Page, target: Locator, maximumTabs = 60) {
+  for (let index = 0; index < maximumTabs; index += 1) {
+    await page.keyboard.press("Tab");
+    if (
+      await target.evaluate((element) => element === document.activeElement)
+    ) {
+      return;
+    }
+  }
+  throw new Error("Keyboard target was not reached within the tab limit");
+}
+
+async function expectFocusIndicator(target: Locator) {
+  const visible = await target.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return (
+      (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) >= 2) ||
+      style.boxShadow !== "none"
+    );
+  });
+  expect(visible).toBe(true);
+}
 
 function compareItem(item: typeof asset, estimatedExitDays: number) {
   return {

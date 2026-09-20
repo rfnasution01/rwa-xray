@@ -468,7 +468,7 @@ export function MethodologyView() {
 function HeroDatum({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-[#041416] p-4">
-      <p className="font-mono text-[8px] tracking-[0.12em] text-[#527d7f] uppercase">
+      <p className="font-mono text-[8px] tracking-[0.12em] text-[#739799] uppercase">
         {label}
       </p>
       <p className="mt-2 font-mono text-xs font-semibold text-[#b9d8d5]">
@@ -523,7 +523,7 @@ function Formula({
 }) {
   return (
     <div className={last ? "py-5" : "border-b border-[#173b3d] py-5"}>
-      <p className="font-mono text-[9px] tracking-[0.12em] text-[#557f81] uppercase">
+      <p className="font-mono text-[9px] tracking-[0.12em] text-[#739799] uppercase">
         {label}
       </p>
       <code className="mt-2 block text-lg text-[#72eee8] sm:text-xl">

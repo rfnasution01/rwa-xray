@@ -215,7 +215,7 @@ export function IssuerDetailView({ issuerId }: { issuerId: string }) {
 function IssuerMetric({ label, value }: { label: string; value: string }) {
   return (
     <article className="border border-[#174749] bg-[#041214] p-5">
-      <p className="font-mono text-[8px] tracking-[0.15em] text-[#557f81] uppercase">
+      <p className="font-mono text-[8px] tracking-[0.15em] text-[#739799] uppercase">
         {label}
       </p>
       <p className="mt-3 text-2xl font-medium text-[#e9f6f4] tabular-nums">

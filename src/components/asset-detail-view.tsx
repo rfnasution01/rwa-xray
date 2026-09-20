@@ -598,7 +598,7 @@ function Score({
             <strong className="block text-2xl font-medium text-[#65eee7] tabular-nums">
               {value === null ? "—" : score}
             </strong>
-            <span className="font-mono text-[8px] text-[#527b7d]">/100</span>
+            <span className="font-mono text-[8px] text-[#739799]">/100</span>
           </span>
         </div>
       </div>
@@ -607,7 +607,7 @@ function Score({
           {label}
         </TechnicalTerm>
       </p>
-      <p className="mt-1 font-mono text-[9px] text-[#527b7d]">{sublabel}</p>
+      <p className="mt-1 font-mono text-[9px] text-[#739799]">{sublabel}</p>
     </div>
   );
 }
@@ -798,7 +798,7 @@ function TokenTable({
                 <tr key={token.cryptoId}>
                   <td>
                     <strong>{token.symbol}</strong>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-xs text-slate-400">
                       {token.name}
                     </span>
                   </td>
@@ -856,7 +856,7 @@ function TradfiMarketTable({
                   <tr key={`${market.exchangeId}-${market.ticker}`}>
                     <td>
                       <strong>{market.exchangeName}</strong>
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-xs text-slate-400">
                         {market.exchangeSlug}
                       </span>
                     </td>
@@ -1074,7 +1074,7 @@ function OverviewMetric({
 }) {
   return (
     <div className="border border-[#1a5557] bg-[#041416] p-5 shadow-[inset_0_0_24px_rgba(45,202,196,0.025)]">
-      <dt className="font-mono text-[9px] tracking-[0.08em] text-[#5b8587] uppercase">
+      <dt className="font-mono text-[9px] tracking-[0.08em] text-[#739799] uppercase">
         <TechnicalTerm term={term} align={align} />
       </dt>
       <dd className="mt-3 text-xl font-medium tracking-tight text-[#dff0ee] tabular-nums">
@@ -1094,7 +1094,7 @@ function SmallMetric({
 }) {
   return (
     <div className="border border-[#153f41] bg-[#061719] p-3">
-      <dt className="font-mono text-[9px] text-[#5b8587]">
+      <dt className="font-mono text-[9px] text-[#739799]">
         <TechnicalTerm term={term} align={align} />
       </dt>
       <dd className="mt-2 text-sm font-medium text-[#cfdfdd] tabular-nums">

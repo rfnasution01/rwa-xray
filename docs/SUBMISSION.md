@@ -7,9 +7,9 @@
 - [x] Demo deployment tersedia di `https://rwa-xray.vercel.app`.
 - [ ] X post menghubungkan submission dan demo video.
 - [ ] Hashtag `#BuildwithCMC` digunakan.
-- [ ] Endpoint CMC ditulis eksplisit.
-- [ ] Ada bukti code dan response dari API nyata.
-- [ ] Ada catatan manfaat dan keterbatasan API.
+- [x] Endpoint CMC ditulis eksplisit.
+- [x] Ada bukti code dan response tersanitasi dari API nyata.
+- [x] Ada catatan manfaat dan keterbatasan API.
 - [ ] Track **Real World Assets** dipilih.
 - [ ] Seluruh anggota tim maksimal empat dan memenuhi syarat usia.
 
@@ -67,11 +67,12 @@ Why it was necessary:
 
 ## 4. Bukti API
 
-- [ ] Tampilkan CMC client dalam source code.
-- [ ] Tampilkan response tersanitasi pada Evidence Panel/video.
-- [ ] Tampilkan timestamp dan endpoint.
-- [ ] Pastikan key/header tidak terlihat.
-- [ ] Jelaskan bagaimana response berubah menjadi metrik.
+- [x] CMC client tersedia dalam source code.
+- [x] Response tersanitasi tersedia pada Evidence Panel.
+- [ ] Tampilkan Evidence Panel tersebut di video final.
+- [x] Timestamp dan endpoint tampil pada Evidence.
+- [x] Key/header tidak diteruskan ke browser dan regression check tersedia.
+- [x] Metric lineage menjelaskan bagaimana response berubah menjadi metrik.
 
 ## 5. Struktur video 2–3 menit
 
@@ -90,9 +91,9 @@ Tunjukkan perbedaan market cap, volume, dan concentration. Jangan mulai dengan t
 3. Jelaskan Estimated Exit Days, Daily Exit Capacity, dan Position-to-Volume Ratio.
 4. Aktifkan volume haircut 50%.
 5. Tampilkan concentration dan Evidence Coverage.
-6. Buka Historical Replay.
-7. Bandingkan dengan peer kedua.
-8. Generate grounded AI Memo secara on-demand.
+6. Buka tab Markets dan Evidence untuk menunjukkan partial-data semantics serta lineage.
+7. Bandingkan dengan peer kedua menggunakan satu shared scenario.
+8. Buka issuer lineage dan jelaskan batasan reserve/legal-claim verification.
 
 ### 1:40–2:10 — Bukti API
 
@@ -109,19 +110,19 @@ Jelaskan pengguna sasaran, keterbatasan, dan roadmap singkat.
 - [x] Demo URL stabil dan dapat dibuka tanpa akun.
 - [x] Skenario default langsung tersedia.
 - [x] Error state tidak merusak seluruh halaman.
-- [ ] Responsive layouts tersedia; final mobile dan desktop device audit tetap diperlukan.
+- [x] Responsive layout, desktop/mobile viewport, overflow, keyboard, focus, dan Axe audit tersedia di `docs/AUDIT.md`.
 
 ### Usefulness — 25
 
-- [ ] Persona dan keputusan pengguna jelas.
-- [ ] Simulator memakai nominal posisi nyata.
-- [ ] Output dapat ditindaklanjuti tanpa menjadi financial advice.
+- [x] Persona dan keputusan pengguna jelas.
+- [x] Simulator memakai nominal posisi nyata.
+- [x] Output dapat ditindaklanjuti dengan planning horizon tanpa menjadi financial advice.
 
 ### Interesting API use — 20
 
-- [ ] Bukan sekadar price dashboard.
-- [ ] Assets, tokens, issuer, dan pairs digabungkan.
-- [ ] Data lineage terlihat.
+- [x] Bukan sekadar price dashboard.
+- [x] Assets, tokens, issuer, dan pairs digabungkan.
+- [x] Data lineage terlihat.
 
 ### Code quality — 15
 
@@ -134,7 +135,7 @@ Jelaskan pengguna sasaran, keterbatasan, dan roadmap singkat.
 
 - [ ] Hook berbasis masalah.
 - [ ] Video tidak lebih panjang dari yang diperlukan.
-- [ ] Font dan angka terlihat jelas.
+- [x] Font, angka, focus indicator, dan contrast utama lulus automated WCAG audit.
 - [ ] Tidak ada loading/error saat recording.
 - [ ] Subtitle tersedia.
 
@@ -160,8 +161,8 @@ Sesuaikan mention dan tautan dengan akun/event resmi ketika submission.
 - [x] `.env.example` tidak berisi secret.
 - [x] `.gitignore` benar.
 - [x] Staged tree dipindai sebelum initial commit; CI Gitleaks memindai full history.
-- [ ] Fixture API telah disanitasi.
-- [ ] README mempunyai screenshot dan live URL.
+- [x] Fixture API telah disanitasi dan lulus forbidden-secret scan.
+- [x] README mempunyai screenshot dan live URL.
 - [ ] Commit/tag final dibuat.
 - [ ] Branch default lulus CI.
 

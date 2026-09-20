@@ -216,7 +216,7 @@ export function CompareView() {
                       <p className="font-mono text-[9px] font-semibold tracking-[0.14em] text-[#66ece5] uppercase">
                         Selected assets · {selectedCandidates.length}
                       </p>
-                      <p className="font-mono text-[8px] text-[#527f81] uppercase">
+                      <p className="font-mono text-[8px] text-[#739799] uppercase">
                         Search-independent
                       </p>
                     </div>
@@ -235,7 +235,7 @@ export function CompareView() {
                     </div>
                   </div>
                 ) : null}
-                <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[9px] tracking-[0.08em] text-[#527f81] uppercase">
+                <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[9px] tracking-[0.08em] text-[#739799] uppercase">
                   <span>
                     {fullSearchActive
                       ? `Showing ${visibleCandidates.length} targeted search results`
