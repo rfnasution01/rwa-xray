@@ -76,12 +76,13 @@ The production release confirmed:
 - `/api/health` reported the production database as reachable;
 - all seven CMC endpoint checks and PostgreSQL write/read/delete passed;
 - production smoke returned four Explorer assets and confirmed detail, Market Pairs, Evidence, and Compare;
-- a manual priority snapshot persisted 13 of 13 discovered assets and snapshots without stale sources or issues.
+- a manual priority snapshot persisted 13 of 13 discovered assets and snapshots without stale sources or issues;
+- `SENTRY_DSN` was configured for production/preview and a sanitized SDK verification event flushed successfully.
 
 ## Remaining manual checks
 
 1. Inspect desktop and a physical mobile device in an incognito session.
 2. Inspect keyboard focus and perform a screen-reader spot check.
 3. Confirm no credential or upstream API request appears in DevTools.
-4. Configure `SENTRY_DSN`, then confirm the Sentry test event arrives without request headers, body, query, cookies, or user context.
+4. Inspect the flushed Sentry verification event in the dashboard and confirm redaction of request headers, body, query, cookies, and user context.
 5. Capture final production screenshots for the submission and video.
