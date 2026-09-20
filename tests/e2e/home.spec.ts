@@ -337,6 +337,65 @@ test("runs the guided capacity scenario", async ({ page }) => {
   await expectNoA11yViolations(page);
 });
 
+test("publishes canonical SEO and crawler metadata", async ({ page }) => {
+  await mockRwaApi(page);
+  await page.goto("/");
+
+  await expect(page).toHaveTitle("RWA X-Ray — Tokenized Asset Market Capacity");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "https://rwa-xray.vercel.app",
+  );
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    "content",
+    /market-capacity scenarios/i,
+  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    "content",
+    "RWA X-Ray — Tokenized Asset Market Capacity",
+  );
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    "content",
+    "summary_large_image",
+  );
+
+  const jsonLd = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent();
+  expect(JSON.parse(jsonLd ?? "{}")).toMatchObject({
+    "@type": "WebApplication",
+    name: "RWA X-Ray",
+    isAccessibleForFree: true,
+  });
+
+  const socialImageUrl = await page
+    .locator('meta[property="og:image"]')
+    .getAttribute("content");
+  expect(socialImageUrl).toBeTruthy();
+  const socialImage = await page.request.get(socialImageUrl!);
+  expect(socialImage.ok()).toBe(true);
+  expect(socialImage.headers()["content-type"]).toContain("image/png");
+
+  const iconUrl = await page
+    .locator('link[rel="icon"][type="image/png"]')
+    .getAttribute("href");
+  expect(iconUrl).toBeTruthy();
+  const icon = await page.request.get(iconUrl!);
+  expect(icon.ok()).toBe(true);
+  expect(icon.headers()["content-type"]).toContain("image/png");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "sizes",
+    "180x180",
+  );
+
+  const robots = await page.request.get("/robots.txt");
+  expect(await robots.text()).toContain("Disallow: /api/");
+  const sitemap = await page.request.get("/sitemap.xml");
+  const sitemapBody = await sitemap.text();
+  expect(sitemapBody).toContain("https://rwa-xray.vercel.app/assets");
+  expect(sitemapBody).toContain("https://rwa-xray.vercel.app/methodology");
+});
+
 test("keeps the redesigned landing usable on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockRwaApi(page);
@@ -479,18 +538,28 @@ test("keeps the redesigned Compare workflow usable on mobile", async ({
   await expect(
     page.getByText("Selected", { exact: true }).first(),
   ).toBeVisible();
-  await page
-    .locator("label")
-    .filter({ hasText: "TCN2" })
-    .getByRole("checkbox")
-    .evaluate((checkbox) => (checkbox as HTMLInputElement).click());
-  await expect(page.getByText("1/4 selected")).toBeVisible();
-  await page
-    .locator("label")
-    .filter({ hasText: "TCN2" })
-    .getByRole("checkbox")
-    .evaluate((checkbox) => (checkbox as HTMLInputElement).click());
-  await expect(page.getByText("2/4 selected")).toBeVisible();
+  await expect(async () => {
+    const selectedTcn2 = page
+      .locator("label")
+      .filter({ hasText: "TCN2" })
+      .getByRole("checkbox");
+    if (await selectedTcn2.isChecked())
+      await selectedTcn2.click({ force: true });
+    await expect(page.getByText("1/4 selected")).toBeVisible({
+      timeout: 1_000,
+    });
+  }).toPass({ timeout: 10_000 });
+  await expect(async () => {
+    const candidateTcn2 = page
+      .locator("label")
+      .filter({ hasText: "TCN2" })
+      .getByRole("checkbox");
+    if (!(await candidateTcn2.isChecked()))
+      await candidateTcn2.click({ force: true });
+    await expect(page.getByText("2/4 selected")).toBeVisible({
+      timeout: 1_000,
+    });
+  }).toPass({ timeout: 10_000 });
   await page
     .getByRole("button", { name: "Select assets", exact: true })
     .click();
@@ -714,6 +783,11 @@ test("filters and opens a live Explorer row", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Treasury Capacity Note", level: 1 }),
   ).toBeVisible();
+  await expect(page).toHaveTitle("RWA Asset #101 Market Capacity | RWA X-Ray");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "https://rwa-xray.vercel.app/assets/101",
+  );
   const averagePriceTerm = page.getByRole("button", {
     name: "Average tokenized price",
     exact: true,
@@ -830,6 +904,11 @@ test("opens an issuer and traces its token to an RWA asset", async ({
   await expect(
     page.getByRole("heading", { name: "Example Issuer", level: 1 }),
   ).toBeVisible();
+  await expect(page).toHaveTitle("RWA Issuer 6878977d | RWA X-Ray");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "https://rwa-xray.vercel.app/issuers/6878977dcbbf471de3366e85",
+  );
   await expect(page.getByText("Example Treasury Token")).toBeVisible();
   await expect(page.getByRole("link", { name: "Open X-Ray" })).toHaveAttribute(
     "href",

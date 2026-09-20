@@ -1,11 +1,4 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
 import type { ExitPlanningHorizon } from "@/domain/analysis";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const planningHorizonLabels = {
   under_one_day: "Under 1 day",

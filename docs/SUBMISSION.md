@@ -40,7 +40,7 @@ Tanpa CMC API, aplikasi harus mengintegrasikan dan menormalisasi banyak token, i
 - Volume adalah proxy aktivitas, bukan order-book depth.
 - Simulator tidak menjamin waktu eksekusi atau slippage.
 - Cakupan market dapat berbeda antar-aset.
-- Histori hanya tersedia sejak snapshot aplikasi mulai dikumpulkan.
+- Historical Replay belum tersedia pada release hackathon; snapshot internal baru dikumpulkan untuk pengembangan mendatang.
 - Score bukan rekomendasi investasi.
 
 ## 3. Endpoint yang dicantumkan

@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 
 import { MethodologyView } from "@/components/methodology-view";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Methodology",
+export const metadata: Metadata = createPageMetadata({
+  title: "Market-Capacity Methodology",
   description:
-    "How RWA X-Ray calculates transparent market-capacity scenarios, concentration, health, and evidence coverage.",
-};
+    "Review the formulas, assumptions, confidence rules, and limitations behind RWA X-Ray market-capacity and concentration analysis.",
+  path: "/methodology",
+});
 
 export default function MethodologyPage() {
   return (

@@ -9,11 +9,11 @@ Baseline deployment yang disetujui:
 - Next.js App Router + TypeScript strict di Vercel;
 - Supabase PostgreSQL + Drizzle ORM;
 - TanStack Query untuk browser data fetching;
-- Apache ECharts untuk visualisasi;
-- shadcn/ui + Radix UI + Tailwind untuk komponen;
+- tabel dan ringkasan teks untuk visualisasi release; Apache ECharts tetap opsi roadmap dan baru akan ditambahkan bersama fallback accessible;
+- semantic React components + Tailwind CSS; Radix/shadcn tetap opsi hanya jika kebutuhan interaction primitive muncul;
 - GitHub Actions menjalankan Node.js snapshot script secara langsung;
 - Sentry + structured logs untuk observability;
-- PostHog cookieless tanpa session recording.
+- PostHog cookieless tanpa session recording tetap deferred dan belum aktif.
 
 ## 2. Diagram konteks
 
@@ -44,6 +44,7 @@ flowchart LR
 - `/compare` menerapkan satu scenario pada 2–4 canonical RWA IDs, mempertahankan partial results, dan memakai neutral ordering berdasarkan Estimated Exit Days. Initial selection hanya menerima 50 kandidat `assets/list` berdasarkan volume; suggested peers memprioritaskan kategori target lalu jarak log tokenized market cap dan volume 24 jam, dengan rank/name sebagai fallback deterministik. Search dua karakter atau lebih berjalan server-side secara debounced dan dibatasi 50 hasil: exact symbol melalui `/map`, exact normalized slug melalui `/assets/list`, serta name matching pada 250 aset bervolume tertinggi. Browser tidak memuat seluruh universe atau melakukan refetch semua page setiap 60 detik. Quotes dan metadata dimuat dalam batch multi-ID, benchmark list dibagikan, sedangkan market pairs tetap dimuat per canonical asset yang benar-benar dikembalikan quote batch.
 - `/issuers` menampilkan issuer directory terpaginasikan; `/issuers/[issuerId]` menampilkan token yang dilaporkan terkait dan menautkannya kembali ke canonical asset bila `rwa_id` tersedia.
 - Response internal divalidasi dengan Zod di browser sebelum dirender.
+- SEO memakai canonical metadata per route, static social-card generation, WebApplication JSON-LD, `robots.txt`, dan sitemap untuk route publik stabil. Dynamic asset/issuer metadata memakai canonical ID tanpa menambah upstream request khusus crawler.
 - Tidak pernah menerima `X-CMC_PRO_API_KEY`.
 
 ### Backend API
@@ -62,16 +63,7 @@ Backend menggunakan Next.js route handlers agar deployment sederhana. Jangan men
 
 ### Database
 
-PostgreSQL menyimpan:
-
-- canonical asset dan issuer;
-- snapshot quote;
-- snapshot market pair;
-- hasil metrik berversi;
-- konfigurasi metodologi;
-- anonymous shared report.
-
-Raw response opsional disimpan singkat untuk debugging dan harus bebas secret.
+PostgreSQL menyimpan persistent cache tervalidasi, canonical asset dan issuer, snapshot quote, snapshot market pair, hasil metrik berversi, serta aktivitas aset anonim untuk menentukan prioritas worker. Release hackathon tidak menyimpan raw upstream response, secret, authorization header, atau shared report.
 
 ### Cache
 
@@ -114,16 +106,16 @@ Implementasi tersedia pada `src/server/snapshots/`, CLI `scripts/snapshot.ts`, d
 - Mengambil top 10 government securities dan aset yang aktif dibuka setiap 5 menit.
 - Market pairs hanya untuk aset prioritas agar credit terkendali.
 - Menyimpan `observed_at` dan upstream `last_updated` secara terpisah.
-- Aggregate quote disimpan jangka panjang; raw market-pair snapshot 30 hari lalu diringkas per jam.
-- Historical chart diberi label “collected by RWA X-Ray”.
+- Aggregate quote disimpan jangka panjang; target retention raw market-pair adalah 30 hari sebelum hourly aggregation, tetapi aggregation/retention belum aktif.
+- Historical Replay UI belum aktif; visualisasi mendatang wajib diberi label “collected by RWA X-Ray”.
 - `401/403/429` pada Market Pairs membuka circuit breaker per-run; quote dan analisis parsial tetap disimpan.
 - Retry dengan source `observed_at` yang sama idempotent melalui unique indexes.
 
 Raw-pair hourly aggregation dan retention belum diaktifkan; data belum dihapus agar histori tidak hilang sebelum agregasi tersedia.
 
-### AI explanation layer
+### AI explanation layer — deferred target
 
-Komponen opsional dan on-demand. Domain menggunakan provider-agnostic interface dengan Gemini sebagai adapter awal. Input hanya `AnalysisResult` terstruktur dan glossary. Output harus lolos schema validation. Angka yang tidak ada dalam input ditolak. Cache key mencakup aset, snapshot, skenario, prompt version, dan methodology version. AI dinonaktifkan untuk stale fallback data.
+Komponen ini belum aktif pada release hackathon. Desain P1 yang disetujui tetap berupa provider-agnostic, on-demand, dan menerima hanya `AnalysisResult` terstruktur serta glossary. Implementasi mendatang wajib memvalidasi output, menolak angka yang tidak ada dalam input, memasukkan asset/snapshot/scenario/prompt/methodology version ke cache key, dan tetap nonaktif untuk stale fallback data.
 
 ## 4. Aliran request detail aset
 
@@ -164,8 +156,8 @@ sequenceDiagram
 | GET    | `/api/assets/:rwaId/evidence` | Sanitized lineage dan normalized excerpt — implemented  |
 | GET    | `/api/issuers`                | Issuer directory aktif dan terpaginasikan — implemented |
 | GET    | `/api/issuers/:issuerId`      | Issuer metadata dan linked token page — implemented     |
-| POST   | `/api/reports`                | Membuat shared report                                   |
-| GET    | `/api/reports/:id`            | Membaca shared report                                   |
+| POST   | `/api/reports`                | Deferred; belum tersedia pada release hackathon         |
+| GET    | `/api/reports/:id`            | Deferred; belum tersedia pada release hackathon         |
 | GET    | `/api/health`                 | Readiness validasi environment tanpa secret             |
 
 Route handlers memakai application service/DAL dan tidak meneruskan response CMC atau record database mentah. Seluruh query divalidasi dengan Zod, response memakai envelope konsisten, cache key disembunyikan, dan optional source failure dikembalikan sebagai `dataGaps`. Basic per-instance rate limiting adalah defense tambahan; rate limiting Vercel tetap harus diaktifkan untuk enforcement lintas-instance. Security headers diterapkan global melalui `next.config.ts`; production smoke harness memverifikasi halaman, API, readiness, sensitive field names, dan header tersebut.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -17,6 +18,14 @@ import {
   MotionStagger,
 } from "@/components/landing-motion";
 import { TechnicalTerm } from "@/components/technical-term";
+import { createPageMetadata, siteConfig } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: siteConfig.title,
+  description: siteConfig.description,
+  path: "/",
+  absoluteTitle: true,
+});
 
 const principles = [
   {

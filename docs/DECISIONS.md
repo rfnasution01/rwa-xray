@@ -70,8 +70,8 @@ Dokumen ini merangkum keputusan discovery yang telah disetujui. Keputusan ini be
 | ------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Visual style  | Dark-first Sleek and Futuristic dashboard with institutional character                                           |
 | Themes        | Dark default plus light-mode compatibility; redesign dimulai dari landing                                        |
-| Charts        | Apache ECharts with accessible table/text alternatives                                                           |
-| Components    | shadcn/ui + Radix UI + Tailwind CSS                                                                              |
+| Charts        | Deferred for release; Apache ECharts remains an option only with accessible table/text alternatives              |
+| Components    | Semantic React components + Tailwind CSS; Radix/shadcn only when a new interaction requires the primitive        |
 | Data fetching | TanStack Query                                                                                                   |
 | SEO           | Index homepage, Explorer, asset detail, methodology; noindex reports and scenario variants                       |
 | Sharing       | Lightweight shareable scenario URL in P1; immutable unlisted report deferred until core/P1 priorities are stable |

@@ -57,7 +57,7 @@ Jika keputusan baru mengubah scope, arsitektur, kontrak API internal, atau formu
 
 ## 4. Current repository state
 
-Repository telah memasuki tahap **P0 deployment readiness**. Next.js, TypeScript strict, Tailwind, Vitest, Playwright, Drizzle, environment validation, CI, typed CMC client, normalization layer, PostgreSQL persistent cache, cached RWA repository, Analysis Engine v1.0.0, application service, Explorer/detail API routes, serta live verification harness telah tersedia. Supabase dan seluruh tujuh endpoint CMC telah terverifikasi; akses Startup plan untuk `market-pairs/list` aktif dan response live telah dinormalisasi. Adaptive snapshot worker, GitHub Actions scheduler, guided live scenario, responsive Explorer, full Asset X-Ray detail page, Compare Mode, dedicated Evidence API, security headers, readiness check, dan production smoke harness telah tersedia. Public repository dan Vercel deployment aktif di `https://rwa-xray.vercel.app`; CI, external production smoke, dan manual priority snapshot workflow telah lulus. Historical Replay, monitoring integration, dan reliability polish masih harus dibangun.
+Repository telah memasuki tahap **production release dan feature freeze**. Next.js, TypeScript strict, Tailwind, Vitest, Playwright, Drizzle, environment validation, CI, typed CMC client, normalization layer, PostgreSQL persistent cache, cached RWA repository, Analysis Engine v1.1.0, application service, Explorer/detail API routes, serta live verification harness telah tersedia. Supabase dan seluruh tujuh endpoint CMC telah terverifikasi; akses Startup plan untuk `market-pairs/list` aktif dan response live telah dinormalisasi. Adaptive snapshot worker, GitHub Actions scheduler, guided live scenario, responsive Explorer, full Asset X-Ray detail page, Compare Mode, dedicated Evidence API, security headers, readiness check, dan production smoke harness telah tersedia. Public repository dan Vercel deployment aktif di `https://rwa-xray.vercel.app`; CI, external production smoke, manual priority snapshot workflow, server/edge Sentry, redacted structured logs, dan release-verification gate telah lulus. Historical Replay, Grounded AI Memo, hourly pair aggregation/retention, dan optional product analytics tetap deferred serta bukan bagian release hackathon.
 
 Periksa `package.json` sebelum menjalankan command. Pertahankan scripts standar berikut:
 
@@ -81,15 +81,15 @@ Gunakan stack sederhana agar dapat selesai dalam 21 hari:
 
 - **Framework:** Next.js App Router
 - **Language:** TypeScript dengan strict mode
-- **UI:** React + Tailwind CSS + shadcn/ui/Radix UI
+- **UI:** React + Tailwind CSS dengan semantic custom components; Radix/shadcn hanya jika interaction primitive baru benar-benar membutuhkannya
 - **Client data:** TanStack Query
 - **Validation:** Zod
 - **Database:** Supabase PostgreSQL
 - **ORM/query layer:** Drizzle ORM
 - **Unit/integration test:** Vitest
-- **UI test:** Testing Library
+- **UI/accessibility test:** Playwright + Axe
 - **End-to-end test:** Playwright
-- **Charts:** Apache ECharts dengan accessible table/text fallback
+- **Charts:** deferred; jika Apache ECharts ditambahkan, accessible table/text fallback wajib hadir pada perubahan yang sama
 - **Hosting:** Vercel
 - **Scheduler:** GitHub Actions menjalankan Node.js script
 - **Package manager:** pnpm

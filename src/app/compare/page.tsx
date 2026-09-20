@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 
 import { CompareView } from "@/components/compare-view";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Compare RWA Capacity",
+export const metadata: Metadata = createPageMetadata({
+  title: "Compare RWA Market Capacity",
   description:
-    "Compare two to four tokenized assets under one transparent volume-participation scenario.",
-};
+    "Compare two to four tokenized real-world assets under one transparent position, volume-participation, and stress scenario.",
+  path: "/compare",
+});
 
 export default function ComparePage() {
   return (

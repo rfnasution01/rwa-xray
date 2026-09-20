@@ -172,7 +172,7 @@ curl --get 'https://pro-api.coinmarketcap.com/v5/real-world-assets/market-pairs/
 | Price dispersion       | market-pairs/list     | weighted deviation                |
 | Issuer explorer        | issuers/list, issuers | issuer metadata                   |
 | Stable identifier      | map                   | symbol/slug → `rwa_id`            |
-| Historical replay      | snapshot internal     | perubahan metrik sejak observasi  |
+| Historical replay      | snapshot internal     | deferred; belum ada UI/API replay |
 
 ## 5. Strategi credit dan caching
 

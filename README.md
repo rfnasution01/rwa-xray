@@ -31,11 +31,9 @@ RWA X-Ray menyediakan:
 1. **RWA Explorer** — pencarian dan penyaringan aset berdasarkan jenis, market cap, volume, dan turnover.
 2. **Exit Capacity Simulator** — estimasi jumlah hari berdasarkan ukuran posisi dan batas partisipasi volume.
 3. **Market Concentration** — distribusi volume antar-market, exchange, token, dan issuer.
-4. **Market Cap Mirage Indicator** _(future/P2)_ — menandai kombinasi market cap besar dan aktivitas perdagangan yang lemah.
-5. **Market Capacity Health** — skor transparan dengan rincian formula, data, dan Evidence Coverage terpisah.
-6. **Compare Mode** — perbandingan beberapa aset berdasarkan metrik yang relevan.
-7. **Evidence Panel** — bukti panggilan API, waktu pembaruan, dan sumber setiap metrik.
-8. **Grounded AI Memo** _(stretch goal)_ — ringkasan risiko yang hanya menggunakan metrik terstruktur.
+4. **Market Capacity Health** — skor transparan dengan rincian formula, data, dan Evidence Coverage terpisah.
+5. **Compare Mode** — perbandingan beberapa aset berdasarkan metrik yang relevan.
+6. **Evidence Panel** — bukti panggilan API, waktu pembaruan, dan sumber setiap metrik.
 
 ## Baseline produk yang disetujui
 
@@ -43,7 +41,7 @@ RWA X-Ray menyediakan:
 - Fokus awal: **tokenized government securities**.
 - Guided demo: posisi **$100.000**, participation rate **5%**, USD.
 - Metrik utama: Estimated Exit Days, Daily Exit Capacity, dan Position-to-Volume Ratio.
-- P1: Historical Replay dan grounded AI Due-Diligence Memo.
+- Deferred roadmap: Historical Replay dan grounded AI Due-Diligence Memo; keduanya tidak aktif pada release hackathon.
 - UI: English, dark-first Sleek and Futuristic design system dengan light-mode compatibility.
 - Akses publik tanpa akun.
 
@@ -162,7 +160,7 @@ Vercel environment, migration, GitHub secrets, security headers, dan rollback di
 
 ## Status
 
-Tahap saat ini: **P0 deployment readiness**.
+Tahap saat ini: **production release dan feature freeze**.
 
 Sudah tersedia:
 
@@ -188,7 +186,8 @@ Sudah tersedia:
 - full Asset X-Ray page dengan simulator, four-dimensional concentration, price dispersion, token/market tables, Health/Evidence breakdown, sanitized lineage, warnings, dan partial-data states;
 - Compare Mode 2–4 aset dengan shared scenario, neutral ordering, partial results, dan data-gap labels;
 - `POST /api/compare` serta dedicated `GET /api/assets/:rwaId/evidence` dengan validated input dan safe response;
-- production security headers, server/edge Sentry, redacted structured logs, configuration-aware readiness, manual GitHub release-verification workflow, serta secret-safe live/production smoke gate yang mewajibkan bukti Market Pairs.
+- production security headers, server/edge Sentry, redacted structured logs, configuration-aware readiness, manual GitHub release-verification workflow, serta secret-safe live/production smoke gate yang mewajibkan bukti Market Pairs;
+- canonical metadata per route, Open Graph/Twitter share images, WebApplication JSON-LD, `robots.txt`, dan `sitemap.xml` untuk production discoverability.
 
 Live verification telah mengonfirmasi migration dan persistent cache melalui Supabase Session Pooler serta seluruh tujuh endpoint CMC. Akses Startup plan untuk `market-pairs/list` aktif; Asset X-Ray dan Compare telah diverifikasi dengan market concentration serta price dispersion dari response live. Adaptive snapshot worker, GitHub Actions scheduler, security headers, production smoke harness, dan public Vercel deployment telah tersedia. Production CI, public smoke test, serta manual priority snapshot workflow telah terverifikasi. Minimal production monitoring aktif dengan server/edge Sentry dan redacted structured logs; DSN production telah dikonfigurasi dan SDK transport test berhasil di-flush.
 
