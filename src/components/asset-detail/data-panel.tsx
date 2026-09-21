@@ -14,7 +14,7 @@ export function DataPanel({
   children: React.ReactNode;
 }) {
   return (
-    <article className="overflow-hidden border border-[#1a5557] bg-[#041214]">
+    <article className="relative overflow-visible border border-[#1a5557] bg-[#041214]">
       <div className="flex items-center justify-between border-b border-[#153b3d] px-5 py-4">
         <h3 className="font-semibold">
           {term ? <TechnicalTerm term={term}>{title}</TechnicalTerm> : title}
